@@ -19,12 +19,13 @@ export function HeroSection() {
               Software Developer
             </Typography>
             <Typography mb={5}>
-              A passionate Software Developer with a strong background in creating efficient,
-              scalable, and user-friendly applications. I specialize in [mention your expertise,
-              e.g., frontend development with React and TypeScript] and enjoy building solutions
-              that make a difference. Through this blog, I aim to share my journey, insights into
-              software development, and tips that I’ve picked up along the way. Whether you’re a
-              fellow developer or just curious about tech, I hope you find something valuable here.
+              I am a full-stack developer with a passion for building scalable, high-performance
+              applications. With expertise in ReactJS, NextJS, and TypeScript for frontend
+              development, along with NodeJS, C#, and Python for backend, I specialize in creating
+              seamless, robust solutions that power modern web applications. Whether it is crafting
+              dynamic UIs, optimizing APIs, or working with data-driven architectures, I thrive on
+              pushing the boundaries of what technology can achieve. Let’s build the future, one
+              line of code at a time.
             </Typography>
             <Button variant="contained" size="large">
               Download Resume

@@ -19,7 +19,9 @@ export function PostItem({ post }: PostItemProps) {
             {format(new Date(post.publishedDate), 'dd MMM yyyy')}
           </Typography>
           <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
-          <Typography variant="body1">{post.tagList.join(', ')}</Typography>
+          <Typography variant="body1" color="GrayText">
+            {post.tagList.join(', ')}
+          </Typography>
         </Stack>
         <Typography variant="body2">{post.description}</Typography>
       </CardContent>

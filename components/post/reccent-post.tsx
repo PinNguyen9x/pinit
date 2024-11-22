@@ -11,20 +11,19 @@ export function RecentPost() {
     {
       id: '1',
       slug: '',
-      title: 'Making a design system from scratch',
-      publishedDate: '2022-06-15T03:00:00Z',
+      title: 'Practical Micro Frontends: Building Scalable UIs',
+      publishedDate: '2024-06-15T03:00:00Z',
       tagList: ['Design', 'Pattern'],
-      description:
-        'Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis enim velit mollit. Exercitation veniam consequat sunt nostrud amet.',
+      description: `This post explores how to implement micro frontends by breaking down monolithic UIs into smaller, manageable pieces. Using tools like React, Webpack, and Module Federation, you'll learn how to create scalable, maintainable front-end applications that enhance team collaboration and project flexibility.`,
     },
     {
       id: '2',
       slug: '',
-      title: 'Creating pixel perfect icons in Figma',
-      publishedDate: '2022-06-16T03:00:00Z',
-      tagList: ['Figma', 'Icon Design'],
+      title: 'Large Language Model (LLM) & Chatbox',
+      publishedDate: '2024-06-16T03:00:00Z',
+      tagList: ['AI', 'Mechine Learning'],
       description:
-        'Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis enim velit mollit. Exercitation veniam consequat sunt nostrud amet.',
+        'This is a model that provides a general introduction to AI chatbots, large language models (LLMs), how to apply them in the workplace, essential knowledge about AI and prompts, their advantages and disadvantages, key terms related to LLMs, and tools that help enhance productivity for developers.',
     },
   ]
 
