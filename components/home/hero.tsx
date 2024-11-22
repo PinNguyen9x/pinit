@@ -34,12 +34,15 @@ export function HeroSection() {
           <Box
             sx={{
               minWidth: '240px',
+              width: '240px',
+              height: '240px',
+              borderRadius: '50%',
+              overflow: 'hidden',
               boxShadow: '-5px 13px',
               color: 'secondary.light',
-              borderRadius: '50%',
             }}
           >
-            <Image src={avatar} layout="responsive" alt="avatar" />
+            <Image src={avatar} alt="avatar" layout="intrinsic" />
           </Box>
         </Stack>
       </Container>
