@@ -10,6 +10,7 @@ module.exports = {
       'js-post-api.herokuapp.com',
       'media.istockphoto.com',
       'plus.unsplash.com',
+      'json-server-blog.vercel.app',
     ],
   },
 }

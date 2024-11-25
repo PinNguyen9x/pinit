@@ -4,9 +4,15 @@ import { MainLayout } from '@/components/layouts'
 import { RecentPost } from '@/components/post'
 import { FeatureWork } from '@/components/work/feature-work'
 import { Box } from '@mui/material'
-import { NextPageWithLayout } from '../models'
+import { GetStaticProps } from 'next'
+import { NextPageWithLayout, Post, Work } from '../models'
 
-const Home: NextPageWithLayout = () => {
+interface HomeProps {
+  posts?: Post[]
+  works?: Work[]
+}
+
+const Home: NextPageWithLayout = ({ posts, works }: HomeProps) => {
   return (
     <Box>
       <Seo
@@ -20,12 +26,31 @@ const Home: NextPageWithLayout = () => {
         }}
       />
       <HeroSection />
-      <RecentPost />
-      <FeatureWork />
+      <RecentPost postList={posts || []} />
+      <FeatureWork workList={works || []} />
     </Box>
   )
 }
 
 Home.Layout = MainLayout
+
+export const getStaticProps: GetStaticProps<{ posts: Post[]; works: Work[] }> = async () => {
+  const [postsResponse, worksResponse] = await Promise.all([
+    fetch('https://json-server-blog.vercel.app/api/posts?_page=1&_limit=2'),
+    fetch('https://json-server-blog.vercel.app/api/works?_page=1&_limit=10'),
+  ])
+
+  const postsData = await postsResponse.json()
+  const worksData = await worksResponse.json()
+  console.log({ postsData, worksData })
+
+  return {
+    props: {
+      posts: postsData.data || [],
+      works: worksData.data || [],
+    },
+    revalidate: 60, // ISR: Revalidate every 60 seconds
+  }
+}
 
 export default Home
