@@ -13,7 +13,7 @@ export interface WorkDetailsProps {
 export default function WorkDetails({ work }: WorkDetailsProps) {
   const router = useRouter()
   const { isLoggedIn } = useAuth()
-
+  if (!work) return null
   return (
     <Box>
       <Container>
@@ -38,7 +38,7 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
               size="small"
             />
             <Typography ml={2} color="GrayText">
-              {work.tagList.join(', ')}
+              {work?.tagList?.join(', ')}
             </Typography>
           </Stack>
           <Typography>{work.shortDescription}</Typography>
