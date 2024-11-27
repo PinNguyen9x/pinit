@@ -1,107 +1,103 @@
 ---
-slug: git-dung-trong-du-an-thuc-te
-title: Git - Các lệnh được dùng từ lúc nhận task cho tới lúc tạo PR 🎉
-author: Hậu Nguyễn
-author_title: Senior Software Engineer at fram^
-author_url: https://github.com/paulnguyen-mn
-author_image_url: https://avatars3.githubusercontent.com/u/31444102?s=400&u=c545a527aa31843e1361462e410c0f51863e8e26&v=4
-tags: [git, git trong dự án thực tế]
+slug: git-used-in-real-world-projects
+title: Git - Commands Used from Receiving a Task to Creating a PR 🎉
+author: Pin Nguyen
+tags: [git, git in real-world projects]
 date: '2024-07-29T12:00:00Z'
-image: https://images.unsplash.com/photo-1549923746-c502d488b3ea?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1351&q=80
 ---
 
-Khi nhắc tới git có khá là nhiều lệnh khác nhau, tuy nhiên trong thực tế sử dụng trong dự án thì có những lệnh nào được sử dụng nhiều nhất? 🤔 Hãy cùng mình khám phá qua bài blog này nhé! 😉
+Git offers many commands, but which ones are most commonly used in real-world projects? 🤔 As an essential tool for version control, Git helps track changes, collaborate with teams, and maintain code stability. Mastering key commands boosts productivity, reduces conflicts, and keeps the codebase clean. Let’s dive into these frequently used commands! 😉
 
 <!-- truncate-->
 
 ## Agenda
 
-## 0. Nhận task, ví dụ ở đây task có id là 123
+## 0. Receiving a Task, for example, task ID 123
 
-- Tí nữa, đọc thấy tạo nhánh có số 123 thì các bạn hiểu ngầm nó chính là `taskId` nhen.
-- Ví dụ team mình dev trên nhánh `develop`.
+- Later, when you see a branch created with the number 123, you can assume it's the `taskId`.
+- For example, in my team, we develop on the `develop` branch.
 
-## 1. Lấy code mới nhất trên branch develop
+## 1. Get the latest code from the develop branch
 
 ```sh
-git checkout develop # switch sang nhánh develop
+git checkout develop # switch to the develop branch
 
-git pull # lấy code mới nhất về
+git pull # lfetch the latest code
 ```
 
-## 2. Làm task trực tiếp trên nhánh develop
+## 2. Work on the task directly on the develop branch
 
 CODING CHANGES 😎
-<br />Sau khi code xong, nhờ review lại những thay đổi của mình, review cẩn thận, từ từ.
-<br />Review về coding convention.
-<br />Review về console log đã xoá chưa?
-<br />Review về imports (có dư thừa gì ko?)
-<br />Review về eslints
-<br />Review xem chỗ nào logic phức tạp nên add thêm comment vào.
-<br />Review xem chỗ nào code nhiều if/else quá thì refactor lại.
+<br />After finishing your code, review your changes carefully and slowly.
+<br />Review the coding conventions.
+<br />Check if all console logs are removed.
+<br />Verify if there are any redundant imports.
+<br />Check for eslint issues.
+<br />If there’s complex logic, add comments.
+<br />If there’s too much if/else logic, refactor it.
 <br />...
-<br />Review bằng VSCode hen, cho nó dễ nhìn, còn bạn muốn cool ngầu thì cứ git diff và check nhé! 😎
-<br />Hãy tập thói quen review code của bản thân cẩn thận trước khi đưa cho lead review nhé! 😉
+<br />Review your code in VSCode for better readability. If you want to look cool, use git diff and check instead! 😎
+<br />Make it a habit to review your code thoroughly before handing it to your lead for review! 😉
 
-## 3. Chuẩn bị tạo Pull Request (PR)
+## 3. Prepare to create a Pull Request (PR)
 
-> Sau khi đã code xong, giờ chuẩn bị tạo PR
-> <br />Nhưng có thể trong lúc mình làm, ai đó đã update thêm lên nhánh develop rồi.
-> <br />Nên mình phải lấy code mới nhất trên nhánh develop rồi mới apply cái changes của mình.
+> After finishing your code, it’s time to prepare a PR.
+> <br />However, while you were working, someone else might have updated the develop branch.
+> <br />NSo, you must fetch the latest code from the develop branch before applying your changes.
 
 ```sh
-git add . # chấp nhận tất cả changes
+git add . # stage all changes
 
-git stash # save tất cả code changes vào stash (kiểu nơi giữ code tạm)
+git stash  # save all code changes to stash (temporary storage)
 
-git pull  # lấy code mới nhất về
+git pull  # fetch the latest code
 ```
 
-## 4. Tạo nhánh cho code changes của mình
+## 4. Create a branch for your code changes
 
 ```sh
 git checkout -b feature/123-add-address-ui
 ```
 
-## 5. Lấy code từ trong stash ra (hùi nảy lưu bằng git stash)
+## 5. Retrieve your stashed code (saved earlier using git stash)
 
 ```sh
 git stash pop
 ```
 
-> OPTIONAL: resolve conflicts nếu có, nhớ test lại để đảm bảo code còn chạy ngon 😅
+> OPTIONAL: Resolve conflicts if there are any. Remember to test again to ensure the code still works smoothly. 😅
 
-## 6. Tạo commit, viết commit message
+## 6. Create a commit and write a commit message
 
 ```sh
-git status # xem các files thay đổi
-git add . # chấp nhận tất cả thay đổi
+git status # view the changed files
+git add . # stage all changes
 
-git commit -m "[123] Add address ui
+git commit -m "[123] Add address UI
 
 - More details about your PR
 - Keep it short and descriptive"
 ```
 
-> 📝Lưu ý chỗ chữ màu vàng
-> <br/> - Dòng đầu tiên là title
-> <br/> - Dòng thứ 2 là empty ( BẮT BUỘC )
-> <br/> - Dòng thứ 3 trở đi là dòng mô tả thêm về Pull Request của mình.
-> <br/> Convention này nó giúp bạn tự động điền title, description vào ô tương ứng trên Github, Gitlab, Bitbucket, ...
+> 📝Note the yellow text:
+> <br/> - The first line is the title.
+> <br/> - The second line is empty (MANDATORY).
+> <br/> - From the third line onward, provide additional details about your Pull Request.
+> <br/> This convention helps automatically populate the title and description fields in GitHub, GitLab, Bitbucket, etc.
 
-## 7. Push code lên remote repository (Github, Gitlab, Bitbucket, ...)
+## 7. Push code to the remote repository (GitHub, GitLab, Bitbucket, etc.)
 
 ```sh
 git push -u origin feature/123-address-ui
 ```
 
-## Cuối cùng, lên remote repo tạo PR/MR vào nhánh develop. Xong nhờ lead review thôi hehe
+## Finally, create a PR/MR into the develop branch on the remote repository and request a lead review. Done! Hehe 😄
 
-**📝LƯU Ý**
+**📝NOTES**
 
-- Tuỳ dự án sẽ có quy định tên nhánh khác nhau, nhớ follow theo team.
-- Làm việc trên nhánh nào cũng tuỳ team, `ko phải` lúc nào cũng là `develop`.
-- `Không phải` ai cũng apply cái process này giống mình, `mỗi người mỗi kiểu`.
-- Ở trên là process, mình đi làm thấy nó tốt và đã apply suốt thời gian qua, thấy hiệu quả nên chia sẻ lại cho mọi người nè, mọi người đọc tham khảo, thấy hay thì có thể vận dụng nhen 😉
+- Each project may have different branch naming conventions; follow your team’s rules.
+- The branch you work on also depends on the team; it’s not always `develop`.
+- `Not everyone` follows the same process as mine; everyone has their own `style`.
+- The process shared above is something I’ve applied during my career and found effective. I’m sharing it here for your reference; feel free to adapt it if you find it helpful. 😊
 
-CHÚC CẢ NHÀ SỨC KHOẺ VÀ HỌC TẬP TỐT NHÉ! ❤️
+WISH YOU ALL GOOD HEALTH AND SUCCESSFUL LEARNING! ❤️

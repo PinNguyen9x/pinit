@@ -25,7 +25,7 @@ export default function BlogDetailPage({ post }: BlogDetailPageProps) {
           title: `${post.title} | Pin Nguyen`,
           description: post.description,
           thumbnailUrl:
-            post.thumbnailUrl ||
+            post?.thumbnailUrl ||
             'https://images.unsplash.com/photo-1549923746-c502d488b3ea?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1351&q=80',
           url: `${process.env.HOST_URL}/blog/${post.slug}`,
         }}
@@ -64,13 +64,15 @@ export const getStaticProps: GetStaticProps<BlogDetailPageProps> = async (
   if (!post) return { notFound: true }
   // convert from markdown to html
 
+  // parse md to html
   const file = await unified()
     .use(remarkParse)
     .use(remarkToc, { heading: 'agenda.*' })
+    .use(require('remark-prism'), { theme: 'material-palenight' })
     .use(remarkRehype)
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, { behavior: 'wrap' })
-    .use(rehypeDocument, { title: 'Blog Detail Page' })
+    .use(rehypeDocument, { title: 'Blog details page' })
     .use(rehypeFormat)
     .use(rehypeStringify)
     .process(post.mdContent || '')
