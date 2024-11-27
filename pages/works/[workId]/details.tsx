@@ -59,7 +59,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   console.log('\nGET STATIC PATHS')
   // server-side code
   // build -times
-  const response = await fetch(`${process.env.API_URL}/api/works?_page=1&_limit=3`)
+  const response = await fetch(`${process.env.API_URL_NEW}/api/works?_page=1&_limit=3`)
   const data = await response.json()
 
   return {
@@ -75,7 +75,7 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
   console.log('\nGET STATIC PROPS', context.params?.workId)
   // server-side code
   // build -times
-  const response = await fetch(`${process.env.API_URL}/api/works/${workId}`)
+  const response = await fetch(`${process.env.API_URL_NEW}/api/works/${workId}`)
   const data = await response.json()
   // sanitize data
   data.fullDescription = sanitizeHtml(data.fullDescription, {
