@@ -1,4 +1,4 @@
-import { Work } from '@/models'
+import { Work, WorkStatus } from '@/models'
 import { Box, Chip, Stack, Typography } from '@mui/material'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -9,8 +9,10 @@ export interface WorkItemProps {
 }
 
 export function WorkItem({ work }: WorkItemProps) {
+  const { id, status = WorkStatus.DRAFT, slug } = work || {}
+  const href = status === WorkStatus.PUBLISHED ? `works/${id}/${slug}` : `works/${id}/details`
   return (
-    <Link href={`/works/${work.id}/details`} passHref>
+    <Link href={href} passHref>
       <Stack direction={{ sx: 'column', sm: 'row' }} spacing={2} sx={{ cursor: 'pointer' }}>
         <Box flexShrink={0} sx={{ width: { xs: '100%', sm: '246px' } }}>
           <Image

@@ -1,10 +1,16 @@
+import { TicTacToe } from '@/components/games'
 import { MainLayout } from '@/components/layouts'
-import { useAuth } from '@/hooks'
+import { SlUG } from '@/constants'
 import { Work } from '@/models'
-import { Box, Button, Chip, Container, Stack, Typography } from '@mui/material'
+import { Box, Chip, Container, Stack, Typography } from '@mui/material'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
-import sanitizeHtml from 'sanitize-html'
+
+const ColorMatching = dynamic(
+  () => import('@/components/games/color-matching').then((mod) => mod.ColorMatching),
+  { ssr: false },
+)
 
 export interface WorkDetailsProps {
   work: Work
@@ -12,24 +18,18 @@ export interface WorkDetailsProps {
 
 export default function WorkDetails({ work }: WorkDetailsProps) {
   const router = useRouter()
-  const { isLoggedIn } = useAuth()
-
+  const { slug } = router.query || {}
   return (
     <Box>
       <Container>
-        <Typography component="h1" variant="h5" mt={4}>
+        <Typography component="h1" variant="h5" mt={4} mb={4}>
           Work details
         </Typography>
         <Box>
-          <Stack mb={4} mt={2} direction="row" justifyContent="space-between" alignItems="center">
-            <Typography component="h1" variant="h5" mt={8} mb={4}>
+          <Stack mt={2} direction="row" justifyContent="space-between" alignItems="center">
+            <Typography component="h1" variant="h5" mt={4} mb={4}>
               {work.title}
             </Typography>
-            {isLoggedIn && (
-              <Button variant="contained" onClick={() => router.push(`/works/${work.id}`)}>
-                Edit
-              </Button>
-            )}
           </Stack>
           <Stack direction="row" my={2}>
             <Chip
@@ -42,11 +42,11 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
             </Typography>
           </Stack>
           <Typography>{work.shortDescription}</Typography>
-          <Box
-            component="div"
-            dangerouslySetInnerHTML={{ __html: work.fullDescription }}
-            sx={{ img: { maxWidth: '100%' } }}
-          />
+          <Box mt={6}>
+            <Typography variant="h6" gutterBottom></Typography>
+            {slug === SlUG.GAME_TIC_TAC_TOE && <TicTacToe />}
+            {slug === SlUG.GAME_COLOR_MATCHING && <ColorMatching />}
+          </Box>
         </Box>
       </Container>
     </Box>
@@ -59,31 +59,28 @@ export const getStaticPaths: GetStaticPaths = async () => {
   console.log('\nGET STATIC PATHS')
   // server-side code
   // build -times
-  const response = await fetch(`${process.env.API_URL}/api/works?_page=1&limit=3`)
+  const response = await fetch(`${process.env.API_URL_NEW}/api/works?_page=1&_limit=10`)
   const data = await response.json()
 
   return {
-    paths: data.data.map((work: Work) => ({ params: { workId: work.id } })),
-    fallback: false,
+    paths: data.data.map((work: Work) => ({ params: { workId: work.id, slug: work.slug } })),
+    fallback: 'blocking',
   }
 }
 
 export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
   context: GetStaticPropsContext,
 ) => {
-  const workId = context.params?.workId
+  const { workId } = context.params || {}
   console.log('\nGET STATIC PROPS', context.params?.workId)
   // server-side code
   // build -times
-  const response = await fetch(`${process.env.API_URL}/api/works/${workId}`)
+  const response = await fetch(`${process.env.API_URL_NEW}/api/works/${workId}`)
   const data = await response.json()
-  // sanitize data
-  data.fullDescription = sanitizeHtml(data.fullDescription, {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-  })
   return {
     props: {
       work: data,
     },
+    revalidate: 60,
   }
 }

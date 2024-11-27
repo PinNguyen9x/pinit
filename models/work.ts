@@ -1,3 +1,7 @@
+export enum WorkStatus {
+  DRAFT = 'draft',
+  PUBLISHED = 'published',
+}
 export interface Work {
   id: string
   title: string
@@ -7,6 +11,8 @@ export interface Work {
   createdAt: string
   updatedAt: string
   thumbnailUrl: string
+  status: WorkStatus
+  slug?: string
 }
 export interface WorkPayload extends Work {
   thumbnail: null | {
