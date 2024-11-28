@@ -7,9 +7,9 @@ module.exports = {
     domains: [
       'res.cloudinary.com',
       'placehold.co',
-      'js-post-api.herokuapp.com',
       'media.istockphoto.com',
       'plus.unsplash.com',
+      'images.unsplash.com',
       'json-server-blog.vercel.app',
     ],
   },
