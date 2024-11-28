@@ -1,8 +1,15 @@
-import { Facebook, Instagram, Twitter, LinkedIn } from '@mui/icons-material'
+import { Facebook, GitHub, LinkedIn, Twitter } from '@mui/icons-material'
 import { Box, Icon, Stack, Typography } from '@mui/material'
-
 export function Footer() {
   const socialLinks = [
+    {
+      icon: GitHub,
+      url: 'https://github.com/PinNguyen9x',
+    },
+    {
+      icon: LinkedIn,
+      url: 'https://www.linkedin.com/in/pin-nguyen-69123b16a/',
+    },
     {
       icon: Facebook,
       url: 'https://www.facebook.com',
@@ -10,14 +17,6 @@ export function Footer() {
     {
       icon: Twitter,
       url: 'https://www.twitter.com',
-    },
-    {
-      icon: Instagram,
-      url: 'https://www.instagram.com',
-    },
-    {
-      icon: LinkedIn,
-      url: 'https://www.linkedin.com',
     },
   ]
   return (
