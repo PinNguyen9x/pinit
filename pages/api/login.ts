@@ -29,7 +29,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Data>)
       })
       proxyResponse.on('end', () => {
         try {
-          const { accessToken, expiredAt } = JSON.parse(body)
+          const { access_token, expiredAt } = JSON.parse(body)
           const isSuccess =
             proxyResponse.statusCode &&
             proxyResponse.statusCode >= 200 &&
@@ -44,7 +44,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Data>)
           const cookies = Cookies(req, res, {
             secure: process.env.NODE_ENV !== 'development',
           })
-          cookies.set('access_token', accessToken, {
+          cookies.set('access_token', access_token, {
             httpOnly: true,
             sameSite: 'lax',
             expires: new Date(expiredAt),
