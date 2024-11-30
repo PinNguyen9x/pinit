@@ -40,7 +40,6 @@ export const getStaticProps: GetStaticProps<PostDetailPageProps> = async (
   // build -times
   const response = await fetch(`https://js-post-api.herokuapp.com/api/posts/${postId}`)
   const data = await response.json()
-  console.log('data', data)
   return {
     props: {
       post: data,
