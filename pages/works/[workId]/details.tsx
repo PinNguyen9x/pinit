@@ -1,5 +1,6 @@
+import { NoDataFound } from '@/components/common'
 import { MainLayout } from '@/components/layouts'
-import { useAuth } from '@/hooks'
+import { useAuth, useRenderTagIcon } from '@/hooks'
 import { Work } from '@/models'
 import {
   Box,
@@ -20,21 +21,8 @@ import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { AiOutlineCloudSync } from 'react-icons/ai'
-import { DiPython } from 'react-icons/di'
-import { FaDocker, FaNodeJs, FaReact } from 'react-icons/fa'
 import { MdCheckCircle, MdEdit } from 'react-icons/md'
-import {
-  SiExpress,
-  SiJavascript,
-  SiMongodb,
-  SiPython,
-  SiRedux,
-  SiTailwindcss,
-  SiTypescript,
-  SiVite,
-} from 'react-icons/si'
-import { TbJson } from 'react-icons/tb'
+import sanitizeHtml from 'sanitize-html'
 
 export interface WorkDetailsProps {
   work: Work
@@ -84,25 +72,23 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
   const [hoveredTag, setHoveredTag] = useState<number | null>(null)
   const router = useRouter()
   const { isLoggedIn } = useAuth()
-  if (!work) return null
-
-  const techStack = [
-    { icon: <FaDocker size={24} />, name: 'Docker', color: '#2496ED' },
-    { icon: <FaReact size={24} />, name: 'ReactJS', color: '#61DAFB' },
-    { icon: <FaNodeJs size={24} />, name: 'NodeJS', color: '#339933' },
-    { icon: <SiRedux size={24} />, name: 'Redux', color: '#764ABC' },
-    { icon: <SiTypescript size={24} />, name: 'TypeScript', color: '#3178C6' },
-    { icon: <SiJavascript size={24} />, name: 'JavaScript', color: '#F7DF1E' },
-    { icon: <SiExpress size={24} />, name: 'ExpressJS', color: '#000000' },
-    { icon: <SiMongodb size={24} />, name: 'MongoDB', color: '#47A248' },
-    { icon: <SiVite size={24} />, name: 'Vite', color: '#646CFF' },
-    { icon: <TbJson size={24} />, name: 'JSON Server', color: '#000000' },
-    { icon: <SiPython size={24} />, name: 'Python', color: '#3776AB' },
-    { icon: <DiPython size={24} />, name: 'Faker', color: '#7F5AB6' },
-    { icon: <SiTailwindcss size={24} />, name: 'TailwindCSS', color: '#06B6D4' },
-    { icon: <DiPython size={24} />, name: 'Gradio', color: '#FF7C00' },
-    { icon: <AiOutlineCloudSync size={24} />, name: 'Stable Diffusion', color: '#5C3EE8' },
-  ]
+  const techStack = useRenderTagIcon(work?.tagList || [])
+  const renderCheckListStack = (checkList: string[]) => {
+    if (!checkList || checkList.length === 0) return []
+    return (
+      <List dense>
+        {checkList.map((item, index) => (
+          <ListItem key={index} sx={{ padding: '4px 0' }}>
+            <ListItemIcon sx={{ minWidth: '30px' }}>
+              <MdCheckCircle style={{ color: '#4CAF50' }} />
+            </ListItemIcon>
+            <ListItemText primary={item} />
+          </ListItem>
+        ))}
+      </List>
+    )
+  }
+  if (!work) return <NoDataFound />
 
   return (
     <Container maxWidth="lg">
@@ -111,9 +97,12 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
           {work.title}
         </Typography>
 
-        <Typography variant="body1" paragraph sx={{ fontSize: '1.1rem', color: 'text.secondary' }}>
-          {work.shortDescription}
-        </Typography>
+        <Typography
+          variant="body1"
+          paragraph
+          sx={{ fontSize: '1.1rem' }}
+          dangerouslySetInnerHTML={{ __html: work.shortDescription }}
+        />
 
         <Box
           sx={{
@@ -167,62 +156,52 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
               <Typography variant="h6" gutterBottom>
                 Frontend
               </Typography>
-              <List dense>
-                {[
-                  'React Components',
-                  'Redux State Management',
-                  'TypeScript Integration',
-                  'Responsive Design',
-                ].map((item, index) => (
-                  <ListItem key={index} sx={{ padding: '4px 0' }}>
-                    <ListItemIcon sx={{ minWidth: '30px' }}>
-                      <MdCheckCircle style={{ color: '#4CAF50' }} />
-                    </ListItemIcon>
-                    <ListItemText primary={item} />
-                  </ListItem>
-                ))}
-              </List>
+              {renderCheckListStack(work?.frontEndTagList || [])}
             </Box>
-            <Box
-              sx={{
-                background: '#ffffff',
-                padding: '1rem',
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                flex: '1',
-                minWidth: '200px',
-                textAlign: 'center',
-                transition: 'transform 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-5px)',
-                },
-              }}
-            >
-              <Typography variant="h6" gutterBottom>
-                Backend
-              </Typography>
-              <Typography variant="body2">Node.js + Express API</Typography>
-            </Box>
-            <Box
-              sx={{
-                background: '#ffffff',
-                padding: '1rem',
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                flex: '1',
-                minWidth: '200px',
-                textAlign: 'center',
-                transition: 'transform 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-5px)',
-                },
-              }}
-            >
-              <Typography variant="h6" gutterBottom>
-                Database
-              </Typography>
-              <Typography variant="body2">MongoDB + Redis Cache</Typography>
-            </Box>
+            {Array.isArray(work?.backEndTagList) && work?.backEndTagList?.length > 0 && (
+              <Box
+                sx={{
+                  background: '#ffffff',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                  flex: '1',
+                  minWidth: '200px',
+                  textAlign: 'center',
+                  transition: 'transform 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-5px)',
+                  },
+                }}
+              >
+                <Typography variant="h6" gutterBottom>
+                  Backend
+                </Typography>
+                {renderCheckListStack(work?.backEndTagList)}
+              </Box>
+            )}
+            {Array.isArray(work?.dbTagList) && work?.dbTagList?.length > 0 && (
+              <Box
+                sx={{
+                  background: '#ffffff',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                  flex: '1',
+                  minWidth: '200px',
+                  textAlign: 'center',
+                  transition: 'transform 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-5px)',
+                  },
+                }}
+              >
+                <Typography variant="h6" gutterBottom>
+                  Database
+                </Typography>
+                {renderCheckListStack(work?.dbTagList)}
+              </Box>
+            )}
           </Box>
         </Box>
 
@@ -320,10 +299,12 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
   // build -times
   const response = await fetch(`${process.env.API_URL}/api/works/${workId}`)
   const data = await response.json()
-  // sanitize data
-  //   data.fullDescription = sanitizeHtml(data.fullDescription, {
-  //     allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-  //   })
+  //sanitize data
+  data.shortDescription = sanitizeHtml(data.shortDescription, {
+    allowedAttributes: {
+      span: ['style', 'class'],
+    },
+  })
   return {
     props: {
       work: data,

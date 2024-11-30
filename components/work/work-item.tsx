@@ -35,7 +35,7 @@ export function WorkItem({ work }: WorkItemProps) {
               {work.tagList.join(', ')}
             </Typography>
           </Stack>
-          <Typography>{work.shortDescription}</Typography>
+          <Typography dangerouslySetInnerHTML={{ __html: work.shortDescription }} />
         </Box>
       </Stack>
     </Link>

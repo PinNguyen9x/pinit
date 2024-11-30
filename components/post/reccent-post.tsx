@@ -4,7 +4,10 @@ import { Box } from '@mui/system'
 import dynamic from 'next/dynamic'
 import { PostCard } from './post-card'
 
-const ViewAllLink = dynamic(() => import('../common/view-all-link'), { ssr: false })
+const ViewAllButton = dynamic(
+  () => import('../common/view-all-button').then((mod) => mod.ViewAllButton),
+  { ssr: false },
+)
 interface RecentPostProps {
   postList: Post[]
 }
@@ -20,7 +23,7 @@ export function RecentPost({ postList }: RecentPostProps) {
         >
           <Typography variant="h5">Recent Posts</Typography>
 
-          <ViewAllLink />
+          <ViewAllButton />
         </Stack>
 
         <Stack

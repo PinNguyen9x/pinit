@@ -42,7 +42,6 @@ export const getStaticProps: GetStaticProps<{ posts: Post[]; works: Work[] }> = 
 
   const postsData = await postsResponse.json()
   const worksData = await worksResponse.json()
-  console.log({ postsData, worksData })
 
   return {
     props: {

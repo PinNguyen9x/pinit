@@ -135,11 +135,14 @@ export default function Header() {
           </Link>
         )}
         {isLoggedIn && (
-          <Link href={`/login?back_to=${encodeUrl(router.asPath)}`}>
-            <StyledButton key={'logout'} sx={{ color: '#fff' }} startIcon={<FaSignOutAlt />}>
-              Logout
-            </StyledButton>
-          </Link>
+          <StyledButton
+            key={'logout'}
+            sx={{ color: '#fff' }}
+            startIcon={<FaSignOutAlt />}
+            onClick={logout}
+          >
+            Logout
+          </StyledButton>
         )}
       </>
     )

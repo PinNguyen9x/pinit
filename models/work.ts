@@ -13,6 +13,9 @@ export interface Work {
   thumbnailUrl: string
   status: WorkStatus
   slug?: string
+  frontEndTagList?: string[]
+  backEndTagList?: string[]
+  dbTagList?: string[]
 }
 export interface WorkPayload extends Work {
   thumbnail: null | {

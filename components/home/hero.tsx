@@ -1,6 +1,11 @@
 import avatar from '@/images/avatar.png'
-import { Box, Button, Container, Stack, Typography } from '@mui/material'
+import { Box, Button, Container, Stack, styled, Typography } from '@mui/material'
 import Image from 'next/image'
+
+const HighlightedText = styled('span')(({ theme }) => ({
+  // color: theme.palette.primary.main,
+  fontWeight: 600,
+}))
 
 export function HeroSection() {
   return (
@@ -20,12 +25,29 @@ export function HeroSection() {
             </Typography>
             <Typography mb={5}>
               I am a full-stack developer with a passion for building scalable, high-performance
-              applications. With expertise in ReactJS, NextJS, and TypeScript for frontend
-              development, along with NodeJS, C#, and Python for backend, I specialize in creating
-              seamless, robust solutions that power modern web applications. Whether it is crafting
-              dynamic UIs, optimizing APIs, or working with data-driven architectures, I thrive on
-              pushing the boundaries of what technology can achieve. Let’s build the future, one
-              line of code at a time.
+              applications. With expertise in{' '}
+              <HighlightedText sx={{ fontWeight: 700, fontStyle: 'italic' }}>
+                ReactJs , NextJS
+              </HighlightedText>{' '}
+              and{' '}
+              <HighlightedText sx={{ fontWeight: 700, fontStyle: 'italic' }}>
+                TypeScript
+              </HighlightedText>{' '}
+              for <HighlightedText sx={{ fontWeight: 700 }}>Frontend</HighlightedText> development,
+              along with{' '}
+              <HighlightedText sx={{ fontWeight: 700, fontStyle: 'italic' }}>
+                NodeJS ,
+              </HighlightedText>
+              <HighlightedText sx={{ fontWeight: 700, fontStyle: 'italic' }}>C# </HighlightedText>
+              and{' '}
+              <HighlightedText sx={{ fontWeight: 700, fontStyle: 'italic' }}>
+                Python{' '}
+              </HighlightedText>{' '}
+              for <HighlightedText sx={{ fontWeight: 700 }}>Backend</HighlightedText> , I specialize
+              in creating seamless, robust solutions that power modern web applications. Whether it
+              is crafting dynamic UIs, optimizing APIs, or working with data-driven architectures, I
+              thrive on pushing the boundaries of what technology can achieve. Let’s build the
+              future, one line of code at a time.
             </Typography>
             <Button variant="contained" size="large">
               Download Resume
