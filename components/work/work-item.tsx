@@ -2,7 +2,6 @@ import { Work, WorkStatus } from '@/models'
 import { Box, Chip, Stack, Typography } from '@mui/material'
 import Image from 'next/image'
 import Link from 'next/link'
-import * as React from 'react'
 
 export interface WorkItemProps {
   work: Work

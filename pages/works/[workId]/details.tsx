@@ -1,5 +1,6 @@
 import { NoDataFound } from '@/components/common'
 import { MainLayout } from '@/components/layouts'
+import { WorkDetailSkeleton } from '@/components/work'
 import { useAuth, useRenderTagIcon } from '@/hooks'
 import { Work } from '@/models'
 import {
@@ -90,26 +91,29 @@ const FlowStep = styled(Box)(({ theme }) => ({
     transform: 'translateY(-5px)',
   },
 }))
+const renderLayer = (checkList: string[]) => {
+  if (!checkList || checkList.length === 0) return []
+  return (
+    <List dense>
+      {checkList.map((item, index) => (
+        <ListItem key={index}>
+          <ListItemIcon>
+            <MdCheckCircle color="#2196F3" />
+          </ListItemIcon>
+          <ListItemText primary={item} />
+        </ListItem>
+      ))}
+    </List>
+  )
+}
 
 export default function WorkDetails({ work }: WorkDetailsProps) {
   const [hoveredTag, setHoveredTag] = useState<number | null>(null)
   const router = useRouter()
   const { isLoggedIn } = useAuth()
   const techStack = useRenderTagIcon(work?.tagList || [])
-  const renderLayer = (checkList: string[]) => {
-    if (!checkList || checkList.length === 0) return []
-    return (
-      <List dense>
-        {checkList.map((item, index) => (
-          <ListItem key={index}>
-            <ListItemIcon>
-              <MdCheckCircle color="#2196F3" />
-            </ListItemIcon>
-            <ListItemText primary={item} />
-          </ListItem>
-        ))}
-      </List>
-    )
+  if (router.isFallback) {
+    return <WorkDetailSkeleton />
   }
   if (!work) return <NoDataFound />
 
@@ -251,7 +255,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
   return {
     paths: data.data.map((work: Work) => ({ params: { workId: work.id } })),
-    fallback: 'blocking',
+    fallback: true,
   }
 }
 
