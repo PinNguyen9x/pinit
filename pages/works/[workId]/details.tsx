@@ -18,10 +18,9 @@ import {
 import Zoom from '@mui/material/Zoom'
 import { styled } from '@mui/system'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
-import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { MdCheckCircle, MdEdit } from 'react-icons/md'
+import { MdArrowForward, MdCheckCircle, MdEdit } from 'react-icons/md'
 import sanitizeHtml from 'sanitize-html'
 
 export interface WorkDetailsProps {
@@ -68,19 +67,43 @@ const EditButton = styled(ActionButton)(({ theme }) => ({
   },
 }))
 
+const ArchitectureBox = styled(Box)(({ theme }) => ({
+  padding: '2rem',
+  background: '#f8f9fa',
+  borderRadius: '12px',
+  marginBottom: '2rem',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2rem',
+}))
+
+const FlowStep = styled(Box)(({ theme }) => ({
+  padding: '1.5rem',
+  background: '#ffffff',
+  borderRadius: '10px',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '1rem',
+  transition: 'transform 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+  },
+}))
+
 export default function WorkDetails({ work }: WorkDetailsProps) {
   const [hoveredTag, setHoveredTag] = useState<number | null>(null)
   const router = useRouter()
   const { isLoggedIn } = useAuth()
   const techStack = useRenderTagIcon(work?.tagList || [])
-  const renderCheckListStack = (checkList: string[]) => {
+  const renderLayer = (checkList: string[]) => {
     if (!checkList || checkList.length === 0) return []
     return (
       <List dense>
         {checkList.map((item, index) => (
-          <ListItem key={index} sx={{ padding: '4px 0' }}>
-            <ListItemIcon sx={{ minWidth: '30px' }}>
-              <MdCheckCircle style={{ color: '#4CAF50' }} />
+          <ListItem key={index}>
+            <ListItemIcon>
+              <MdCheckCircle color="#2196F3" />
             </ListItemIcon>
             <ListItemText primary={item} />
           </ListItem>
@@ -101,109 +124,51 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
           variant="body1"
           paragraph
           sx={{ fontSize: '1.1rem' }}
-          dangerouslySetInnerHTML={{ __html: work.shortDescription }}
+          dangerouslySetInnerHTML={{ __html: work.fullDescription }}
         />
 
-        <Box
-          sx={{
-            background: '#f8f9fa',
-            padding: '2rem',
-            borderRadius: '12px',
-            marginBottom: '2rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '2rem',
-          }}
-        >
-          <Box
-            sx={{
-              width: '100%',
-              height: '300px',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              position: 'relative',
-            }}
-          >
-            <Image
-              src={work?.thumbnailUrl}
-              alt="Project Architecture Diagram"
-              layout="fill"
-              objectFit="cover"
-            />
-          </Box>
+        <ArchitectureBox>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: '600' }}>
+            Architecture Flow
+          </Typography>
 
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '1rem',
-            }}
-          >
-            <Box
-              sx={{
-                background: '#ffffff',
-                padding: '1rem',
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                flex: '1',
-                minWidth: '200px',
-                textAlign: 'left',
-              }}
-            >
-              <Typography variant="h6" gutterBottom>
-                Frontend
-              </Typography>
-              {renderCheckListStack(work?.frontEndTagList || [])}
-            </Box>
-            {Array.isArray(work?.backEndTagList) && work?.backEndTagList?.length > 0 && (
-              <Box
-                sx={{
-                  background: '#ffffff',
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                  flex: '1',
-                  minWidth: '200px',
-                  textAlign: 'center',
-                  transition: 'transform 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-5px)',
-                  },
-                }}
-              >
-                <Typography variant="h6" gutterBottom>
-                  Backend
-                </Typography>
-                {renderCheckListStack(work?.backEndTagList)}
-              </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {Array.isArray(work.frontEndTagList) && work.frontEndTagList.length > 0 && (
+              <FlowStep>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Frontend Layer
+                  </Typography>
+                  {renderLayer(work.frontEndTagList || [])}
+                </Box>
+                <MdArrowForward size={24} color="#2196F3" />
+              </FlowStep>
             )}
-            {Array.isArray(work?.dbTagList) && work?.dbTagList?.length > 0 && (
-              <Box
-                sx={{
-                  background: '#ffffff',
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                  flex: '1',
-                  minWidth: '200px',
-                  textAlign: 'center',
-                  transition: 'transform 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-5px)',
-                  },
-                }}
-              >
-                <Typography variant="h6" gutterBottom>
-                  Database
-                </Typography>
-                {renderCheckListStack(work?.dbTagList)}
-              </Box>
+            {Array.isArray(work.backEndTagList) && work.backEndTagList.length > 0 && (
+              <FlowStep>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h6" gutterBottom>
+                    API Layer
+                  </Typography>
+                  {renderLayer(work.backEndTagList || [])}
+                </Box>
+                <MdArrowForward size={24} color="#2196F3" />
+              </FlowStep>
+            )}
+
+            {Array.isArray(work.dbTagList) && work.dbTagList.length > 0 && (
+              <FlowStep>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Data Layer
+                  </Typography>
+                  {renderLayer(work.dbTagList || [])}
+                </Box>
+                <MdArrowForward size={24} color="#2196F3" />
+              </FlowStep>
             )}
           </Box>
-        </Box>
+        </ArchitectureBox>
 
         <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
           Technical Stack
@@ -300,7 +265,7 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
   const response = await fetch(`${process.env.API_URL}/api/works/${workId}`)
   const data = await response.json()
   //sanitize data
-  data.shortDescription = sanitizeHtml(data.shortDescription, {
+  data.fullDescription = sanitizeHtml(data.fullDescription, {
     allowedAttributes: {
       span: ['style', 'class'],
     },

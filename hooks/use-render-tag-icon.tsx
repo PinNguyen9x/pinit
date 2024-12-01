@@ -14,6 +14,8 @@ import {
   SiFirebase,
   SiJest,
   SiTestinglibrary,
+  SiReactquery,
+  SiNextdotjs,
 } from 'react-icons/si'
 import { TbJson } from 'react-icons/tb'
 
@@ -64,6 +66,8 @@ const techStack: Record<
   },
   Jest: { icon: <SiJest size={24} />, name: 'Jest', color: '#C21325' },
   Firebase: { icon: <SiFirebase size={24} />, name: 'Firebase', color: '#FFCA28' },
+  'React Query': { icon: <SiReactquery size={24} />, name: 'React Query', color: '#FF4154' },
+  NextJS: { icon: <SiNextdotjs size={24} />, name: 'NextJS', color: '#000000' },
   default: { icon: <FaReact size={24} />, color: '#61DAFB', name: 'ReactJS' },
 }
 export function useRenderTagIcon(tagList: string[]) {
