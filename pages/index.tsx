@@ -1,11 +1,18 @@
 import { Seo } from '@/components/common'
-import { HeroSection } from '@/components/home'
 import { MainLayout } from '@/components/layouts'
 import { RecentPost } from '@/components/post'
 import { FeatureWork } from '@/components/work/feature-work'
 import { Box } from '@mui/material'
 import { GetStaticProps } from 'next'
 import { NextPageWithLayout, Post, Work } from '../models'
+import dynamic from 'next/dynamic'
+
+const HeroSection = dynamic(
+  () => import('../components/home/hero').then((mod) => mod.HeroSection),
+  {
+    ssr: false,
+  },
+)
 
 interface HomeProps {
   posts?: Post[]
