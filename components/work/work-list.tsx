@@ -1,6 +1,7 @@
 import { Work } from '@/models'
 import { Box, Divider } from '@mui/material'
 import { Fragment } from 'react'
+import { NoDataFound } from '../common'
 import { WorkItem } from './work-item'
 import { WorkSkeleton } from './work-skeleton'
 
@@ -21,7 +22,7 @@ export function WorkList({ workList, isLoading }: WorkListProps) {
         ))}
       </Box>
     )
-  if (workList.length === 0) return <p>No data</p>
+  if (workList.length === 0) return <NoDataFound />
   return (
     <Box>
       {workList.map((work) => (
