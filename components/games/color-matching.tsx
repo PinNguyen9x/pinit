@@ -49,7 +49,7 @@ const ColorBlock = styled(Paper)(
   }),
 )
 
-const GameColorMatching = () => {
+export const GameColorMatching = () => {
   const [colors, setColors] = useState<any[]>([])
   const [flippedCards, setFlippedCards] = useState<any[]>([])
   const [matchedPairs, setMatchedPairs] = useState<any[]>([])
@@ -228,5 +228,3 @@ const GameColorMatching = () => {
     </Container>
   )
 }
-
-export default GameColorMatching

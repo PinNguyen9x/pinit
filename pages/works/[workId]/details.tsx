@@ -250,7 +250,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   console.log('\nGET STATIC PATHS')
   // server-side code
   // build -times
-  const response = await fetch(`${process.env.API_URL}/api/works?_page=1&_limit=3`)
+  const response = await fetch(`${process.env.API_URL}/api/works?_page=1&_limit=10`)
   const data = await response.json()
 
   return {

@@ -58,7 +58,7 @@ const RuleDetail = styled(Typography)({
   fontSize: '0.9rem',
 })
 
-const GomeTicTacToe = () => {
+export const GomeTicTacToe = () => {
   const [board, setBoard] = useState(Array(9).fill(null))
   const [isXNext, setIsXNext] = useState(true)
   const [winner, setWinner] = useState(null)
@@ -286,5 +286,3 @@ const GomeTicTacToe = () => {
     </Container>
   )
 }
-
-export default GomeTicTacToe
