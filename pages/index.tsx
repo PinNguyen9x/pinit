@@ -1,29 +1,34 @@
 import { Seo } from '@/components/common'
+import { HeroSection } from '@/components/home'
 import { MainLayout } from '@/components/layouts'
+import { RecentPost } from '@/components/post'
+import { FeatureWork } from '@/components/work'
 import { Box } from '@mui/material'
 import { GetStaticProps } from 'next'
 import { NextPageWithLayout, Post, Work } from '../models'
-import dynamic from 'next/dynamic'
 
-const HeroSection = dynamic(() => import('@/components/home/hero').then((mod) => mod.HeroSection), {
-  ssr: false,
-})
-const RecentPost = dynamic(
-  () => import('@/components/post/reccent-post').then((mod) => mod.RecentPost),
-  {
-    ssr: false,
-  },
-)
-const FeatureWork = dynamic(
-  () => import('@/components/work/feature-work').then((mod) => mod.FeatureWork),
-  {
-    ssr: false,
-  },
-)
+// const HeroSection = dynamic(() => import('@/components/home/hero').then((mod) => mod.HeroSection), {
+//   ssr: false,
+// })
+// const RecentPost = dynamic(
+//   () => import('@/components/post/reccent-post').then((mod) => mod.RecentPost),
+//   {
+//     ssr: false,
+//   },
+// )
+// const FeatureWork = dynamic(
+//   () => import('@/components/work/feature-work').then((mod) => mod.FeatureWork),
+//   {
+//     ssr: false,
+//   },
+// )
 
-interface HomeProps {}
+interface HomeProps {
+  posts?: Post[]
+  works?: Work[]
+}
 
-const Home: NextPageWithLayout = () => {
+const Home: NextPageWithLayout = ({ posts, works }: HomeProps) => {
   return (
     <Box>
       <Seo
@@ -37,28 +42,28 @@ const Home: NextPageWithLayout = () => {
         }}
       />
       <HeroSection />
-      <RecentPost />
-      <FeatureWork />
+      <RecentPost postList={posts || []} />
+      <FeatureWork workList={works || []} />
     </Box>
   )
 }
 
 Home.Layout = MainLayout
 
-// export const getStaticProps: GetStaticProps<{}> = async () => {
-//   const [postsResponse, worksResponse] = await Promise.all([
-//     fetch(`${process.env.API_URL}/api/posts?_page=1&_limit=2`),
-//     fetch(`${process.env.API_URL}/api/works?_page=1&_limit=3`),
-//   ])
-//   const postsData = await postsResponse.json()
-//   const worksData = await worksResponse.json()
-//   return {
-//     props: {
-//       posts: postsData.data || [],
-//       works: worksData.data || [],
-//     },
-//     revalidate: 60, // ISR: Revalidate every 60 seconds
-//   }
-// }
+export const getStaticProps: GetStaticProps<{}> = async () => {
+  const [postsResponse, worksResponse] = await Promise.all([
+    fetch(`${process.env.API_URL}/api/posts?_page=1&_limit=2`),
+    fetch(`${process.env.API_URL}/api/works?_page=1&_limit=3`),
+  ])
+  const [postsData, worksData] = await Promise.all([postsResponse.json(), worksResponse.json()])
+
+  return {
+    props: {
+      posts: postsData.data || [],
+      works: worksData.data || [],
+    },
+    revalidate: 60, // ISR: Revalidate every 60 seconds
+  }
+}
 
 export default Home
