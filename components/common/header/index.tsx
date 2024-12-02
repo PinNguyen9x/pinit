@@ -81,7 +81,7 @@ export default function Header() {
           >
             {routeList.map((item) => (
               <MenuItem key={item.label} aria-label={`Navigate to ${item.label}`}>
-                <Link href={item.path}>
+                <Link href={item.path} onClick={handleMobileMenuClose}>
                   <Box display="flex" alignItems="center" gap={1}>
                     {item.icon}
                     <Typography>{item.label}</Typography>
@@ -91,7 +91,10 @@ export default function Header() {
             ))}
             {!isLoggedIn && (
               <MenuItem key="login" aria-label={`Navigate to Login`}>
-                <Link href={`/login?back_to=${encodeUrl(router.asPath)}`}>
+                <Link
+                  href={`/login?back_to=${encodeUrl(router.asPath)}`}
+                  onClick={handleMobileMenuClose}
+                >
                   <Box display="flex" alignItems="center" gap={1}>
                     <FaUser />
                     <Typography>Login</Typography>
