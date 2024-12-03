@@ -14,7 +14,6 @@ import {
   Typography,
 } from '@mui/material'
 import { styled } from '@mui/system'
-import { useState } from 'react'
 import { FaBriefcase, FaGraduationCap, FaHeart, FaPhone, FaUserCircle } from 'react-icons/fa'
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -27,24 +26,24 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 }))
 
 function AboutPage() {
-  const [personalInfo, setPersonalInfo] = useState({
+  const personalInfo = {
     name: 'Pin Nguyen',
     birthYear: '1995',
     gender: 'Male',
     hometown: 'Ho Chi Minh City',
     phone: '+84 0906901419',
-  })
+  }
 
-  const [education] = useState([
+  const education = [
     {
       degree: 'Bachelor of Engineering',
       institution: 'University of Science VNUHCM',
       major: 'Software Engineering',
       year: '2013-2017',
     },
-  ])
+  ]
 
-  const [workExperience] = useState([
+  const workExperience = [
     {
       company: 'Aperia Solutions',
       position: 'Senior Frontend Developer',
@@ -69,10 +68,10 @@ function AboutPage() {
       duration: '2017',
       products: ['Insurance'],
     },
-  ])
+  ]
 
-  const [hobbies] = useState(['Coding', 'Reading', 'Traveling', 'Photography'])
-  const [programmingLanguages] = useState(['JavaScript', 'Python', 'Java', 'TypeScript'])
+  const hobbies = ['Coding', 'Reading', 'Traveling', 'Photography']
+  const programmingLanguages = ['JavaScript', 'Python', 'Java', 'TypeScript']
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
