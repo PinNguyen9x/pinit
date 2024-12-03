@@ -18,16 +18,16 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { FaBars, FaBlog, FaBriefcase, FaHome, FaSignOutAlt, FaUser } from 'react-icons/fa'
 
-const gradients = [
-  'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-  'linear-gradient(45deg, #FF4081 30%, #FF79B0 90%)',
-  'linear-gradient(45deg, #9C27B0 30%, #E040FB 90%)',
-  // 'linear-gradient(45deg, #4CAF50 30%, #8BC34A 90%)',
-  // 'linear-gradient(45deg, #FF9800 30%, #FFC107 90%)',
-]
+// const gradients = [
+//   'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+//   'linear-gradient(45deg, #FF4081 30%, #FF79B0 90%)',
+//   'linear-gradient(45deg, #9C27B0 30%, #E040FB 90%)',
+//   'linear-gradient(45deg, #4CAF50 30%, #8BC34A 90%)',
+//   'linear-gradient(45deg, #FF9800 30%, #FFC107 90%)',
+// ]
 
 const StyledAppBar = styled(AppBar)(({ backgroundIndex }: { backgroundIndex: number }) => ({
-  background: gradients[backgroundIndex],
+  background: 'linear-gradient(45deg, #9C27B0 30%, #E040FB 90%)',
   boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',
   transition: 'background 0.5s ease-in-out',
 }))
@@ -81,13 +81,13 @@ export default function Header() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBackgroundIndex((prevIndex) => (prevIndex + 1) % gradients.length)
-    }, 5000)
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setBackgroundIndex((prevIndex) => (prevIndex + 1) % gradients.length)
+  //   }, 5000)
 
-    return () => clearInterval(interval)
-  }, [])
+  //   return () => clearInterval(interval)
+  // }, [])
 
   const handleMobileMenuOpen = (event: any) => {
     setMobileMenuAnchor(event.currentTarget)
