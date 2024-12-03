@@ -217,14 +217,14 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
           <DemoButton
             variant="contained"
             aria-label="View project demo"
-            onClick={() => console.log('Demo clicked')}
+            onClick={() => window.open(work?.linkDemo || '', '_blank')}
           >
             View Demo
           </DemoButton>
           <GithubButton
             variant="contained"
             aria-label="View source code on GitHub"
-            onClick={() => window.open('https://github.com/username/repo', '_blank')}
+            onClick={() => window.open(work?.linkSource || '', '_blank')}
           >
             Source Code
           </GithubButton>

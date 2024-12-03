@@ -16,6 +16,8 @@ export interface Work {
   frontEndTagList?: string[]
   backEndTagList?: string[]
   dbTagList?: string[]
+  linkDemo?: string
+  linkSource?: string
 }
 export interface WorkPayload extends Work {
   thumbnail: null | {
