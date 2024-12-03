@@ -1,4 +1,4 @@
-import { Facebook, GitHub, LinkedIn, Twitter } from '@mui/icons-material'
+import { GitHub, LinkedIn } from '@mui/icons-material'
 import { Box, Icon, Stack, Typography } from '@mui/material'
 export function Footer() {
   const socialLinks = [
@@ -10,14 +10,14 @@ export function Footer() {
       icon: LinkedIn,
       url: 'https://www.linkedin.com/in/pin-nguyen-69123b16a/',
     },
-    {
-      icon: Facebook,
-      url: 'https://www.facebook.com',
-    },
-    {
-      icon: Twitter,
-      url: 'https://www.twitter.com',
-    },
+    // {
+    //   icon: Facebook,
+    //   url: 'https://www.facebook.com',
+    // },
+    // {
+    //   icon: Twitter,
+    //   url: 'https://www.twitter.com',
+    // },
   ]
   return (
     <Box component="footer" sx={{ py: 3, px: 2, textAlign: 'center' }}>
