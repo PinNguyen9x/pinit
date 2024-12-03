@@ -77,9 +77,6 @@ function AboutPage() {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ mb: 4, textAlign: 'center' }}>
         <FaUserCircle size={64} color="#1976d2" />
-        <Typography variant="h3" component="h1" gutterBottom>
-          About Me
-        </Typography>
       </Box>
 
       <Grid container spacing={3}>
