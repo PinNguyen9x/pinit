@@ -189,7 +189,10 @@ export default function Header() {
     <>
       <StyledAppBar position="static" backgroundIndex={backgroundIndex}>
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', flex: 1 }}
+            onClick={() => router.push('/about')}
+          >
             <LogoText variant="h4">Nip</LogoText>
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>{renderNavigationItems()}</Box>
