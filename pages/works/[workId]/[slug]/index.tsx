@@ -27,7 +27,9 @@ export const getStaticPaths: GetStaticPaths = async () => {
   // server-side code
   // build -times
   const response = await fetch(
-    `${process.env.API_URL}/api/works?status=published&_page=1&_limit=10`,
+    `${
+      process.env.API_URL ?? 'https://json-server-blog.vercel.app'
+    }/api/works?status=published&_page=1&_limit=10`,
   )
   const data = await response.json()
 
@@ -49,7 +51,11 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
       notFound: true,
     }
   }
-  const response = await fetch(`${process.env.API_URL}/api/works/${workId}?slug=${slug}`)
+  const response = await fetch(
+    `${
+      process.env.API_URL ?? 'https://json-server-blog.vercel.app'
+    }/api/works/${workId}?slug=${slug}`,
+  )
   const data = await response.json()
   return {
     props: {

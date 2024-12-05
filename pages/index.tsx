@@ -52,8 +52,12 @@ Home.Layout = MainLayout
 
 export const getStaticProps: GetStaticProps<{}> = async () => {
   const [postsResponse, worksResponse] = await Promise.all([
-    fetch(`${process.env.API_URL}/api/posts?_page=1&_limit=2`),
-    fetch(`${process.env.API_URL}/api/works?_page=1&_limit=3`),
+    fetch(
+      `${process.env.API_URL ?? 'https://json-server-blog.vercel.app'}/api/posts?_page=1&_limit=2`,
+    ),
+    fetch(
+      `${process.env.API_URL ?? 'https://json-server-blog.vercel.app'}/api/works?_page=1&_limit=3`,
+    ),
   ])
   const [postsData, worksData] = await Promise.all([postsResponse.json(), worksResponse.json()])
 

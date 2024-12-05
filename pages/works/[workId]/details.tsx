@@ -250,7 +250,9 @@ export const getStaticPaths: GetStaticPaths = async () => {
   console.log('\nGET STATIC PATHS')
   // server-side code
   // build -times
-  const response = await fetch(`${process.env.API_URL}/api/works?_page=1&_limit=10`)
+  const response = await fetch(
+    `${process.env.API_URL ?? 'https://json-server-blog.vercel.app'}/api/works?_page=1&_limit=10`,
+  )
   const data = await response.json()
 
   return {
@@ -266,7 +268,9 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
   console.log('\nGET STATIC PROPS', context.params?.workId)
   // server-side code
   // build -times
-  const response = await fetch(`${process.env.API_URL}/api/works/${workId}`)
+  const response = await fetch(
+    `${process.env.API_URL ?? 'https://json-server-blog.vercel.app'}/api/works/${workId}`,
+  )
   const data = await response.json()
   //sanitize data
   data.fullDescription = sanitizeHtml(data.fullDescription, {
