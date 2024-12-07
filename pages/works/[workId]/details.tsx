@@ -214,20 +214,18 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
         </Grid>
 
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-          <DemoButton
-            variant="contained"
-            aria-label="View project demo"
-            onClick={() => window.open(work?.linkDemo || '', '_blank')}
-          >
-            View Demo
-          </DemoButton>
-          <GithubButton
-            variant="contained"
-            aria-label="View source code on GitHub"
-            onClick={() => window.open(work?.linkSource || '', '_blank')}
-          >
-            Source Code
-          </GithubButton>
+          <Box component="a" href={work?.linkDemo} target="_blank" rel="noopener noreferrer">
+            <DemoButton variant="contained" aria-label="View project demo">
+              View Demo
+            </DemoButton>
+          </Box>
+
+          <Box component="a" href={work?.linkSource} target="_blank" rel="noopener noreferrer">
+            <GithubButton variant="contained" aria-label="View source code on GitHub">
+              Source Code
+            </GithubButton>
+          </Box>
+
           {isLoggedIn && (
             <EditButton
               variant="contained"
