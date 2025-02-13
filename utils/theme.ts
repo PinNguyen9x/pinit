@@ -88,6 +88,15 @@ export let theme = createTheme({
         },
       ],
     },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          '&:hover': {
+            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+          },
+        },
+      },
+    },
   },
 })
 
