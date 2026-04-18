@@ -2,8 +2,11 @@
 slug: enhance-frontend-performance-critical-rendering-path
 title: Enhance frontend performance - Critical Rendering Path (CRP)
 author: Pin Nguyen
-tags: [enhance-performance, Optimize image, Cache, Lazy Loading]
+author_title: Software Developer
+author_image_url: https://avatars.githubusercontent.com/Pinnguyen
+tags: [ReactJS, JavaScript, TypeScript]
 date: '2024-07-29T12:00:00Z'
+image: https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&auto=format&fit=crop&q=80
 ---
 
 Vấn đề cốt lõi của tối ưu Frontend là làm sao để trình duyệt tải và hiển thị nội dung trang web một cách nhanh chóng nhất, từ đó mang lại trải nghiệm tốt cho người dùng. Để giải quyết vấn đề này, chúng ta cần phối hợp nhiều kỹ thuật khác nhau, tập trung vào ba yếu tố chính: giảm dung lượng tài nguyên (như HTML, CSS, JavaScript, hình ảnh) bằng cách minification, tree shaking, code splitting, nén file; tận dụng bộ nhớ đệm (cache) của trình duyệt và CDN để lưu trữ và tái sử dụng tài nguyên, giảm số lượng request; và tối ưu hóa cách tải và thực thi code bằng cách sử dụng async, defer, lazy loading, preload, prefetch. Khi giải quyết được ba yếu tố này, tốc độ tải trang sẽ được cải thiện đáng kể, giúp người dùng truy cập và tương tác với trang web một cách mượt mà và hiệu quả hơn.

@@ -4,13 +4,14 @@ module.exports = {
   images: {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    domains: [
-      'res.cloudinary.com',
-      'placehold.co',
-      'media.istockphoto.com',
-      'plus.unsplash.com',
-      'images.unsplash.com',
-      'json-server-blog.vercel.app',
+    remotePatterns: [
+      { hostname: 'res.cloudinary.com' },
+      { hostname: 'placehold.co' },
+      { hostname: 'media.istockphoto.com' },
+      { hostname: 'plus.unsplash.com' },
+      { hostname: 'images.unsplash.com' },
+      { hostname: 'json-server-blog.vercel.app' },
+      { hostname: 'avatars.githubusercontent.com' },
     ],
   },
 }

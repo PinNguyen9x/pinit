@@ -3,22 +3,22 @@ import { styled } from '@mui/system'
 import Link from 'next/link'
 import { FiArrowRight } from 'react-icons/fi'
 
-const StyledButton = styled(Button)(({ theme }) => ({
-  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+const StyledButton = styled(Button)(() => ({
+  background: 'linear-gradient(45deg, #dc2626 30%, #f97316 90%)',
   borderRadius: '25px',
   border: 0,
   color: 'white',
   padding: '12px 24px',
-  boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',
+  boxShadow: '0 3px 5px 2px rgba(220, 38, 38, .3)',
   transition: 'all 0.3s ease-in-out',
   fontSize: '16px',
   fontWeight: 600,
   textTransform: 'none',
   minWidth: '150px',
   '&:hover': {
-    background: 'linear-gradient(45deg, #21CBF3 30%, #2196F3 90%)',
+    background: 'linear-gradient(45deg, #f97316 30%, #dc2626 90%)',
     transform: 'translateY(-2px)',
-    boxShadow: '0 6px 10px 2px rgba(33, 203, 243, .3)',
+    boxShadow: '0 6px 10px 2px rgba(220, 38, 38, .3)',
   },
   '@media (max-width: 600px)': {
     fontSize: '14px',

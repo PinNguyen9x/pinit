@@ -1,3 +1,4 @@
+import React from 'react'
 import { AiOutlineCloudSync } from 'react-icons/ai'
 import { DiPython } from 'react-icons/di'
 import { FaDocker, FaNodeJs, FaReact } from 'react-icons/fa'
@@ -22,7 +23,7 @@ import { TbJson } from 'react-icons/tb'
 const techStack: Record<
   string,
   {
-    icon: JSX.Element
+    icon: React.JSX.Element
     color: string
     name: string
   }

@@ -1,45 +1,73 @@
 import { MainLayout } from '@/components/layouts'
 import { PostItem } from '@/components/post'
-import { Box, Container, Divider } from '@mui/material'
+import { Post } from '@/models'
+import { Box, Container, Stack, Typography, useTheme } from '@mui/material'
 import { GetStaticProps, GetStaticPropsContext } from 'next'
 import Link from 'next/link'
 import { getPostList } from '../../utils/posts'
 
 export interface BlogPageProps {
-  posts: any[]
+  posts: Post[]
+}
+
+function BlogPageHeader() {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+
+  return (
+    <Box
+      pt={{ xs: 6, md: 10 }}
+      pb={5}
+      sx={{
+        borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+        mb: 5,
+      }}
+    >
+      <Typography
+        variant="overline"
+        sx={{
+          color: 'primary.main',
+          fontWeight: 600,
+          letterSpacing: '0.1em',
+          fontSize: '0.68rem',
+          display: 'block',
+          mb: 1,
+        }}
+      >
+        Writing
+      </Typography>
+      <Typography variant="h3" fontWeight={700} letterSpacing="-0.03em" mb={1.5}>
+        Blog
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 520 }}>
+        Thoughts on software development, web technologies, and engineering.
+      </Typography>
+    </Box>
+  )
 }
 
 export default function BlogPage({ posts }: BlogPageProps) {
   return (
     <Box>
-      <Container>
-        <h1>Blogs</h1>
-        <Box component="ul" sx={{ p: 0, listStyle: 'none' }}>
-          {posts.map((x) => (
-            <li key={x.id}>
-              <Link href={`/blog/${x.slug}`}>
-                <a>
-                  <PostItem post={x} />
-                </a>
-                <Divider sx={{ my: 3 }} />
-              </Link>
-            </li>
+      <Container maxWidth="md">
+        <BlogPageHeader />
+        <Stack spacing={2} pb={10}>
+          {posts.map((post) => (
+            <Link key={post.id} href={`/blog/${post.slug}`} style={{ textDecoration: 'none' }}>
+              <PostItem post={post} />
+            </Link>
           ))}
-        </Box>
+        </Stack>
       </Container>
     </Box>
   )
 }
+
 BlogPage.Layout = MainLayout
 
 export const getStaticProps: GetStaticProps<BlogPageProps> = async (
-  context: GetStaticPropsContext,
+  _context: GetStaticPropsContext,
 ) => {
-  // server-side code
-  // build -times
-  // const response = await fetch('https://js-post-api.herokuapp.com/api/posts?_page=1')
-  // const data = await response.json()
-  // convert mardown file into list of javascript object
   const postList = await getPostList()
   return {
     props: {

@@ -6,104 +6,101 @@ import { Work } from '@/models'
 import {
   Box,
   Button,
+  Chip,
   Container,
   Grid,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Paper,
+  Stack,
   Tooltip,
   Typography,
+  Zoom,
+  useTheme,
 } from '@mui/material'
-import Zoom from '@mui/material/Zoom'
-import { styled } from '@mui/system'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { MdArrowForward, MdCheckCircle, MdEdit } from 'react-icons/md'
+import { MdArrowForward, MdCheckCircle, MdEdit, MdLaunch } from 'react-icons/md'
+import { FaGithub } from 'react-icons/fa'
 import sanitizeHtml from 'sanitize-html'
 
 export interface WorkDetailsProps {
   work: Work
 }
 
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: '2rem',
-  margin: '2rem 0',
-  borderRadius: '16px',
-  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-}))
+interface LayerCardProps {
+  title: string
+  items: string[]
+  index: number
+  isLast: boolean
+}
 
-const ActionButton = styled(Button)(({ theme }) => ({
-  padding: '0.8rem 2rem',
-  borderRadius: '25px',
-  textTransform: 'none',
-  fontSize: '1.1rem',
-  fontWeight: '600',
-  margin: '0 0.5rem',
-}))
-
-const DemoButton = styled(ActionButton)(({ theme }) => ({
-  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-  boxShadow: '0 3px 15px rgba(33, 150, 243, 0.3)',
-  '&:hover': {
-    background: 'linear-gradient(45deg, #1976D2 30%, #00B4D8 90%)',
-  },
-}))
-
-const GithubButton = styled(ActionButton)(({ theme }) => ({
-  background: 'linear-gradient(45deg, #24292e 30%, #404448 90%)',
-  boxShadow: '0 3px 15px rgba(36, 41, 46, 0.3)',
-  '&:hover': {
-    background: 'linear-gradient(45deg, #1b1f23 30%, #2f3337 90%)',
-  },
-}))
-
-const EditButton = styled(ActionButton)(({ theme }) => ({
-  background: 'linear-gradient(45deg, #FF6B6B 30%, #FF8E53 90%)',
-  boxShadow: '0 3px 15px rgba(255, 107, 107, 0.3)',
-  '&:hover': {
-    background: 'linear-gradient(45deg, #FF5252 30%, #FF7043 90%)',
-  },
-}))
-
-const ArchitectureBox = styled(Box)(({ theme }) => ({
-  padding: '2rem',
-  background: '#f8f9fa',
-  borderRadius: '12px',
-  marginBottom: '2rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '2rem',
-}))
-
-const FlowStep = styled(Box)(({ theme }) => ({
-  padding: '1.5rem',
-  background: '#ffffff',
-  borderRadius: '10px',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1rem',
-  transition: 'transform 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-5px)',
-  },
-}))
-const renderLayer = (checkList: string[]) => {
-  if (!checkList || checkList.length === 0) return []
+function LayerCard({ title, items, index, isLast }: LayerCardProps) {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
   return (
-    <List dense>
-      {checkList.map((item, index) => (
-        <ListItem key={index}>
-          <ListItemIcon>
-            <MdCheckCircle color="#2196F3" />
-          </ListItemIcon>
-          <ListItemText primary={item} />
-        </ListItem>
-      ))}
-    </List>
+    <Box
+      sx={{
+        position: 'relative',
+        p: { xs: 2.5, md: 3 },
+        bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+        transition: 'border-color 0.2s, background-color 0.2s',
+        '&:hover': {
+          borderColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.18)',
+          bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.035)',
+        },
+      }}
+    >
+      <Stack direction="row" alignItems="center" spacing={1.5} mb={1.5}>
+        <Box
+          sx={{
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            bgcolor: 'primary.main',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            flexShrink: 0,
+          }}
+        >
+          {index + 1}
+        </Box>
+        <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+          {title}
+        </Typography>
+      </Stack>
+      <Stack spacing={0.75} pl={0.5}>
+        {items.map((item) => (
+          <Stack key={item} direction="row" alignItems="center" spacing={1.25}>
+            <MdCheckCircle size={16} color={theme.palette.primary.main} style={{ flexShrink: 0 }} />
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.9rem' }}>
+              {item}
+            </Typography>
+          </Stack>
+        ))}
+      </Stack>
+      {!isLast && (
+        <Box
+          aria-hidden
+          sx={{
+            position: 'absolute',
+            left: '50%',
+            bottom: -18,
+            transform: 'translateX(-50%) rotate(90deg)',
+            color: theme.palette.primary.main,
+            display: 'flex',
+          }}
+        >
+          <MdArrowForward size={20} />
+        </Box>
+      )}
+    </Box>
   )
 }
 
@@ -111,133 +108,220 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
   const [hoveredTag, setHoveredTag] = useState<number | null>(null)
   const router = useRouter()
   const { isLoggedIn } = useAuth()
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
   const techStack = useRenderTagIcon(work?.tagList || [])
-  if (router.isFallback) {
-    return <WorkDetailSkeleton />
-  }
+
+  if (router.isFallback) return <WorkDetailSkeleton />
   if (!work) return <NoDataFound />
 
+  const layers = [
+    { title: 'Frontend Layer', items: work.frontEndTagList || [] },
+    { title: 'API Layer', items: work.backEndTagList || [] },
+    { title: 'Data Layer', items: work.dbTagList || [] },
+  ].filter((l) => Array.isArray(l.items) && l.items.length > 0)
+
+  const sectionHeading = {
+    position: 'relative',
+    pl: 1.5,
+    fontWeight: 700,
+    fontSize: { xs: '1.15rem', md: '1.3rem' },
+    mb: 3,
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      left: 0,
+      top: '0.15em',
+      bottom: '0.15em',
+      width: '3px',
+      bgcolor: 'primary.main',
+      borderRadius: '2px',
+    },
+  } as const
+
   return (
-    <Container maxWidth="lg">
-      <StyledPaper elevation={0}>
-        <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-          {work.title}
-        </Typography>
+    <Container maxWidth="lg" sx={{ pt: { xs: 10, md: 12 }, pb: { xs: 8, md: 12 } }}>
+      <Box mb={4}>
+        <Link href="/works" style={{ textDecoration: 'none' }}>
+          <Stack
+            component="span"
+            direction="row"
+            alignItems="center"
+            spacing={0.75}
+            sx={{
+              display: 'inline-flex',
+              color: 'text.secondary',
+              cursor: 'pointer',
+              '&:hover': { color: 'text.primary' },
+              transition: 'color 0.15s',
+            }}
+          >
+            <ArrowBackIcon sx={{ fontSize: 15 }} />
+            <Typography variant="body2" fontWeight={500} fontSize="0.875rem">
+              Back to Works
+            </Typography>
+          </Stack>
+        </Link>
+      </Box>
 
-        <Typography
-          variant="body1"
-          paragraph
-          sx={{ fontSize: '1.1rem' }}
-          dangerouslySetInnerHTML={{ __html: work.fullDescription }}
-        />
+      <Typography
+        component="h1"
+        fontWeight={800}
+        letterSpacing="-0.03em"
+        lineHeight={1.2}
+        mb={2}
+        sx={{ fontSize: { xs: '1.85rem', md: '2.5rem' } }}
+      >
+        {work.title}
+      </Typography>
 
-        <ArchitectureBox>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: '600' }}>
+      <Box
+        sx={{
+          color: 'text.secondary',
+          fontSize: '1.0625rem',
+          lineHeight: 1.8,
+          mb: 6,
+          '& strong': { color: 'text.primary', fontWeight: 700 },
+          '& em': { color: 'text.primary' },
+          '& p': { m: 0, mb: '1em' },
+        }}
+        dangerouslySetInnerHTML={{ __html: work.fullDescription }}
+      />
+
+      {layers.length > 0 && (
+        <Box mb={6}>
+          <Typography component="h2" sx={sectionHeading}>
             Architecture Flow
           </Typography>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {Array.isArray(work.frontEndTagList) && work.frontEndTagList.length > 0 && (
-              <FlowStep>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Frontend Layer
-                  </Typography>
-                  {renderLayer(work.frontEndTagList || [])}
-                </Box>
-                <MdArrowForward size={24} color="#2196F3" />
-              </FlowStep>
-            )}
-            {Array.isArray(work.backEndTagList) && work.backEndTagList.length > 0 && (
-              <FlowStep>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" gutterBottom>
-                    API Layer
-                  </Typography>
-                  {renderLayer(work.backEndTagList || [])}
-                </Box>
-                <MdArrowForward size={24} color="#2196F3" />
-              </FlowStep>
-            )}
-
-            {Array.isArray(work.dbTagList) && work.dbTagList.length > 0 && (
-              <FlowStep>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Data Layer
-                  </Typography>
-                  {renderLayer(work.dbTagList || [])}
-                </Box>
-                <MdArrowForward size={24} color="#2196F3" />
-              </FlowStep>
-            )}
-          </Box>
-        </ArchitectureBox>
-
-        <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-          Technical Stack
-        </Typography>
-
-        <Grid container spacing={2} sx={{ mb: 4 }}>
-          {techStack.map((tech, index) => (
-            <Grid item key={tech.name}>
-              <Tooltip title={tech.name} TransitionComponent={Zoom} arrow placement="top">
-                <Box
-                  onMouseEnter={() => setHoveredTag(index)}
-                  onMouseLeave={() => setHoveredTag(null)}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '20px',
-                    background: '#f0f2f5',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer',
-                    color: hoveredTag === index ? tech.color : 'text.primary',
-                    border: `1px solid ${tech.color}`,
-                    '&:hover': {
-                      background: '#e3e6e9',
-                      transform: 'translateY(-2px)',
-                    },
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`${tech.name} technology tag`}
-                >
-                  {tech.icon}
-                  <Typography variant="body2">{tech.name}</Typography>
-                </Box>
-              </Tooltip>
-            </Grid>
-          ))}
-        </Grid>
-
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-          <Box component="a" href={work?.linkDemo} target="_blank" rel="noopener noreferrer">
-            <DemoButton variant="contained" aria-label="View project demo">
-              View Demo
-            </DemoButton>
-          </Box>
-
-          <Box component="a" href={work?.linkSource} target="_blank" rel="noopener noreferrer">
-            <GithubButton variant="contained" aria-label="View source code on GitHub">
-              Source Code
-            </GithubButton>
-          </Box>
-
-          {isLoggedIn && (
-            <EditButton
-              variant="contained"
-              aria-label="Edit project details"
-              onClick={() => router.push(`/works/${work.id}`)}
-              startIcon={<MdEdit />}
-            >
-              Edit Project
-            </EditButton>
-          )}
+          <Stack spacing={{ xs: 4, md: 4.5 }}>
+            {layers.map((layer, i) => (
+              <LayerCard
+                key={layer.title}
+                title={layer.title}
+                items={layer.items}
+                index={i}
+                isLast={i === layers.length - 1}
+              />
+            ))}
+          </Stack>
         </Box>
-      </StyledPaper>
+      )}
+
+      {techStack.length > 0 && (
+        <Box mb={6}>
+          <Typography component="h2" sx={sectionHeading}>
+            Technical Stack
+          </Typography>
+          <Grid container spacing={1.25}>
+            {techStack.map((tech, index) => {
+              const hovered = hoveredTag === index
+              return (
+                <Grid item key={tech.name}>
+                  <Tooltip title={tech.name} TransitionComponent={Zoom} arrow placement="top">
+                    <Box
+                      onMouseEnter={() => setHoveredTag(index)}
+                      onMouseLeave={() => setHoveredTag(null)}
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        px: 1.5,
+                        py: 0.75,
+                        borderRadius: '999px',
+                        bgcolor: hovered
+                          ? isDark
+                            ? 'rgba(255,255,255,0.08)'
+                            : 'rgba(0,0,0,0.05)'
+                          : 'transparent',
+                        color: hovered ? tech.color : 'text.primary',
+                        border: `1px solid ${hovered ? tech.color : theme.palette.divider}`,
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer',
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${tech.name} technology`}
+                    >
+                      {tech.icon}
+                      <Typography variant="body2" fontWeight={500} fontSize="0.825rem">
+                        {tech.name}
+                      </Typography>
+                    </Box>
+                  </Tooltip>
+                </Grid>
+              )
+            })}
+          </Grid>
+        </Box>
+      )}
+
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1.5}
+        sx={{
+          pt: 4,
+          borderTop: `1px solid ${theme.palette.divider}`,
+          flexWrap: 'wrap',
+          rowGap: 1.5,
+        }}
+      >
+        {work?.linkDemo && (
+          <Button
+            component="a"
+            href={work.linkDemo}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="contained"
+            color="primary"
+            disableElevation
+            startIcon={<MdLaunch />}
+            sx={{ borderRadius: '8px', px: 2.5, py: 1, fontWeight: 600, textTransform: 'none' }}
+            aria-label="View project demo"
+          >
+            View Demo
+          </Button>
+        )}
+
+        {work?.linkSource && (
+          <Button
+            component="a"
+            href={work.linkSource}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="outlined"
+            startIcon={<FaGithub />}
+            sx={{
+              borderRadius: '8px',
+              px: 2.5,
+              py: 1,
+              fontWeight: 600,
+              textTransform: 'none',
+              color: 'text.primary',
+              borderColor: theme.palette.divider,
+              '&:hover': {
+                borderColor: isDark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.22)',
+                bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+              },
+            }}
+            aria-label="View source code on GitHub"
+          >
+            Source Code
+          </Button>
+        )}
+
+        {isLoggedIn && (
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<MdEdit />}
+            onClick={() => router.push(`/works/${work.id}`)}
+            sx={{ borderRadius: '8px', px: 2.5, py: 1, fontWeight: 600, textTransform: 'none' }}
+            aria-label="Edit project details"
+          >
+            Edit Project
+          </Button>
+        )}
+      </Stack>
     </Container>
   )
 }
@@ -246,8 +330,6 @@ WorkDetails.Layout = MainLayout
 
 export const getStaticPaths: GetStaticPaths = async () => {
   console.log('\nGET STATIC PATHS')
-  // server-side code
-  // build -times
   const response = await fetch(
     `${process.env.API_URL ?? 'https://json-server-blog.vercel.app'}/api/works?_page=1&_limit=10`,
   )
@@ -264,13 +346,10 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
 ) => {
   const workId = context.params?.workId
   console.log('\nGET STATIC PROPS', context.params?.workId)
-  // server-side code
-  // build -times
   const response = await fetch(
     `${process.env.API_URL ?? 'https://json-server-blog.vercel.app'}/api/works/${workId}`,
   )
   const data = await response.json()
-  //sanitize data
   data.fullDescription = sanitizeHtml(data.fullDescription, {
     allowedAttributes: {
       span: ['style', 'class'],

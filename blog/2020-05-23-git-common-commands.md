@@ -2,8 +2,11 @@
 slug: git-used-in-real-world-projects
 title: Git - Commands Used from Receiving a Task to Creating a PR 🎉
 author: Pin Nguyen
-tags: [git, git in real-world projects]
+author_title: Software Developer
+author_image_url: https://avatars.githubusercontent.com/Pinnguyen
+tags: [JavaScript, TypeScript, NodeJS]
 date: '2024-07-29T12:00:00Z'
+image: https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=1200&auto=format&fit=crop&q=80
 ---
 
 Git offers many commands, but which ones are most commonly used in real-world projects? 🤔 As an essential tool for version control, Git helps track changes, collaborate with teams, and maintain code stability. Mastering key commands boosts productivity, reduces conflicts, and keeps the codebase clean. Let’s dive into these frequently used commands! 😉
