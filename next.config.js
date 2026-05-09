@@ -2,6 +2,7 @@
 module.exports = {
   reactStrictMode: true,
   images: {
+    unoptimized: true, // bypass Next.js 15.5 LRUCache bug; images still serve via remote CDN
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [

@@ -3,6 +3,13 @@ import fs from 'fs'
 import matter from 'gray-matter'
 import path from 'path'
 const BLOG_FOLDER = path.join(process.cwd(), 'blog')
+
+export function getReadingMinutes(content: string): number {
+  if (!content) return 1
+  const words = content.trim().split(/\s+/).length
+  return Math.max(1, Math.round(words / 200))
+}
+
 export async function getPostList() {
   // read all markdown files
   const fileNameList = fs.readdirSync(BLOG_FOLDER)
@@ -27,9 +34,12 @@ export async function getPostList() {
       tagList: data.tags,
       publishedDate: data.date,
       description: excerpt || '',
+      readingMinutes: getReadingMinutes(content),
       mdContent: content,
       htmlContent: '',
     })
   }
-  return postList
+  return postList.sort(
+    (a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime(),
+  )
 }

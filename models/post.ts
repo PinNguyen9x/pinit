@@ -15,4 +15,5 @@ export interface Post {
   mdContent?: string
   htmlContent?: string
   thumbnailUrl?: string
+  readingMinutes?: number
 }
