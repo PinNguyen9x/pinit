@@ -3,6 +3,7 @@ import { GameColorMatching, GameSkeleton, GomeTicTacToe } from '@/components/gam
 import { MainLayout } from '@/components/layouts'
 import { SlUG } from '@/constants'
 import { Work } from '@/models'
+import { API_BASE, safeFetchJson } from '@/utils'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
 import { useRouter } from 'next/router'
 
@@ -23,19 +24,14 @@ export default WorkDetails
 WorkDetails.Layout = MainLayout
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  console.log('\nGET STATIC PATHS')
-  // server-side code
-  // build -times
-  const response = await fetch(
-    `${
-      process.env.API_URL ?? 'https://json-server-blog.vercel.app'
-    }/api/works?status=published&_page=1&_limit=10`,
+  const data = await safeFetchJson<{ data: Work[] }>(
+    `${API_BASE}/api/works?status=published&_page=1&_limit=10`,
   )
-  const data = await response.json()
 
   return {
-    paths: data.data.map((work: Work) => ({ params: { workId: work.id, slug: work.slug } })),
-    fallback: true,
+    paths:
+      data?.data?.map((work) => ({ params: { workId: work.id, slug: work.slug ?? '' } })) ?? [],
+    fallback: 'blocking',
   }
 }
 
@@ -43,24 +39,17 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
   context: GetStaticPropsContext,
 ) => {
   const { workId, slug } = context.params || {}
-  console.log('\nGET STATIC PROPS', context.params?.workId)
-  // server-side code
-  // build -times
   if (!workId || !slug) {
-    return {
-      notFound: true,
-    }
+    return { notFound: true }
   }
-  const response = await fetch(
-    `${
-      process.env.API_URL ?? 'https://json-server-blog.vercel.app'
-    }/api/works/${workId}?slug=${slug}`,
-  )
-  const data = await response.json()
+  const data = await safeFetchJson<Work>(`${API_BASE}/api/works/${workId}?slug=${slug}`)
+  if (!data || !data.id) {
+    return { notFound: true, revalidate: 60 }
+  }
   return {
     props: {
       work: data,
     },
-    revalidate: 60,
+    revalidate: 300,
   }
 }

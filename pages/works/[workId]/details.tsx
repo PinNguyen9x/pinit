@@ -3,6 +3,7 @@ import { MainLayout } from '@/components/layouts'
 import { WorkDetailSkeleton } from '@/components/work'
 import { useAuth, useRenderTagIcon } from '@/hooks'
 import { Work, WorkStatus } from '@/models'
+import { API_BASE, safeFetchJson } from '@/utils'
 import { Box, Container, Stack, useTheme } from '@mui/material'
 import { format } from 'date-fns'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
@@ -1215,15 +1216,15 @@ function FloatingBadge({
 WorkDetails.Layout = MainLayout
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  console.log('\nGET STATIC PATHS')
-  const response = await fetch(
-    `${process.env.API_URL ?? 'https://json-server-blog.vercel.app'}/api/works?_page=1&_limit=10`,
+  const data = await safeFetchJson<{ data: Work[] }>(
+    `${API_BASE}/api/works?_page=1&_limit=10`,
   )
-  const data = await response.json()
 
+  // If the backend was unreachable at build time, skip pre-rendering and let
+  // every page render on demand. Otherwise pre-render the first batch.
   return {
-    paths: data.data.map((work: Work) => ({ params: { workId: work.id } })),
-    fallback: true,
+    paths: data?.data?.map((work) => ({ params: { workId: work.id } })) ?? [],
+    fallback: 'blocking',
   }
 }
 
@@ -1231,19 +1232,21 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
   context: GetStaticPropsContext,
 ) => {
   const workId = context.params?.workId
-  console.log('\nGET STATIC PROPS', context.params?.workId)
-  const response = await fetch(
-    `${process.env.API_URL ?? 'https://json-server-blog.vercel.app'}/api/works/${workId}`,
+  const data = await safeFetchJson<Work & { fullDescription?: string }>(
+    `${API_BASE}/api/works/${workId}`,
   )
-  const data = await response.json()
-  data.fullDescription = sanitizeHtml(data.fullDescription, {
+  if (!data || !data.id) {
+    return { notFound: true, revalidate: 60 }
+  }
+  data.fullDescription = sanitizeHtml(data.fullDescription ?? '', {
     allowedAttributes: {
       span: ['style', 'class'],
     },
   })
   return {
     props: {
-      work: data,
+      work: data as Work,
     },
+    revalidate: 300,
   }
 }
