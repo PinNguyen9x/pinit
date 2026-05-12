@@ -1,6 +1,13 @@
+import { LoginDialog } from '@/components/auth'
+import { CvViewerDialog } from '@/components/cv'
+import { useAuth, useCvDownload } from '@/hooks'
 import avatar from '@/images/avatar.png'
-import { Box, Button, Container, keyframes, Stack, Typography, useTheme } from '@mui/material'
+import { getErrorMessage } from '@/utils'
+import { Box, Button, CircularProgress, Container, keyframes, Stack, Typography, useTheme } from '@mui/material'
 import Image from 'next/image'
+import { useState } from 'react'
+import { MdDownload, MdLock, MdVisibility } from 'react-icons/md'
+import { toast } from 'react-toastify'
 
 const techStack = ['TypeScript', 'React', 'Next.js', 'Node.js', 'Go', 'Java', 'Python']
 
@@ -89,6 +96,46 @@ export function HeroSection() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const sparkleColor = isDark ? 'rgba(252,165,165,0.9)' : 'rgba(220,38,38,0.55)'
+
+  const { isLoggedIn } = useAuth()
+  const { download, isDownloading } = useCvDownload()
+  const [loginOpen, setLoginOpen] = useState(false)
+  const [viewerOpen, setViewerOpen] = useState(false)
+  // Which action to resume after a successful login from the gated buttons.
+  const [pendingAction, setPendingAction] = useState<'download' | 'view' | null>(null)
+
+  const triggerDownload = async () => {
+    try {
+      await download()
+      toast.success('CV downloaded')
+    } catch (error) {
+      toast.error(getErrorMessage(error) || 'Failed to download CV')
+    }
+  }
+
+  const handleResumeClick = () => {
+    if (isLoggedIn) {
+      triggerDownload()
+    } else {
+      setPendingAction('download')
+      setLoginOpen(true)
+    }
+  }
+
+  const handleViewClick = () => {
+    if (isLoggedIn) {
+      setViewerOpen(true)
+    } else {
+      setPendingAction('view')
+      setLoginOpen(true)
+    }
+  }
+
+  const handleLoginSuccess = () => {
+    if (pendingAction === 'view') setViewerOpen(true)
+    else if (pendingAction === 'download') triggerDownload()
+    setPendingAction(null)
+  }
 
   return (
     <Box
@@ -242,8 +289,57 @@ export function HeroSection() {
               sx={{ animation: `${fadeUp} 1.1s ease-out 0.35s both` }}
             >
               <Button
+                onClick={handleViewClick}
                 variant="contained"
                 size="large"
+                startIcon={
+                  isLoggedIn ? <MdVisibility size={16} /> : <MdLock size={14} />
+                }
+                aria-label={isLoggedIn ? 'View CV online' : 'Sign in to view CV'}
+                sx={{
+                  position: 'relative',
+                  overflow: 'hidden',
+                  bgcolor: 'primary.main',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  px: 3,
+                  py: 1.25,
+                  fontSize: '0.875rem',
+                  transition: 'all 0.2s',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    background:
+                      'linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.28) 50%, transparent 80%)',
+                    transform: 'translateX(-120%)',
+                    transition: 'transform 0.6s ease',
+                  },
+                  '&:hover': {
+                    bgcolor: 'primary.dark',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 12px 32px -8px rgba(220,38,38,0.5)',
+                    '&::before': { transform: 'translateX(120%)' },
+                  },
+                }}
+              >
+                View CV
+              </Button>
+              <Button
+                onClick={handleResumeClick}
+                disabled={isDownloading}
+                variant="contained"
+                size="large"
+                startIcon={
+                  isDownloading ? (
+                    <CircularProgress color="inherit" size="0.95em" />
+                  ) : isLoggedIn ? (
+                    <MdDownload size={16} />
+                  ) : (
+                    <MdLock size={14} />
+                  )
+                }
+                aria-label={isLoggedIn ? 'Download resume' : 'Sign in to download resume'}
                 sx={{
                   position: 'relative',
                   overflow: 'hidden',
@@ -271,9 +367,13 @@ export function HeroSection() {
                       : '0 12px 32px -8px rgba(0,0,0,0.35)',
                     '&::before': { transform: 'translateX(120%)' },
                   },
+                  '&.Mui-disabled': {
+                    bgcolor: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                    color: isDark ? '#000000' : '#ffffff',
+                  },
                 }}
               >
-                Download Resume
+                {isDownloading ? 'Preparing CV…' : 'Download Resume'}
               </Button>
               <Button
                 component="a"
@@ -387,6 +487,22 @@ export function HeroSection() {
           </Box>
         </Stack>
       </Container>
+
+      <LoginDialog
+        open={loginOpen}
+        onClose={() => {
+          setLoginOpen(false)
+          setPendingAction(null)
+        }}
+        onSuccess={handleLoginSuccess}
+        title={pendingAction === 'view' ? 'Sign in to view CV' : 'Sign in to download CV'}
+        description={
+          pendingAction === 'view'
+            ? 'The resume preview is only available to authenticated visitors. Sign in to view the PDF.'
+            : 'The resume is only available to authenticated visitors. Sign in to get the PDF.'
+        }
+      />
+      <CvViewerDialog open={viewerOpen} onClose={() => setViewerOpen(false)} />
     </Box>
   )
 }

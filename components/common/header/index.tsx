@@ -106,8 +106,61 @@ export default function Header() {
                 </Box>
               </Link>
             ) : (
-              <Box component="span" onClick={logout} sx={navLinkSx(false)}>
-                Logout
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  ml: 1,
+                  pl: 1.5,
+                  borderLeft: `1px solid ${
+                    isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+                  }`,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    px: 1.25,
+                    py: 0.5,
+                    borderRadius: '999px',
+                    border: `1px solid ${
+                      isDark ? 'rgba(248,113,113,0.32)' : 'rgba(220,38,38,0.28)'
+                    }`,
+                    bgcolor: isDark ? 'rgba(220,38,38,0.10)' : 'rgba(220,38,38,0.06)',
+                    color: 'primary.main',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.01em',
+                    maxWidth: 180,
+                  }}
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      bgcolor: 'secondary.main',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Box
+                    component="span"
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {profile?.username}
+                  </Box>
+                </Box>
+                <Box component="span" onClick={logout} sx={navLinkSx(false)}>
+                  Logout
+                </Box>
               </Box>
             )}
           </Box>
@@ -227,23 +280,56 @@ export default function Header() {
               </ListItemButton>
             </Link>
           ) : (
-            <ListItemButton
-              onClick={() => {
-                logout()
-                setMobileOpen(false)
-              }}
-              sx={{
-                mx: 1,
-                borderRadius: 1,
-                py: 1,
-                color: isDark ? '#888888' : '#666666',
-                '&:hover': {
-                  bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                },
-              }}
-            >
-              Logout
-            </ListItemButton>
+            <>
+              <Box
+                sx={{
+                  mx: 2,
+                  mb: 1,
+                  px: 1.25,
+                  py: 0.75,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  borderRadius: '999px',
+                  border: `1px solid ${
+                    isDark ? 'rgba(248,113,113,0.32)' : 'rgba(220,38,38,0.28)'
+                  }`,
+                  bgcolor: isDark ? 'rgba(220,38,38,0.10)' : 'rgba(220,38,38,0.06)',
+                  color: 'primary.main',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  maxWidth: 'fit-content',
+                }}
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    bgcolor: 'secondary.main',
+                  }}
+                />
+                {profile?.username}
+              </Box>
+              <ListItemButton
+                onClick={() => {
+                  logout()
+                  setMobileOpen(false)
+                }}
+                sx={{
+                  mx: 1,
+                  borderRadius: 1,
+                  py: 1,
+                  color: isDark ? '#888888' : '#666666',
+                  '&:hover': {
+                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  },
+                }}
+              >
+                Logout
+              </ListItemButton>
+            </>
           )}
         </List>
       </Drawer>
