@@ -95,7 +95,7 @@ function Sparkle({
 export function HeroSection() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
-  const sparkleColor = isDark ? 'rgba(252,165,165,0.9)' : 'rgba(220,38,38,0.55)'
+  const sparkleColor = isDark ? 'rgba(134,239,172,0.9)' : 'rgba(22,163,74,0.55)'
 
   const { isLoggedIn } = useAuth()
   const { download, isDownloading } = useCvDownload()
@@ -150,8 +150,8 @@ export function HeroSection() {
           position: 'absolute',
           inset: 0,
           background: isDark
-            ? 'radial-gradient(ellipse 80% 55% at 50% -10%, rgba(220,38,38,0.18) 0%, transparent 70%), radial-gradient(ellipse 55% 35% at 85% 30%, rgba(5,150,105,0.12) 0%, transparent 70%)'
-            : 'radial-gradient(ellipse 80% 55% at 50% -10%, rgba(220,38,38,0.09) 0%, transparent 70%), radial-gradient(ellipse 55% 35% at 85% 30%, rgba(5,150,105,0.06) 0%, transparent 70%)',
+            ? 'radial-gradient(ellipse 80% 55% at 50% -10%, rgba(22,163,74,0.08) 0%, transparent 70%), radial-gradient(ellipse 55% 35% at 85% 30%, rgba(5,150,105,0.05) 0%, transparent 70%)'
+            : 'radial-gradient(ellipse 80% 55% at 50% -10%, rgba(22,163,74,0.04) 0%, transparent 70%), radial-gradient(ellipse 55% 35% at 85% 30%, rgba(5,150,105,0.03) 0%, transparent 70%)',
           pointerEvents: 'none',
           zIndex: 0,
         },
@@ -200,7 +200,7 @@ export function HeroSection() {
                   height: 6,
                   borderRadius: '50%',
                   bgcolor: 'primary.main',
-                  boxShadow: '0 0 0 4px rgba(220,38,38,0.18)',
+                  boxShadow: '0 0 0 4px rgba(22,163,74,0.18)',
                   animation: `${pulseGlow} 2.2s ease-in-out infinite`,
                 },
               }}
@@ -217,8 +217,8 @@ export function HeroSection() {
                 letterSpacing: '-0.04em',
                 mb: 3,
                 background: isDark
-                  ? 'linear-gradient(110deg, #ffffff 0%, #b4d1ff 35%, #ffffff 55%, #b4d1ff 75%, #ffffff 100%)'
-                  : 'linear-gradient(110deg, #000 0%, #dc2626 35%, #000 55%, #dc2626 75%, #000 100%)',
+                  ? 'linear-gradient(110deg, #ffffff 0%, #bbf7d0 35%, #ffffff 55%, #bbf7d0 75%, #ffffff 100%)'
+                  : 'linear-gradient(110deg, #000 0%, #16a34a 35%, #000 55%, #16a34a 75%, #000 100%)',
                 backgroundSize: '200% 200%',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -268,13 +268,13 @@ export function HeroSection() {
                     transition: 'all 0.2s ease',
                     animation: `${fadeUp} 0.6s ease-out ${0.3 + i * 0.05}s both`,
                     '&:hover': {
-                      color: isDark ? '#ffffff' : '#dc2626',
-                      borderColor: 'rgba(220,38,38,0.55)',
-                      bgcolor: isDark ? 'rgba(220,38,38,0.08)' : 'rgba(220,38,38,0.05)',
+                      color: isDark ? '#ffffff' : '#16a34a',
+                      borderColor: 'rgba(22,163,74,0.55)',
+                      bgcolor: isDark ? 'rgba(22,163,74,0.08)' : 'rgba(22,163,74,0.05)',
                       transform: 'translateY(-2px)',
                       boxShadow: isDark
-                        ? '0 6px 20px -8px rgba(220,38,38,0.6)'
-                        : '0 6px 20px -8px rgba(220,38,38,0.35)',
+                        ? '0 6px 20px -8px rgba(22,163,74,0.6)'
+                        : '0 6px 20px -8px rgba(22,163,74,0.35)',
                     },
                   }}
                 >
@@ -318,7 +318,7 @@ export function HeroSection() {
                   '&:hover': {
                     bgcolor: 'primary.dark',
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 32px -8px rgba(220,38,38,0.5)',
+                    boxShadow: '0 12px 32px -8px rgba(22,163,74,0.5)',
                     '&::before': { transform: 'translateX(120%)' },
                   },
                 }}
@@ -391,7 +391,7 @@ export function HeroSection() {
                   '&:hover': {
                     borderColor: 'primary.main',
                     color: 'primary.main',
-                    bgcolor: isDark ? 'rgba(220,38,38,0.06)' : 'rgba(220,38,38,0.04)',
+                    bgcolor: isDark ? 'rgba(22,163,74,0.06)' : 'rgba(22,163,74,0.04)',
                     transform: 'translateY(-2px)',
                   },
                 }}
@@ -419,7 +419,7 @@ export function HeroSection() {
                 inset: -8,
                 borderRadius: '50%',
                 background:
-                  'conic-gradient(from 0deg, #dc2626, #f97316, #fbbf24, #34d399, #dc2626)',
+                  'conic-gradient(from 0deg, #16a34a, #10b981, #84cc16, #34d399, #16a34a)',
                 animation: `${spin} 14s linear infinite`,
                 filter: 'blur(2px)',
                 opacity: isDark ? 0.6 : 0.45,
@@ -434,8 +434,8 @@ export function HeroSection() {
                 inset: -20,
                 borderRadius: '50%',
                 background: isDark
-                  ? 'radial-gradient(circle, rgba(220,38,38,0.35) 0%, transparent 60%)'
-                  : 'radial-gradient(circle, rgba(220,38,38,0.2) 0%, transparent 60%)',
+                  ? 'radial-gradient(circle, rgba(22,163,74,0.35) 0%, transparent 60%)'
+                  : 'radial-gradient(circle, rgba(22,163,74,0.2) 0%, transparent 60%)',
                 filter: 'blur(16px)',
                 animation: `${pulseGlow} 3.6s ease-in-out infinite`,
                 zIndex: 0,

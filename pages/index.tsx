@@ -1,4 +1,4 @@
-import { Seo } from '@/components/common'
+import { BackgroundFx, Seo } from '@/components/common'
 import { HeroSection } from '@/components/home'
 import { MainLayout } from '@/components/layouts'
 import { RecentPost } from '@/components/post'
@@ -42,6 +42,7 @@ const Home: NextPageWithLayout = ({ posts, works }: HomeProps) => {
           url: 'https://pinit-ten.vercel.app/',
         }}
       />
+      <BackgroundFx parallax={false} />
       <HeroSection />
       <RecentPost postList={posts || []} />
       <FeatureWork workList={works || []} />

@@ -32,25 +32,25 @@ export function FloatingPhone() {
           alignItems: 'center',
           justifyContent: 'center',
           color: '#fff',
-          background: 'linear-gradient(135deg, #dc2626 0%, #f97316 100%)',
+          background: 'linear-gradient(135deg, #16a34a 0%, #10b981 100%)',
           boxShadow: isDark
-            ? '0 10px 28px -8px rgba(220,38,38,0.55), 0 0 0 1px rgba(255,255,255,0.06)'
-            : '0 10px 28px -8px rgba(220,38,38,0.4), 0 0 0 1px rgba(0,0,0,0.04)',
+            ? '0 10px 28px -8px rgba(22,163,74,0.55), 0 0 0 1px rgba(255,255,255,0.06)'
+            : '0 10px 28px -8px rgba(22,163,74,0.4), 0 0 0 1px rgba(0,0,0,0.04)',
           cursor: 'pointer',
           transition: 'transform 0.2s ease, box-shadow 0.2s ease',
           textDecoration: 'none',
           '&:hover': {
             transform: 'translateY(-2px) scale(1.04)',
             boxShadow: isDark
-              ? '0 14px 34px -8px rgba(220,38,38,0.7), 0 0 0 1px rgba(255,255,255,0.1)'
-              : '0 14px 34px -8px rgba(220,38,38,0.55), 0 0 0 1px rgba(0,0,0,0.06)',
+              ? '0 14px 34px -8px rgba(22,163,74,0.7), 0 0 0 1px rgba(255,255,255,0.1)'
+              : '0 14px 34px -8px rgba(22,163,74,0.55), 0 0 0 1px rgba(0,0,0,0.06)',
           },
           '&::before': {
             content: '""',
             position: 'absolute',
             inset: 0,
             borderRadius: '50%',
-            border: '2px solid rgba(220,38,38,0.6)',
+            border: '2px solid rgba(22,163,74,0.6)',
             animation: `${ping} 1.8s cubic-bezier(0,0,0.2,1) infinite`,
             pointerEvents: 'none',
           },

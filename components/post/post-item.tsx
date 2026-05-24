@@ -2,6 +2,7 @@ import { Post } from '@/models'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
 import { format } from 'date-fns'
+import Link from 'next/link'
 
 export interface PostItemProps {
   post: Post
@@ -10,8 +11,9 @@ export interface PostItemProps {
 export function PostItem({ post }: PostItemProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+  const href = post.slug ? `/blog/${post.slug}` : undefined
 
-  return (
+  const card = (
     <Box
       sx={{
         p: 2.5,
@@ -19,12 +21,18 @@ export function PostItem({ post }: PostItemProps) {
         height: '100%',
         border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
         bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+        cursor: href ? 'pointer' : 'default',
         transition: 'border-color 0.2s, transform 0.2s, box-shadow 0.2s',
         '&:hover': {
-          borderColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.18)',
+          borderColor: href
+            ? 'rgba(22,163,74,0.35)'
+            : isDark
+              ? 'rgba(255,255,255,0.18)'
+              : 'rgba(0,0,0,0.18)',
           transform: 'translateY(-2px)',
           boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.08)',
         },
+        '&:hover .read-more-cta': { gap: 1 },
       }}
     >
       <Stack direction="row" spacing={0.75} mb={2} flexWrap="wrap" useFlexGap>
@@ -36,9 +44,9 @@ export function PostItem({ post }: PostItemProps) {
             sx={{
               fontSize: '0.68rem',
               height: 20,
-              bgcolor: isDark ? 'rgba(220,38,38,0.1)' : 'rgba(220,38,38,0.07)',
-              color: '#dc2626',
-              border: '1px solid rgba(220,38,38,0.18)',
+              bgcolor: isDark ? 'rgba(22,163,74,0.1)' : 'rgba(22,163,74,0.07)',
+              color: '#16a34a',
+              border: '1px solid rgba(22,163,74,0.18)',
               fontWeight: 500,
             }}
           />
@@ -84,17 +92,30 @@ export function PostItem({ post }: PostItemProps) {
           {format(new Date(post.publishedDate), 'MMM dd, yyyy')}
         </Typography>
         <Stack
+          className="read-more-cta"
           direction="row"
           alignItems="center"
           spacing={0.5}
-          sx={{ color: '#dc2626', cursor: 'default' }}
+          sx={{ color: '#16a34a', transition: 'gap 0.15s' }}
         >
-          <Typography component="span" fontSize="0.8rem" fontWeight={500} color="#dc2626">
+          <Typography component="span" fontSize="0.8rem" fontWeight={500} color="#16a34a">
             Read more
           </Typography>
-          <ArrowForwardIcon sx={{ fontSize: 13, color: '#dc2626' }} />
+          <ArrowForwardIcon sx={{ fontSize: 13, color: '#16a34a' }} />
         </Stack>
       </Stack>
     </Box>
+  )
+
+  if (!href) return card
+
+  return (
+    <Link
+      href={href}
+      style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}
+      aria-label={post.title}
+    >
+      {card}
+    </Link>
   )
 }

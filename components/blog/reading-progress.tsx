@@ -23,7 +23,7 @@ export function ReadingProgressBar() {
         left: 0,
         height: '2px',
         width: `${progress}%`,
-        background: 'linear-gradient(90deg, #dc2626, #f97316, #fbbf24)',
+        background: 'linear-gradient(90deg, #16a34a, #10b981, #84cc16)',
         zIndex: 2000,
         transition: 'width 0.08s linear',
         pointerEvents: 'none',

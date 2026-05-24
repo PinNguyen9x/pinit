@@ -86,9 +86,9 @@ export function CvViewerDialog({ open, onClose }: CvViewerDialogProps) {
             width: 30,
             height: 30,
             borderRadius: '8px',
-            bgcolor: isDark ? 'rgba(220,38,38,0.10)' : 'rgba(220,38,38,0.08)',
+            bgcolor: isDark ? 'rgba(22,163,74,0.10)' : 'rgba(22,163,74,0.08)',
             border: `1px solid ${
-              isDark ? 'rgba(248,113,113,0.32)' : 'rgba(220,38,38,0.28)'
+              isDark ? 'rgba(74,222,128,0.32)' : 'rgba(22,163,74,0.28)'
             }`,
             color: 'primary.main',
             display: 'inline-flex',

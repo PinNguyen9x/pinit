@@ -7,9 +7,9 @@ export function getTheme(mode: 'light' | 'dark') {
     palette: {
       mode,
       primary: {
-        main: isDark ? '#f87171' : '#dc2626',
-        light: isDark ? '#fca5a5' : '#ef4444',
-        dark: isDark ? '#ef4444' : '#991b1b',
+        main: isDark ? '#4ade80' : '#16a34a',
+        light: isDark ? '#86efac' : '#22c55e',
+        dark: isDark ? '#22c55e' : '#15803d',
         contrastText: '#ffffff',
       },
       secondary: {
@@ -84,7 +84,7 @@ export function getTheme(mode: 'light' | 'dark') {
         styleOverrides: {
           root: {
             color: 'inherit',
-            '&:hover': { color: isDark ? '#f87171' : '#dc2626' },
+            '&:hover': { color: isDark ? '#4ade80' : '#16a34a' },
           },
         },
         defaultProps: { underline: 'none' },

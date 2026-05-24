@@ -73,7 +73,7 @@ export function Footer() {
           right: 0,
           height: '1px',
           background:
-            'linear-gradient(90deg, transparent 0%, rgba(220,38,38,0.45) 30%, rgba(249,115,22,0.45) 50%, rgba(52,211,153,0.35) 70%, transparent 100%)',
+            'linear-gradient(90deg, transparent 0%, rgba(22,163,74,0.45) 30%, rgba(16,185,129,0.45) 50%, rgba(52,211,153,0.35) 70%, transparent 100%)',
           pointerEvents: 'none',
         },
       }}
@@ -188,11 +188,11 @@ export function Footer() {
                     '&:hover': {
                       color: 'primary.main',
                       borderColor: 'primary.main',
-                      bgcolor: isDark ? 'rgba(220,38,38,0.08)' : 'rgba(220,38,38,0.05)',
+                      bgcolor: isDark ? 'rgba(22,163,74,0.08)' : 'rgba(22,163,74,0.05)',
                       transform: 'translateY(-2px)',
                       boxShadow: isDark
-                        ? '0 6px 18px -8px rgba(220,38,38,0.5)'
-                        : '0 6px 18px -8px rgba(220,38,38,0.35)',
+                        ? '0 6px 18px -8px rgba(22,163,74,0.5)'
+                        : '0 6px 18px -8px rgba(22,163,74,0.35)',
                     },
                   }}
                 >

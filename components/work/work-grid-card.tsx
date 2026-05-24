@@ -1,23 +1,29 @@
-import { Post } from '@/models'
+import { Work, WorkStatus } from '@/models'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
-import { format } from 'date-fns'
 import Link from 'next/link'
 
-export interface BlogGridCardProps {
-  post: Post
+export interface WorkGridCardProps {
+  work: Work
 }
 
-export function BlogGridCard({ post }: BlogGridCardProps) {
+function getWorkHref(work: Work) {
+  return work.status === WorkStatus.PUBLISHED && work.slug
+    ? `/works/${work.id}/${work.slug}`
+    : `/works/${work.id}/details`
+}
+
+export function WorkGridCard({ work }: WorkGridCardProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const accent = theme.palette.primary.main
   const line = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
-  const cover = post.thumbnailUrl
+  const cover = work.thumbnailUrl
+  const year = work.createdAt ? new Date(Number(work.createdAt)).getFullYear() : undefined
 
   return (
     <Link
-      href={`/blog/${post.slug}`}
+      href={getWorkHref(work)}
       style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}
     >
       <Box
@@ -56,7 +62,7 @@ export function BlogGridCard({ post }: BlogGridCardProps) {
         />
         <Box sx={{ p: 2.25, display: 'flex', flexDirection: 'column', gap: 1.25, flex: 1 }}>
           <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-            {post.tagList?.slice(0, 2).map((tag) => (
+            {work.tagList?.slice(0, 2).map((tag) => (
               <Chip
                 key={tag}
                 label={tag}
@@ -91,10 +97,10 @@ export function BlogGridCard({ post }: BlogGridCardProps) {
               m: 0,
             }}
           >
-            {post.title}
+            {work.title}
           </Typography>
 
-          {post.description && (
+          {work.shortDescription && (
             <Typography
               color="text.secondary"
               sx={{
@@ -105,10 +111,10 @@ export function BlogGridCard({ post }: BlogGridCardProps) {
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
                 m: 0,
+                '& span': { fontStyle: 'normal !important', fontWeight: 'inherit !important' },
               }}
-            >
-              {post.description}
-            </Typography>
+              dangerouslySetInnerHTML={{ __html: work.shortDescription }}
+            />
           )}
 
           <Stack
@@ -129,18 +135,22 @@ export function BlogGridCard({ post }: BlogGridCardProps) {
                 textTransform: 'uppercase',
               }}
             >
-              <Box component="span">{format(new Date(post.publishedDate), 'MMM dd')}</Box>
-              <Box
-                component="span"
-                sx={{
-                  width: 3,
-                  height: 3,
-                  borderRadius: '50%',
-                  bgcolor: 'text.secondary',
-                  opacity: 0.5,
-                }}
-              />
-              <Box component="span">{post.readingMinutes ?? 1} min</Box>
+              {year && <Box component="span">{year}</Box>}
+              {work.linkDemo && (
+                <>
+                  <Box
+                    component="span"
+                    sx={{
+                      width: 3,
+                      height: 3,
+                      borderRadius: '50%',
+                      bgcolor: 'text.secondary',
+                      opacity: 0.5,
+                    }}
+                  />
+                  <Box component="span">Live demo</Box>
+                </>
+              )}
             </Stack>
             <Stack
               className="read-cta"
@@ -150,7 +160,7 @@ export function BlogGridCard({ post }: BlogGridCardProps) {
               sx={{ color: accent, transition: 'gap 0.2s' }}
             >
               <Typography component="span" fontSize="0.78rem" fontWeight={600} color={accent}>
-                Read
+                View
               </Typography>
               <ArrowForwardIcon sx={{ fontSize: 13, color: accent }} />
             </Stack>

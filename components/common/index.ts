@@ -1,4 +1,5 @@
 export * from './auth'
+export * from './background-fx'
 export * from './footer'
 export * from './floating-phone'
 export * from './header'

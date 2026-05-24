@@ -189,7 +189,7 @@ function AboutPage() {
               position: 'absolute',
               inset: -4,
               borderRadius: '50%',
-              background: 'conic-gradient(from 0deg, #dc2626, #f97316, #fbbf24, #34d399, #dc2626)',
+              background: 'conic-gradient(from 0deg, #16a34a, #10b981, #84cc16, #34d399, #16a34a)',
               opacity: isDark ? 0.55 : 0.45,
               filter: 'blur(1px)',
             }}
@@ -407,7 +407,7 @@ function AboutPage() {
                         height: 10,
                         borderRadius: '50%',
                         bgcolor: 'primary.main',
-                        boxShadow: `0 0 0 4px ${isDark ? 'rgba(220,38,38,0.15)' : 'rgba(220,38,38,0.12)'}`,
+                        boxShadow: `0 0 0 4px ${isDark ? 'rgba(22,163,74,0.15)' : 'rgba(22,163,74,0.12)'}`,
                       }}
                     />
                     <Stack
@@ -482,8 +482,8 @@ function AboutPage() {
                         borderColor: 'primary.main',
                         transform: 'translateY(-2px)',
                         boxShadow: isDark
-                          ? '0 8px 24px -12px rgba(220,38,38,0.45)'
-                          : '0 8px 24px -12px rgba(220,38,38,0.25)',
+                          ? '0 8px 24px -12px rgba(22,163,74,0.45)'
+                          : '0 8px 24px -12px rgba(22,163,74,0.25)',
                       },
                     }}
                   >
@@ -497,8 +497,8 @@ function AboutPage() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           color: 'primary.main',
-                          bgcolor: isDark ? 'rgba(220,38,38,0.12)' : 'rgba(220,38,38,0.08)',
-                          border: `1px solid ${isDark ? 'rgba(220,38,38,0.22)' : 'rgba(220,38,38,0.18)'}`,
+                          bgcolor: isDark ? 'rgba(22,163,74,0.12)' : 'rgba(22,163,74,0.08)',
+                          border: `1px solid ${isDark ? 'rgba(22,163,74,0.22)' : 'rgba(22,163,74,0.18)'}`,
                           flexShrink: 0,
                         }}
                       >
@@ -591,9 +591,9 @@ function AboutPage() {
                           fontSize: '0.75rem',
                           height: 26,
                           px: 0.5,
-                          bgcolor: isDark ? 'rgba(220,38,38,0.1)' : 'rgba(220,38,38,0.07)',
+                          bgcolor: isDark ? 'rgba(22,163,74,0.1)' : 'rgba(22,163,74,0.07)',
                           color: 'primary.main',
-                          border: '1px solid rgba(220,38,38,0.25)',
+                          border: '1px solid rgba(22,163,74,0.25)',
                           fontWeight: 500,
                         }}
                       />

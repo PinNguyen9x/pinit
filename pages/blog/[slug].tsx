@@ -160,9 +160,9 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
                     sx={{
                       fontSize: '0.68rem',
                       height: 20,
-                      bgcolor: isDark ? 'rgba(220,38,38,0.1)' : 'rgba(220,38,38,0.07)',
-                      color: '#dc2626',
-                      border: '1px solid rgba(220,38,38,0.18)',
+                      bgcolor: isDark ? 'rgba(22,163,74,0.1)' : 'rgba(22,163,74,0.07)',
+                      color: '#16a34a',
+                      border: '1px solid rgba(22,163,74,0.18)',
                       fontWeight: 500,
                     }}
                   />
@@ -294,7 +294,7 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
                 '& h1': { fontSize: { xs: '1.5rem', md: '1.875rem' } },
                 '& h2': {
                   fontSize: { xs: '1.25rem', md: '1.5rem' },
-                  borderLeft: '3px solid #dc2626',
+                  borderLeft: '3px solid #16a34a',
                   pl: '0.75em',
                   mt: '2.5em',
                 },
@@ -332,9 +332,9 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
                   pl: 3,
                   pr: 2,
                   py: 1.25,
-                  borderLeft: '4px solid #dc2626',
+                  borderLeft: '4px solid #16a34a',
                   color: 'text.secondary',
-                  bgcolor: isDark ? 'rgba(220,38,38,0.07)' : 'rgba(220,38,38,0.05)',
+                  bgcolor: isDark ? 'rgba(22,163,74,0.07)' : 'rgba(22,163,74,0.05)',
                   borderRadius: '0 8px 8px 0',
                   '& p': { mb: 0, color: 'inherit', lineHeight: 1.8, fontStyle: 'italic' },
                 },

@@ -42,8 +42,8 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
   const techStack = useRenderTagIcon(work?.tagList || [])
 
   const accent = theme.palette.primary.main
-  const accentSoft = isDark ? 'rgba(248,113,113,0.10)' : 'rgba(220,38,38,0.08)'
-  const accentEdge = isDark ? 'rgba(248,113,113,0.32)' : 'rgba(220,38,38,0.28)'
+  const accentSoft = isDark ? 'rgba(74,222,128,0.10)' : 'rgba(22,163,74,0.08)'
+  const accentEdge = isDark ? 'rgba(74,222,128,0.32)' : 'rgba(22,163,74,0.28)'
   const green = theme.palette.secondary.main
   const greenSoft = isDark ? 'rgba(52,211,153,0.10)' : 'rgba(5,150,105,0.10)'
   const greenEdge = isDark ? 'rgba(52,211,153,0.32)' : 'rgba(5,150,105,0.28)'

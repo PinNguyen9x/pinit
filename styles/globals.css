@@ -37,7 +37,7 @@ a {
 
 /* Text selection */
 ::selection {
-  background: rgba(220, 38, 38, 0.2);
+  background: rgba(22,163,74, 0.2);
 }
 
 /* Code block wrapper injected by blog page */
@@ -95,3 +95,133 @@ a {
   background: rgba(63, 185, 80, 0.08);
   opacity: 1;
 }
+
+/* ===== Aurora background system (home page) =====
+   Performance philosophy: the original mockup used `filter: blur(80px)` on 4
+   drifting blobs plus `filter: hue-rotate()` on the parent and overlay/screen
+   blend modes — gorgeous but each scroll tick had to re-rasterize a viewport-
+   sized blurred layer. We replicate the *look* (soft green glow, gently
+   drifting) using only:
+     - radial-gradient with smooth alpha falloff (cheap, no `filter:blur`)
+     - one transform per animation, on isolated layers
+     - animations paused during scroll (resumed when scroll is idle)
+   This keeps the compositor on a single GPU pass per frame even on lower-tier
+   hardware.
+
+   Layer order (each is position: fixed; inset: 0):
+     bg-fx-base       (z 0) — base radial wash, static
+     bg-fx-parallax   (z 0) — scroll-driven translateY, no animation
+       └ bg-fx-motion        — breathing scale only (transform-only animation)
+         └ bg-fx-mesh        — multi-stop radial-gradient mesh (static paint)
+     bg-fx-stars      (z 1) — opacity-only twinkle
+     bg-fx-vignette   (z 2) — static edge fade */
+.bg-fx-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-fx-base {
+  background: radial-gradient(120% 80% at 50% -10%, #07140d 0%, rgba(0, 0, 0, 0) 60%);
+}
+
+.bg-fx-parallax {
+  transform: translate3d(0, var(--parallax, 0px), 0);
+  will-change: transform;
+}
+
+.bg-fx-motion {
+  position: absolute;
+  inset: -8%;
+}
+.bg-fx-motion.motion-breathe {
+  animation: bgFxBreathe 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes bgFxBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+
+/* Aurora "mesh" — a single static element with multiple radial gradient stops.
+   Each gradient has a smooth alpha falloff that *looks* like a soft 80px-blur
+   blob, but it's a one-time paint into the layer texture: no per-frame filter
+   work. The gradients are placed at the four corners + center so the eye reads
+   it as drifting aurora light. Motion comes from the parent's scale breathe
+   and the page scroll's parallax. */
+.bg-fx-mesh {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(40vw 38vw at 8% 12%,  rgba(34, 197, 94, 0.40) 0%, rgba(34, 197, 94, 0) 60%),
+    radial-gradient(34vw 32vw at 92% 18%, rgba(20, 184, 138, 0.32) 0%, rgba(20, 184, 138, 0) 60%),
+    radial-gradient(46vw 42vw at 50% 92%, rgba(22, 163, 74, 0.30) 0%, rgba(22, 163, 74, 0) 62%),
+    radial-gradient(28vw 24vw at 78% 78%, rgba(52, 211, 153, 0.24) 0%, rgba(52, 211, 153, 0) 65%);
+}
+
+/* Vignette for edge softness. */
+.bg-fx-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(120% 80% at 50% 20%, transparent 50%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+/* Scroll-pause: while the user is actively scrolling, every animation on the
+   background pauses so the only work the browser does per frame is the simple
+   parallax translate. When `is-scrolling` is removed (~120ms after the last
+   scroll event), animations resume from where they paused. */
+body.is-scrolling .bg-fx-motion,
+body.is-scrolling .bg-fx-stars span {
+  animation-play-state: paused;
+}
+
+/* Light mode: vignette uses a soft white fade so it doesn't darken */
+[data-theme="light"] .bg-fx-vignette {
+  background: radial-gradient(120% 80% at 50% 20%, transparent 50%, rgba(255, 255, 255, 0.4) 100%);
+}
+[data-theme="light"] .bg-fx-base {
+  background: radial-gradient(120% 80% at 50% -10%, rgba(34, 197, 94, 0.06) 0%, rgba(255, 255, 255, 0) 60%);
+}
+[data-theme="light"] .bg-fx-mesh {
+  opacity: 0.45;
+}
+
+/* Star sparkles — kept small in count, no box-shadow halo to avoid extra paint */
+.bg-fx-stars {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.bg-fx-stars span {
+  position: absolute;
+  border-radius: 50%;
+  background: #bbf7d0;
+  opacity: 0.4;
+  animation: bgFxTwinkle 6s ease-in-out infinite;
+}
+@keyframes bgFxTwinkle {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 0.6; }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .bg-fx-motion,
+  .bg-fx-stars span { animation: none !important; }
+  .bg-fx-parallax { transform: none !important; }
+}
+
+/* Page content sits above background layers */
+.has-bg-fx { position: relative; z-index: 3; }
+
+/* When BackgroundFx renders into document.body, the React app root must sit
+   above it. Giving #__next a stacking context at z-3 keeps every page's
+   content (header, main, footer) painted on top of the aurora layers, which
+   live at z-index 0/1/2 in the body. */
+#__next { position: relative; z-index: 3; }

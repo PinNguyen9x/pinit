@@ -102,9 +102,9 @@ export function WorkItem({ work }: WorkItemProps) {
                 sx={{
                   fontSize: '0.68rem',
                   height: 20,
-                  bgcolor: isDark ? 'rgba(220,38,38,0.1)' : 'rgba(220,38,38,0.07)',
-                  color: '#dc2626',
-                  border: '1px solid rgba(220,38,38,0.18)',
+                  bgcolor: isDark ? 'rgba(22,163,74,0.1)' : 'rgba(22,163,74,0.07)',
+                  color: '#16a34a',
+                  border: '1px solid rgba(22,163,74,0.18)',
                   fontWeight: 500,
                 }}
               />

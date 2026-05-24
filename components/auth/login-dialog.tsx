@@ -66,8 +66,8 @@ export function LoginDialog({
           border: `1px solid ${isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)'}`,
           borderRadius: { xs: 0, sm: '16px' },
           backgroundImage: isDark
-            ? 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(220,38,38,0.12) 0%, transparent 70%)'
-            : 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(220,38,38,0.06) 0%, transparent 70%)',
+            ? 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(22,163,74,0.12) 0%, transparent 70%)'
+            : 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(22,163,74,0.06) 0%, transparent 70%)',
         },
       }}
       aria-labelledby="login-dialog-title"
@@ -96,8 +96,8 @@ export function LoginDialog({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: isDark ? 'rgba(220,38,38,0.10)' : 'rgba(220,38,38,0.08)',
-              border: `1px solid ${isDark ? 'rgba(248,113,113,0.32)' : 'rgba(220,38,38,0.28)'}`,
+              bgcolor: isDark ? 'rgba(22,163,74,0.10)' : 'rgba(22,163,74,0.08)',
+              border: `1px solid ${isDark ? 'rgba(74,222,128,0.32)' : 'rgba(22,163,74,0.28)'}`,
               color: 'primary.main',
               mb: 0.5,
             }}

@@ -127,9 +127,9 @@ export default function Header() {
                     py: 0.5,
                     borderRadius: '999px',
                     border: `1px solid ${
-                      isDark ? 'rgba(248,113,113,0.32)' : 'rgba(220,38,38,0.28)'
+                      isDark ? 'rgba(74,222,128,0.32)' : 'rgba(22,163,74,0.28)'
                     }`,
-                    bgcolor: isDark ? 'rgba(220,38,38,0.10)' : 'rgba(220,38,38,0.06)',
+                    bgcolor: isDark ? 'rgba(22,163,74,0.10)' : 'rgba(22,163,74,0.06)',
                     color: 'primary.main',
                     fontSize: '0.75rem',
                     fontWeight: 600,
@@ -292,9 +292,9 @@ export default function Header() {
                   gap: 0.75,
                   borderRadius: '999px',
                   border: `1px solid ${
-                    isDark ? 'rgba(248,113,113,0.32)' : 'rgba(220,38,38,0.28)'
+                    isDark ? 'rgba(74,222,128,0.32)' : 'rgba(22,163,74,0.28)'
                   }`,
-                  bgcolor: isDark ? 'rgba(220,38,38,0.10)' : 'rgba(220,38,38,0.06)',
+                  bgcolor: isDark ? 'rgba(22,163,74,0.10)' : 'rgba(22,163,74,0.06)',
                   color: 'primary.main',
                   fontSize: '0.75rem',
                   fontWeight: 600,

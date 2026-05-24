@@ -1,23 +1,28 @@
-import { Post } from '@/models'
+import { Work, WorkStatus } from '@/models'
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
-import { format } from 'date-fns'
 import Link from 'next/link'
 
-export interface BlogMiniCardProps {
-  post: Post
+export interface WorkMiniCardProps {
+  work: Work
 }
 
-export function BlogMiniCard({ post }: BlogMiniCardProps) {
+function getWorkHref(work: Work) {
+  return work.status === WorkStatus.PUBLISHED && work.slug
+    ? `/works/${work.id}/${work.slug}`
+    : `/works/${work.id}/details`
+}
+
+export function WorkMiniCard({ work }: WorkMiniCardProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
-  const accent = theme.palette.primary.main
   const line = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
-  const cover = post.thumbnailUrl
-  const firstTag = post.tagList?.[0]
+  const cover = work.thumbnailUrl
+  const firstTag = work.tagList?.[0]
+  const year = work.createdAt ? new Date(Number(work.createdAt)).getFullYear() : undefined
 
   return (
     <Link
-      href={`/blog/${post.slug}`}
+      href={getWorkHref(work)}
       style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
     >
       <Box
@@ -85,7 +90,7 @@ export function BlogMiniCard({ post }: BlogMiniCardProps) {
               overflow: 'hidden',
             }}
           >
-            {post.title}
+            {work.title}
           </Typography>
           <Stack
             direction="row"
@@ -99,18 +104,22 @@ export function BlogMiniCard({ post }: BlogMiniCardProps) {
               textTransform: 'uppercase',
             }}
           >
-            <Box component="span">{format(new Date(post.publishedDate), 'MMM dd')}</Box>
-            <Box
-              component="span"
-              sx={{
-                width: 3,
-                height: 3,
-                borderRadius: '50%',
-                bgcolor: 'text.secondary',
-                opacity: 0.5,
-              }}
-            />
-            <Box component="span">{post.readingMinutes ?? 1} min</Box>
+            {year && <Box component="span">{year}</Box>}
+            {work.linkDemo && (
+              <>
+                <Box
+                  component="span"
+                  sx={{
+                    width: 3,
+                    height: 3,
+                    borderRadius: '50%',
+                    bgcolor: 'text.secondary',
+                    opacity: 0.5,
+                  }}
+                />
+                <Box component="span">Live</Box>
+              </>
+            )}
           </Stack>
         </Box>
       </Box>

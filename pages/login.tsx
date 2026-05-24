@@ -49,8 +49,8 @@ export default function LoginPage() {
           position: 'absolute',
           inset: 0,
           background: isDark
-            ? 'radial-gradient(ellipse 60% 40% at 50% 0%, rgba(220,38,38,0.18) 0%, transparent 70%), radial-gradient(ellipse 40% 30% at 80% 70%, rgba(5,150,105,0.10) 0%, transparent 70%)'
-            : 'radial-gradient(ellipse 60% 40% at 50% 0%, rgba(220,38,38,0.09) 0%, transparent 70%), radial-gradient(ellipse 40% 30% at 80% 70%, rgba(5,150,105,0.05) 0%, transparent 70%)',
+            ? 'radial-gradient(ellipse 60% 40% at 50% 0%, rgba(22,163,74,0.18) 0%, transparent 70%), radial-gradient(ellipse 40% 30% at 80% 70%, rgba(5,150,105,0.10) 0%, transparent 70%)'
+            : 'radial-gradient(ellipse 60% 40% at 50% 0%, rgba(22,163,74,0.09) 0%, transparent 70%), radial-gradient(ellipse 40% 30% at 80% 70%, rgba(5,150,105,0.05) 0%, transparent 70%)',
           pointerEvents: 'none',
           zIndex: 0,
         },
@@ -109,7 +109,7 @@ export default function LoginPage() {
               right: 0,
               height: '2px',
               background:
-                'linear-gradient(90deg, transparent 0%, rgba(220,38,38,0.7) 50%, transparent 100%)',
+                'linear-gradient(90deg, transparent 0%, rgba(22,163,74,0.7) 50%, transparent 100%)',
             },
           }}
         >
@@ -119,9 +119,9 @@ export default function LoginPage() {
                 width: 56,
                 height: 56,
                 borderRadius: '50%',
-                bgcolor: isDark ? 'rgba(220,38,38,0.10)' : 'rgba(220,38,38,0.08)',
+                bgcolor: isDark ? 'rgba(22,163,74,0.10)' : 'rgba(22,163,74,0.08)',
                 border: `1px solid ${
-                  isDark ? 'rgba(248,113,113,0.32)' : 'rgba(220,38,38,0.28)'
+                  isDark ? 'rgba(74,222,128,0.32)' : 'rgba(22,163,74,0.28)'
                 }`,
                 color: 'primary.main',
                 display: 'flex',

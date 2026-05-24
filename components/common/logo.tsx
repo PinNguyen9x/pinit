@@ -50,7 +50,7 @@ export function Logo({ size = 36 }: LogoProps) {
           inset: -6,
           borderRadius: '50%',
           background:
-            'radial-gradient(circle, rgba(220,38,38,0.55) 0%, rgba(249,115,22,0.22) 55%, transparent 75%)',
+            'radial-gradient(circle, rgba(22,163,74,0.55) 0%, rgba(16,185,129,0.22) 55%, transparent 75%)',
           filter: 'blur(10px)',
           opacity: 0.35,
           transition: 'opacity 0.25s ease',
@@ -66,7 +66,7 @@ export function Logo({ size = 36 }: LogoProps) {
           position: 'absolute',
           inset: 0,
           borderRadius: '50%',
-          background: 'conic-gradient(from 0deg, #dc2626, #f97316, #fbbf24, #34d399, #dc2626)',
+          background: 'conic-gradient(from 0deg, #16a34a, #10b981, #84cc16, #34d399, #16a34a)',
           animation: `${spinRing} 10s linear infinite`,
           zIndex: 1,
         }}
