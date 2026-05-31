@@ -24,6 +24,7 @@ import { useContext, useState } from 'react'
 const navItems = [
   { label: 'Home', path: '/' },
   { label: 'Blog', path: '/blog' },
+  { label: 'Glossary', path: '/glossary' },
   { label: 'Works', path: '/works' },
 ]
 
