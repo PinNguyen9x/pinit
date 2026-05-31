@@ -51,6 +51,22 @@ function rehypeDecodePrismEntities() {
   }
 }
 
+// Convert ```mermaid fenced blocks into <div class="mermaid"> so the client-side
+// mermaid.run() can render them (e.g. git gitGraph). Must run BEFORE remark-prism
+// so Prism doesn't tokenize/escape the diagram source.
+function remarkMermaid() {
+  const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  return (tree: any) => {
+    visit(tree, 'code', (node: any, index: any, parent: any) => {
+      if (node.lang !== 'mermaid' || !parent || index == null) return
+      parent.children[index] = {
+        type: 'html',
+        value: `<div class="mermaid">${escapeHtml(node.value)}</div>`,
+      }
+    })
+  }
+}
+
 export interface BlogDetailPageProps {
   post: Post
   toc: TocItem[]
@@ -105,6 +121,33 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
       })
     })
   }, [post.htmlContent])
+
+  // Render mermaid diagrams (git gitGraph, ...) client-side. mermaid is browser-
+  // only and heavy, so it's dynamically imported (matching the ssr:false pattern).
+  useEffect(() => {
+    let cancelled = false
+    const articleBody = document.getElementById('article-body')
+    if (!articleBody) return
+    const nodes = articleBody.querySelectorAll<HTMLElement>('.mermaid')
+    if (nodes.length === 0) return
+
+    import('mermaid' as any).then((mod: any) => {
+      if (cancelled) return
+      const mermaid = mod.default
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'default',
+        securityLevel: 'loose',
+      })
+      mermaid
+        .run({ nodes: Array.from(nodes) })
+        .catch((err: any) => console.error('Mermaid render error:', err))
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [post.htmlContent, isDark])
 
   return (
     <>
@@ -512,6 +555,7 @@ export const getStaticProps: GetStaticProps<BlogDetailPageProps> = async (
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkToc, { heading: 'agenda.*' })
+    .use(remarkMermaid)
     .use(require('remark-prism'))
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)

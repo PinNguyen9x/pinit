@@ -96,6 +96,27 @@ a {
   opacity: 1;
 }
 
+/* Mermaid diagrams (git gitGraph, flowcharts, ...) rendered client-side */
+#article-body .mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.75em 0;
+  padding: 1rem;
+  background: rgba(127, 127, 127, 0.06);
+  border: 1px solid rgba(127, 127, 127, 0.15);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+/* Hide the raw diagram source until mermaid finishes (avoids a flash of text) */
+#article-body .mermaid:not([data-processed='true']) {
+  color: transparent;
+  min-height: 2rem;
+}
+#article-body .mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
 /* ===== Aurora background system (home page) =====
    Performance philosophy: the original mockup used `filter: blur(80px)` on 4
    drifting blobs plus `filter: hue-rotate()` on the parent and overlay/screen

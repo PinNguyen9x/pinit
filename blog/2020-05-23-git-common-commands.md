@@ -235,13 +235,28 @@ git rebase origin/develop
 
 Kết quả: các commit của bạn được "đặt lại" lên trên đầu `develop` mới nhất → lịch sử thẳng, dễ review hơn so với `merge`.
 
+**Khi dùng `merge`** — sinh ra một merge commit, lịch sử rẽ nhánh:
+
+```mermaid
+gitGraph
+   commit id: "base"
+   branch feature
+   checkout feature
+   commit id: "feat 1"
+   commit id: "feat 2"
+   checkout main
+   commit id: "develop mới"
+   merge feature
 ```
-# merge (có merge commit):          # rebase (lịch sử thẳng):
-*   Merge develop into feature      * feature commit 2
-|\                                  * feature commit 1
-| * feature commit 2               * develop commit mới
-| * feature commit 1               * ...
-* | develop commit mới
+
+**Khi dùng `rebase`** — các commit của bạn được đặt lại lên trên `develop` mới nhất, lịch sử thẳng tắp:
+
+```mermaid
+gitGraph
+   commit id: "base"
+   commit id: "develop mới"
+   commit id: "feat 1'"
+   commit id: "feat 2'"
 ```
 
 ### 3.3. `git rebase -i` (interactive) — squash gộp commit
@@ -315,13 +330,42 @@ git cherry-pick a1b2c3^..d4e5f6
 - Tính năng chưa xong được "giấu" bằng **Feature Flags** thay vì giữ trên nhánh riêng lâu ngày.
 - Phụ thuộc rất nhiều vào **CI/CD tự động** (test, build chạy trên mỗi lần push).
 
+**Trunk-Based** — mọi người commit thẳng/merge nhanh vào `main`, feature branch sống rất ngắn:
+
+```mermaid
+gitGraph
+   commit
+   commit
+   branch feature-ngan
+   checkout feature-ngan
+   commit
+   checkout main
+   merge feature-ngan
+   commit
+   commit
 ```
-Trunk-Based:                        Git Flow:
-                                    main ─────●────────────●──  (release)
-main ●─●─●─●─●─●─●─●  (luôn deploy)          │              │
-     ↑ ↑   ↑   ↑                   develop ─●──●──●──●──●──●──
-   merge nhỏ, thường xuyên                   │  │     │
-   (feature branch sống ngắn)         feature feature release/hotfix...
+
+**Git Flow** — nhiều nhánh dài hạn (`main`, `develop`, `feature`, `release`), merge theo đợt:
+
+```mermaid
+gitGraph
+   commit id: "v1.0"
+   branch develop
+   checkout develop
+   commit
+   branch feature
+   checkout feature
+   commit
+   commit
+   checkout develop
+   merge feature
+   branch release
+   checkout release
+   commit id: "rc"
+   checkout main
+   merge release tag: "v1.1"
+   checkout develop
+   merge release
 ```
 
 ### So sánh Trunk-Based vs Git Flow
