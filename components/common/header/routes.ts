@@ -8,6 +8,10 @@ export const ROUTE_LIST = [
     path: '/blog',
   },
   {
+    label: 'Glossary',
+    path: '/glossary',
+  },
+  {
     label: 'Works',
     path: '/works?_page=1&_limit=10',
     requireLogin: false,
