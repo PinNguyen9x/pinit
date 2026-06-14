@@ -10,21 +10,38 @@ import {
   Paper,
   styled,
   Typography,
+  useTheme,
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { FaClock, FaExclamationTriangle, FaRedo, FaTrophy } from 'react-icons/fa'
 
-const GameCell = styled(Paper)(({ isWinning }: { isWinning?: boolean }) => ({
-  width: '100%',
-  paddingBottom: '100%',
-  position: 'relative',
-  cursor: 'pointer',
-  transition: 'all 0.3s ease',
-  backgroundColor: isWinning ? '#4caf50' : '#fff',
-  '&:hover': {
-    transform: 'scale(1.05)',
-  },
-}))
+const GameCell = styled(Paper, {
+  shouldForwardProp: (prop) => prop !== 'isWinning',
+})<{ isWinning?: boolean }>(({ theme, isWinning }) => {
+  const isDark = theme.palette.mode === 'dark'
+  return {
+    width: '100%',
+    paddingBottom: '100%',
+    position: 'relative',
+    cursor: 'pointer',
+    transition: 'all 0.25s ease',
+    backgroundColor: isWinning
+      ? theme.palette.primary.main
+      : isDark
+      ? 'rgba(255,255,255,0.04)'
+      : '#ffffff',
+    border: `1px solid ${isWinning ? theme.palette.primary.main : theme.palette.divider}`,
+    boxShadow: 'none',
+    '&:hover': {
+      transform: 'scale(1.03)',
+      backgroundColor: isWinning
+        ? theme.palette.primary.main
+        : isDark
+        ? 'rgba(255,255,255,0.07)'
+        : '#f7f7f7',
+    },
+  }
+})
 
 const CellContent = styled(Box)({
   position: 'absolute',
@@ -35,47 +52,31 @@ const CellContent = styled(Box)({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: '2rem',
-  fontWeight: 'bold',
-})
-
-const StyledListItem = styled(ListItem)({
-  backgroundColor: '#f5f5f5',
-  marginBottom: '8px',
-  borderRadius: '8px',
-  '&:hover': {
-    backgroundColor: '#e0e0e0',
-  },
-})
-
-const RuleTitle = styled(Typography)({
-  color: '#1976d2',
-  fontWeight: 600,
-})
-
-const RuleDetail = styled(Typography)({
-  color: '#666',
-  fontSize: '0.9rem',
+  fontSize: '2.25rem',
+  fontWeight: 700,
 })
 
 export const GomeTicTacToe = () => {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+
   const [board, setBoard] = useState(Array(9).fill(null))
   const [isXNext, setIsXNext] = useState(true)
-  const [winner, setWinner] = useState(null)
+  const [winner, setWinner] = useState<string | null>(null)
   const [winningLine, setWinningLine] = useState<number[]>([])
-  const [timeLeft, setTimeLeft] = useState(300) // 5 minutes game
+  const [timeLeft, setTimeLeft] = useState(300)
   const [gameStatus, setGameStatus] = useState('playing')
 
   const calculateWinner = (squares: any) => {
     const lines = [
       [0, 1, 2],
       [3, 4, 5],
-      [6, 7, 8], // rows
+      [6, 7, 8],
       [0, 3, 6],
       [1, 4, 7],
-      [2, 5, 8], // columns
+      [2, 5, 8],
       [0, 4, 8],
-      [2, 4, 6], // diagonals
+      [2, 4, 6],
     ]
 
     for (let i = 0; i < lines.length; i++) {
@@ -127,73 +128,133 @@ export const GomeTicTacToe = () => {
     }
   }
 
+  const panelSx = {
+    p: 3,
+    borderRadius: 2,
+    bgcolor: 'background.paper',
+    border: `1px solid ${theme.palette.divider}`,
+    boxShadow: 'none',
+  }
+
+  const ruleItemSx = {
+    mb: 1,
+    px: 2,
+    py: 1.25,
+    borderRadius: '10px',
+    bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.025)',
+    border: `1px solid ${theme.palette.divider}`,
+    transition: 'background-color 0.15s, border-color 0.15s',
+    '&:hover': {
+      bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.045)',
+      borderColor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.14)',
+    },
+  }
+
+  const sectionHeading = {
+    color: 'primary.main',
+    fontWeight: 700,
+    fontSize: '0.95rem',
+    pb: 1,
+    mb: 2,
+    borderBottom: `2px solid ${theme.palette.primary.main}`,
+  }
+
+  const cellSymbolColor = (cell: string | null, isWin: boolean) => {
+    if (isWin) return '#ffffff'
+    if (cell === 'X') return theme.palette.primary.main
+    if (cell === 'O') return isDark ? '#ff7a7a' : '#d32f2f'
+    return 'text.primary'
+  }
+
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography variant="h2" component="h1" gutterBottom>
+    <Container maxWidth="md" sx={{ pt: { xs: 10, md: 12 }, pb: { xs: 6, md: 8 } }}>
+      <Box sx={{ textAlign: 'center', mb: 5 }}>
+        <Typography
+          component="h1"
+          fontWeight={800}
+          letterSpacing="-0.03em"
+          sx={{ fontSize: { xs: '1.75rem', md: '2.25rem' }, mb: 1 }}
+        >
           Tic Tac Toe Game
         </Typography>
-        <Typography variant="subtitle1" gutterBottom>
+        <Typography variant="body1" color="text.secondary">
           Challenge your strategic thinking in this classic game!
         </Typography>
       </Box>
 
       <Grid container spacing={4}>
         <Grid item xs={12} md={8}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 3,
-              backgroundColor: '#f5f5f5',
-              borderRadius: 2,
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            }}
-          >
+          <Paper sx={panelSx}>
             <Box
-              sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              sx={{
+                mb: 3,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1.5,
+              }}
             >
-              <Typography variant="h6" component="div">
-                <FaClock /> Time: {Math.floor(timeLeft / 60)}:
-                {(timeLeft % 60).toString().padStart(2, '0')}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <FaClock color={theme.palette.text.secondary} />
+                <Typography variant="h6" fontWeight={600} color="text.primary">
+                  Time: {Math.floor(timeLeft / 60)}:
+                  {(timeLeft % 60).toString().padStart(2, '0')}
+                </Typography>
+              </Box>
               <Button
                 variant="contained"
                 color="primary"
                 onClick={resetGame}
                 startIcon={<FaRedo />}
+                disableElevation
               >
                 New Game
               </Button>
             </Box>
 
-            <Grid container spacing={1} sx={{ maxWidth: 400, mx: 'auto' }}>
-              {board.map((cell, index) => (
-                <Grid item xs={4} key={index}>
-                  <GameCell
-                    elevation={2}
-                    onClick={() => handleClick(index)}
-                    isWinning={winningLine.includes(index)}
-                    sx={{ cursor: cell ? 'default' : 'pointer' }}
-                  >
-                    <CellContent>{cell}</CellContent>
-                  </GameCell>
-                </Grid>
-              ))}
+            <Grid container spacing={1.25} sx={{ maxWidth: 420, mx: 'auto' }}>
+              {board.map((cell, index) => {
+                const isWin = winningLine.includes(index)
+                return (
+                  <Grid item xs={4} key={index}>
+                    <GameCell
+                      onClick={() => handleClick(index)}
+                      isWinning={isWin}
+                      sx={{ cursor: cell ? 'default' : 'pointer' }}
+                    >
+                      <CellContent sx={{ color: cellSymbolColor(cell, isWin) }}>
+                        {cell}
+                      </CellContent>
+                    </GameCell>
+                  </Grid>
+                )
+              })}
             </Grid>
 
             {gameStatus !== 'playing' && (
               <Fade in>
-                <Box sx={{ textAlign: 'center', mt: 3 }}>
+                <Box sx={{ textAlign: 'center', mt: 4 }}>
                   {gameStatus === 'win' ? (
-                    <Typography variant="h4" color="success.main">
+                    <Typography
+                      variant="h5"
+                      fontWeight={700}
+                      color="success.main"
+                      sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}
+                    >
                       <FaTrophy /> Player {winner} Wins!
                     </Typography>
                   ) : gameStatus === 'draw' ? (
-                    <Typography variant="h4" color="info.main">
+                    <Typography variant="h5" fontWeight={700} color="info.main">
                       {`It's a Draw!`}
                     </Typography>
                   ) : gameStatus === 'gameOver' ? (
-                    <Typography variant="h4" color="error.main">
+                    <Typography
+                      variant="h5"
+                      fontWeight={700}
+                      color="error.main"
+                      sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}
+                    >
                       <FaExclamationTriangle /> Time is Up!
                     </Typography>
                   ) : null}
@@ -204,81 +265,68 @@ export const GomeTicTacToe = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{ p: 3, backgroundColor: '#f8f9fa' }}>
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{ color: '#1976d2', borderBottom: '2px solid #1976d2', pb: 1 }}
-            >
-              Technologies Used
-            </Typography>
-            <List>
-              <StyledListItem>
-                <ListItemText
-                  primary={
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      React.js
-                    </Typography>
-                  }
-                  secondary="Frontend Framework"
-                />
-              </StyledListItem>
-              <StyledListItem>
-                <ListItemText
-                  primary={
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      Material-UI
-                    </Typography>
-                  }
-                  secondary="UI Components"
-                />
-              </StyledListItem>
-              <StyledListItem>
-                <ListItemText
-                  primary={
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      TypeScript
-                    </Typography>
-                  }
-                  secondary="Type Safety"
-                />
-              </StyledListItem>
+          <Paper sx={panelSx}>
+            <Typography sx={sectionHeading}>Technologies Used</Typography>
+            <List disablePadding sx={{ mb: 3 }}>
+              {[
+                { name: 'React.js', desc: 'Frontend Framework' },
+                { name: 'Material-UI', desc: 'UI Components' },
+                { name: 'TypeScript', desc: 'Type Safety' },
+              ].map((t) => (
+                <ListItem key={t.name} disableGutters sx={ruleItemSx}>
+                  <ListItemText
+                    primary={
+                      <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                        {t.name}
+                      </Typography>
+                    }
+                    secondary={
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                        {t.desc}
+                      </Typography>
+                    }
+                  />
+                </ListItem>
+              ))}
             </List>
 
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{ color: '#1976d2', borderBottom: '2px solid #1976d2', pb: 1, mt: 3 }}
-            >
-              Game Rules
-            </Typography>
-            <List>
-              <ListItem>
-                <ListItemText
-                  primary={<RuleTitle variant="subtitle1">Take Turns</RuleTitle>}
-                  secondary={
-                    <RuleDetail>Players alternate placing X and O on the board</RuleDetail>
-                  }
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText
-                  primary={<RuleTitle variant="subtitle1">Winning Strategy</RuleTitle>}
-                  secondary={
-                    <RuleDetail>
-                      Align three of your symbols horizontally, vertically, or diagonally to win
-                    </RuleDetail>
-                  }
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText
-                  primary={<RuleTitle variant="subtitle1">Time Limit</RuleTitle>}
-                  secondary={
-                    <RuleDetail>Complete the game within the 5-minute time limit</RuleDetail>
-                  }
-                />
-              </ListItem>
+            <Typography sx={sectionHeading}>Game Rules</Typography>
+            <List disablePadding>
+              {[
+                {
+                  title: 'Take Turns',
+                  detail: 'Players alternate placing X and O on the board',
+                },
+                {
+                  title: 'Winning Strategy',
+                  detail:
+                    'Align three of your symbols horizontally, vertically, or diagonally to win',
+                },
+                {
+                  title: 'Time Limit',
+                  detail: 'Complete the game within the 5-minute time limit',
+                },
+              ].map((r) => (
+                <ListItem key={r.title} disableGutters sx={ruleItemSx}>
+                  <ListItemText
+                    primary={
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={600}
+                        color="primary.main"
+                        sx={{ fontSize: '0.95rem' }}
+                      >
+                        {r.title}
+                      </Typography>
+                    }
+                    secondary={
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                        {r.detail}
+                      </Typography>
+                    }
+                  />
+                </ListItem>
+              ))}
             </List>
           </Paper>
         </Grid>

@@ -1,8 +1,9 @@
-import { Seo } from '@/components/common'
+import { BackgroundFx, Seo } from '@/components/common'
 import { HeroSection } from '@/components/home'
 import { MainLayout } from '@/components/layouts'
 import { RecentPost } from '@/components/post'
 import { FeatureWork } from '@/components/work'
+import { API_BASE, safeFetchJson } from '@/utils'
 import { Box } from '@mui/material'
 import { GetStaticProps } from 'next'
 import { NextPageWithLayout, Post, Work } from '../models'
@@ -41,6 +42,7 @@ const Home: NextPageWithLayout = ({ posts, works }: HomeProps) => {
           url: 'https://pinit-ten.vercel.app/',
         }}
       />
+      <BackgroundFx parallax={false} />
       <HeroSection />
       <RecentPost postList={posts || []} />
       <FeatureWork workList={works || []} />
@@ -51,20 +53,15 @@ const Home: NextPageWithLayout = ({ posts, works }: HomeProps) => {
 Home.Layout = MainLayout
 
 export const getStaticProps: GetStaticProps<{}> = async () => {
-  const [postsResponse, worksResponse] = await Promise.all([
-    fetch(
-      `${process.env.API_URL ?? 'https://json-server-blog.vercel.app'}/api/posts?_page=1&_limit=2`,
-    ),
-    fetch(
-      `${process.env.API_URL ?? 'https://json-server-blog.vercel.app'}/api/works?_page=1&_limit=3`,
-    ),
+  const [postsData, worksData] = await Promise.all([
+    safeFetchJson<{ data: Post[] }>(`${API_BASE}/api/posts?_page=1&_limit=2`),
+    safeFetchJson<{ data: Work[] }>(`${API_BASE}/api/works?_page=1&_limit=3`),
   ])
-  const [postsData, worksData] = await Promise.all([postsResponse.json(), worksResponse.json()])
 
   return {
     props: {
-      posts: postsData.data || [],
-      works: worksData.data || [],
+      posts: postsData?.data ?? [],
+      works: worksData?.data ?? [],
     },
     revalidate: 60, // ISR: Revalidate every 60 seconds
   }

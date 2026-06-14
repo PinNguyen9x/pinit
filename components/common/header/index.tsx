@@ -1,203 +1,339 @@
+import { ThemeColorModeContext } from '@/context/theme-mode'
 import { useAuth } from '@/hooks'
 import { encodeUrl } from '@/utils'
+import { Logo } from '../logo'
+import CloseIcon from '@mui/icons-material/Close'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import MenuIcon from '@mui/icons-material/Menu'
 import {
   AppBar,
   Box,
-  Button,
+  Divider,
+  Drawer,
   IconButton,
-  Menu,
-  MenuItem,
+  List,
+  ListItemButton,
   Toolbar,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material'
-import { styled } from '@mui/system'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
-import { FaBars, FaBlog, FaBriefcase, FaHome, FaSignOutAlt, FaUser } from 'react-icons/fa'
+import { useContext, useState } from 'react'
 
-// const gradients = [
-//   'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-//   'linear-gradient(45deg, #FF4081 30%, #FF79B0 90%)',
-//   'linear-gradient(45deg, #9C27B0 30%, #E040FB 90%)',
-//   'linear-gradient(45deg, #4CAF50 30%, #8BC34A 90%)',
-//   'linear-gradient(45deg, #FF9800 30%, #FFC107 90%)',
-// ]
-
-const StyledAppBar = styled(AppBar)(({ backgroundIndex }: { backgroundIndex: number }) => ({
-  background: 'linear-gradient(45deg, #9C27B0 30%, #E040FB 90%)',
-  boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',
-  transition: 'background 0.5s ease-in-out',
-}))
-
-const StyledButton = styled(Button)(({ active = false }: { active?: boolean }) => ({
-  margin: '0 8px',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    transition: 'transform 0.2s ease-in-out',
-  },
-  '&:focus': {
-    outline: '2px solid #fff',
-    outlineOffset: '2px',
-  },
-  ...(active && {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottom: '2px solid white',
-  }),
-}))
-
-const LogoText = styled(Typography)(({ theme }) => ({
-  fontFamily: '"Lobster", cursive',
-  fontSize: '2.5rem',
-  fontWeight: 800,
-  color: '#ffffff',
-  letterSpacing: '3px',
-  textTransform: 'uppercase',
-  cursor: 'pointer',
-  marginRight: '16px',
-  textShadow: '3px 3px 6px rgba(0,0,0,0.3)',
-  transition: 'all 0.3s ease-in-out',
-  '&:hover': {
-    transform: 'scale(1.05)',
-    textShadow: '4px 4px 8px rgba(0,0,0,0.4)',
-  },
-}))
-
-const navigationItems = [
-  { label: 'Home', icon: <FaHome />, path: '/' },
-  { label: 'Blog', icon: <FaBlog />, path: '/blog' },
-  { label: 'Works', icon: <FaBriefcase />, path: '/works', requireLogin: false },
+const navItems = [
+  { label: 'Home', path: '/' },
+  { label: 'Blog', path: '/blog' },
+  { label: 'Glossary', path: '/glossary' },
+  { label: 'Works', path: '/works' },
 ]
 
 export default function Header() {
-  const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null)
-  const [backgroundIndex, setBackgroundIndex] = useState(0)
   const { profile, logout } = useAuth()
   const router = useRouter()
   const isLoggedIn = !!profile?.username
-  const routeList = navigationItems.filter((route) => !route?.requireLogin || isLoggedIn)
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const { toggleColorMode, mode } = useContext(ThemeColorModeContext)
+  const isDark = mode === 'dark'
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setBackgroundIndex((prevIndex) => (prevIndex + 1) % gradients.length)
-  //   }, 5000)
+  const isActive = (path: string) =>
+    path === '/' ? router.pathname === '/' : router.pathname.startsWith(path)
 
-  //   return () => clearInterval(interval)
-  // }, [])
-
-  const handleMobileMenuOpen = (event: any) => {
-    setMobileMenuAnchor(event.currentTarget)
-  }
-
-  const handleMobileMenuClose = () => {
-    setMobileMenuAnchor(null)
-  }
-
-  const renderNavigationItems = () => {
-    if (isMobile) {
-      return (
-        <>
-          <IconButton
-            color="inherit"
-            aria-label="open menu"
-            onClick={handleMobileMenuOpen}
-            edge="start"
-          >
-            <FaBars />
-          </IconButton>
-          <Menu
-            anchorEl={mobileMenuAnchor}
-            open={Boolean(mobileMenuAnchor)}
-            onClose={handleMobileMenuClose}
-          >
-            {routeList.map((item) => (
-              <MenuItem key={item.label} aria-label={`Navigate to ${item.label}`}>
-                <Link href={item.path} onClick={handleMobileMenuClose}>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {item.icon}
-                    <Typography>{item.label}</Typography>
-                  </Box>
-                </Link>
-              </MenuItem>
-            ))}
-            {!isLoggedIn && (
-              <MenuItem key="login" aria-label={`Navigate to Login`}>
-                <Link
-                  href={`/login?back_to=${encodeUrl(router.asPath)}`}
-                  onClick={handleMobileMenuClose}
-                >
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <FaUser />
-                    <Typography>Login</Typography>
-                  </Box>
-                </Link>
-              </MenuItem>
-            )}
-
-            {isLoggedIn && (
-              <MenuItem key="logout" onClick={logout}>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <FaSignOutAlt />
-                  <Typography>Logout</Typography>
-                </Box>
-              </MenuItem>
-            )}
-          </Menu>
-        </>
-      )
-    }
-
-    return (
-      <>
-        {navigationItems.map((item) => (
-          <Link key={item.label} href={item.path}>
-            <StyledButton
-              sx={{ color: '#fff' }}
-              startIcon={item.icon}
-              active={router.pathname === item.path}
-            >
-              {item.label}
-            </StyledButton>
-          </Link>
-        ))}
-        {!isLoggedIn && (
-          <Link href={`/login?back_to=${encodeUrl(router.asPath)}`}>
-            <StyledButton key={'login'} sx={{ color: '#fff' }} startIcon={<FaUser />}>
-              Login
-            </StyledButton>
-          </Link>
-        )}
-        {isLoggedIn && (
-          <StyledButton
-            key={'logout'}
-            sx={{ color: '#fff' }}
-            startIcon={<FaSignOutAlt />}
-            onClick={logout}
-          >
-            Logout
-          </StyledButton>
-        )}
-      </>
-    )
-  }
+  const navLinkSx = (active: boolean) => ({
+    display: 'inline-flex',
+    px: 1.5,
+    py: 0.75,
+    borderRadius: 1,
+    fontSize: '0.875rem',
+    fontWeight: active ? 600 : 400,
+    color: active ? (isDark ? '#ffffff' : '#000000') : isDark ? '#888888' : '#666666',
+    cursor: 'pointer',
+    userSelect: 'none',
+    transition: 'color 0.15s, background-color 0.15s',
+    '&:hover': {
+      color: isDark ? '#ffffff' : '#000000',
+      bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+    },
+  })
 
   return (
     <>
-      <StyledAppBar position="static" backgroundIndex={backgroundIndex}>
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box
-            sx={{ display: 'flex', alignItems: 'center', flex: 1 }}
-            onClick={() => router.push('/about')}
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)',
+          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+          color: isDark ? '#ededed' : '#111111',
+        }}
+      >
+        <Toolbar
+          sx={{
+            maxWidth: '900px',
+            mx: 'auto',
+            width: '100%',
+            px: { xs: 2, md: 3 },
+            minHeight: { xs: 56, md: 64 },
+          }}
+        >
+          <Link
+            href="/about"
+            style={{ textDecoration: 'none', display: 'inline-flex' }}
+            aria-label="About me"
           >
-            <LogoText variant="h4">Nip</LogoText>
+            <Logo size={36} />
+          </Link>
+
+          <Box flexGrow={1} />
+
+          {/* Desktop Nav */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+            {navItems.map((item) => (
+              <Link key={item.label} href={item.path} style={{ textDecoration: 'none' }}>
+                <Box component="span" sx={navLinkSx(isActive(item.path))}>
+                  {item.label}
+                </Box>
+              </Link>
+            ))}
+            {!isLoggedIn ? (
+              <Link
+                href={`/login?back_to=${encodeUrl(router.asPath)}`}
+                style={{ textDecoration: 'none' }}
+              >
+                <Box component="span" sx={navLinkSx(false)}>
+                  Login
+                </Box>
+              </Link>
+            ) : (
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  ml: 1,
+                  pl: 1.5,
+                  borderLeft: `1px solid ${
+                    isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+                  }`,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    px: 1.25,
+                    py: 0.5,
+                    borderRadius: '999px',
+                    border: `1px solid ${
+                      isDark ? 'rgba(74,222,128,0.32)' : 'rgba(22,163,74,0.28)'
+                    }`,
+                    bgcolor: isDark ? 'rgba(22,163,74,0.10)' : 'rgba(22,163,74,0.06)',
+                    color: 'primary.main',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.01em',
+                    maxWidth: 180,
+                  }}
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      bgcolor: 'secondary.main',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Box
+                    component="span"
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {profile?.username}
+                  </Box>
+                </Box>
+                <Box component="span" onClick={logout} sx={navLinkSx(false)}>
+                  Logout
+                </Box>
+              </Box>
+            )}
           </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>{renderNavigationItems()}</Box>
+
+          {/* Theme Toggle */}
+          <IconButton
+            onClick={toggleColorMode}
+            size="small"
+            aria-label="Toggle theme"
+            sx={{
+              ml: 1,
+              color: isDark ? '#888888' : '#666666',
+              '&:hover': {
+                bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                color: isDark ? '#ffffff' : '#000000',
+              },
+            }}
+          >
+            {isDark ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+          </IconButton>
+
+          {/* Mobile Menu Button */}
+          <IconButton
+            size="small"
+            aria-label="Open menu"
+            sx={{
+              ml: 0.5,
+              display: { xs: 'flex', md: 'none' },
+              color: isDark ? '#888888' : '#666666',
+            }}
+            onClick={() => setMobileOpen(true)}
+          >
+            <MenuIcon fontSize="small" />
+          </IconButton>
         </Toolbar>
-      </StyledAppBar>
+      </AppBar>
+
+      {/* Mobile Drawer */}
+      <Drawer
+        anchor="right"
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        PaperProps={{
+          sx: {
+            width: 240,
+            bgcolor: isDark ? '#0a0a0a' : '#ffffff',
+            borderLeft: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+          },
+        }}
+      >
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography fontWeight={700} fontSize="0.9rem" color={isDark ? '#ededed' : '#111111'}>
+            Navigation
+          </Typography>
+          <IconButton size="small" onClick={() => setMobileOpen(false)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        <Divider sx={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+        <List sx={{ py: 1 }}>
+          {navItems.map((item) => (
+            <Link
+              key={item.label}
+              href={item.path}
+              onClick={() => setMobileOpen(false)}
+              style={{ textDecoration: 'none' }}
+            >
+              <ListItemButton
+                selected={isActive(item.path)}
+                sx={{
+                  mx: 1,
+                  borderRadius: 1,
+                  mb: 0.5,
+                  py: 1,
+                  fontSize: '0.875rem',
+                  fontWeight: isActive(item.path) ? 600 : 400,
+                  color: isActive(item.path)
+                    ? isDark
+                      ? '#ffffff'
+                      : '#000000'
+                    : isDark
+                    ? '#888888'
+                    : '#666666',
+                  '&.Mui-selected': {
+                    bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                  },
+                  '&:hover': {
+                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  },
+                }}
+              >
+                {item.label}
+              </ListItemButton>
+            </Link>
+          ))}
+          <Divider
+            sx={{ my: 1, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}
+          />
+          {!isLoggedIn ? (
+            <Link
+              href={`/login?back_to=${encodeUrl(router.asPath)}`}
+              onClick={() => setMobileOpen(false)}
+              style={{ textDecoration: 'none' }}
+            >
+              <ListItemButton
+                sx={{
+                  mx: 1,
+                  borderRadius: 1,
+                  py: 1,
+                  color: isDark ? '#888888' : '#666666',
+                  '&:hover': {
+                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  },
+                }}
+              >
+                Login
+              </ListItemButton>
+            </Link>
+          ) : (
+            <>
+              <Box
+                sx={{
+                  mx: 2,
+                  mb: 1,
+                  px: 1.25,
+                  py: 0.75,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  borderRadius: '999px',
+                  border: `1px solid ${
+                    isDark ? 'rgba(74,222,128,0.32)' : 'rgba(22,163,74,0.28)'
+                  }`,
+                  bgcolor: isDark ? 'rgba(22,163,74,0.10)' : 'rgba(22,163,74,0.06)',
+                  color: 'primary.main',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  maxWidth: 'fit-content',
+                }}
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    bgcolor: 'secondary.main',
+                  }}
+                />
+                {profile?.username}
+              </Box>
+              <ListItemButton
+                onClick={() => {
+                  logout()
+                  setMobileOpen(false)
+                }}
+                sx={{
+                  mx: 1,
+                  borderRadius: 1,
+                  py: 1,
+                  color: isDark ? '#888888' : '#666666',
+                  '&:hover': {
+                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  },
+                }}
+              >
+                Logout
+              </ListItemButton>
+            </>
+          )}
+        </List>
+      </Drawer>
     </>
   )
 }

@@ -1,110 +1,112 @@
 import { createTheme, responsiveFontSizes } from '@mui/material/styles'
 
-export let theme = createTheme({
-  typography: {
-    fontFamily: 'Heebo, sans-serif',
-  },
-  palette: {
-    primary: {
-      main: '#FF6464',
+export function getTheme(mode: 'light' | 'dark') {
+  const isDark = mode === 'dark'
+
+  let t = createTheme({
+    palette: {
+      mode,
+      primary: {
+        main: isDark ? '#4ade80' : '#16a34a',
+        light: isDark ? '#86efac' : '#22c55e',
+        dark: isDark ? '#22c55e' : '#15803d',
+        contrastText: '#ffffff',
+      },
+      secondary: {
+        main: isDark ? '#34d399' : '#059669',
+        light: isDark ? '#6ee7b7' : '#10b981',
+        dark: isDark ? '#10b981' : '#047857',
+        contrastText: '#ffffff',
+      },
+      background: {
+        default: isDark ? '#000000' : '#ffffff',
+        paper: isDark ? '#0a0a0a' : '#fafafa',
+      },
+      text: {
+        primary: isDark ? '#ededed' : '#111111',
+        secondary: isDark ? '#888888' : '#666666',
+      },
+      divider: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
     },
-    secondary: {
-      light: '#EDF7FA',
-      main: '#00A8CC',
+    typography: {
+      fontFamily: '"Inter", "Heebo", sans-serif',
+      h1: { fontWeight: 700, letterSpacing: '-0.04em' },
+      h2: { fontWeight: 700, letterSpacing: '-0.03em' },
+      h3: { fontWeight: 700, letterSpacing: '-0.02em' },
+      h4: { fontWeight: 600, letterSpacing: '-0.02em' },
+      h5: { fontWeight: 600 },
+      h6: { fontWeight: 600 },
     },
-    error: {
-      main: '#f44336',
-    },
-    text: {
-      primary: '#21243D',
-    },
-  },
-  components: {
-    MuiContainer: {
-      styleOverrides: {
-        maxWidthSm: {
-          maxWidth: '680px', // default 680px
-          '@media (min-width: 600px)': {
+    shape: { borderRadius: 8 },
+    components: {
+      MuiContainer: {
+        styleOverrides: {
+          maxWidthSm: {
             maxWidth: '680px',
+            '@media (min-width: 600px)': { maxWidth: '680px' },
+          },
+          maxWidthMd: {
+            maxWidth: '900px',
+            '@media (min-width: 900px)': { maxWidth: '900px' },
           },
         },
-        maxWidthMd: {
-          maxWidth: '860px', // default 860px
-          '@media (min-width: 900px)': {
-            maxWidth: '860px',
+        defaultProps: { maxWidth: 'md' },
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            textTransform: 'none',
+            fontWeight: 500,
+            borderRadius: '8px',
+            boxShadow: 'none',
+            '&:hover': { boxShadow: 'none' },
           },
         },
       },
-      defaultProps: {
-        maxWidth: 'md',
-      },
-    },
-    MuiLink: {
-      styleOverrides: {
-        root: {
-          color: 'black',
-          '&:hover, &.active': {
-            color: '#FF6464',
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            fontWeight: 500,
+            fontSize: '0.72rem',
+            borderRadius: '6px',
           },
         },
       },
-      defaultProps: {
-        underline: 'hover',
-      },
-    },
-    MuiButton: {
-      variants: [
-        {
-          props: { variant: 'contained', color: 'primary' },
-          style: {
-            color: 'white',
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+            boxShadow: 'none',
           },
-        },
-      ],
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          paddingInline: 2,
         },
       },
-      variants: [
-        {
-          props: { color: 'secondary' },
-          style: {
-            color: 'white',
-            backgroundColor: '#142850',
-            fontWeight: 'bold',
-            fontSize: '16px',
+      MuiLink: {
+        styleOverrides: {
+          root: {
+            color: 'inherit',
+            '&:hover': { color: isDark ? '#4ade80' : '#16a34a' },
           },
         },
-        {
-          props: { color: 'primary' },
-          style: {
-            color: 'white',
-            fontSize: '16px',
-            fontWeight: 'bold',
-          },
+        defaultProps: { underline: 'none' },
+      },
+      MuiIconButton: {
+        styleOverrides: {
+          root: { borderRadius: '8px' },
         },
-      ],
-    },
-    MuiIconButton: {
-      styleOverrides: {
-        root: {
-          '&:hover': {
-            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+      },
+      MuiDivider: {
+        styleOverrides: {
+          root: {
+            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
           },
         },
       },
     },
-  },
-})
+  })
 
-theme = responsiveFontSizes(theme)
+  t = responsiveFontSizes(t)
+  return t
+}
 
-// theme.typography.h3 = {
-//   fontSize: '2rem',
-//   [theme.breakpoints.up('md')]: {
-//     fontSize: '3rem',
-//   },
-// }
+// Default export kept for _document.tsx
+export const theme = getTheme('dark')

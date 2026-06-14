@@ -1,5 +1,5 @@
 import { Work } from '@/models'
-import { Box, Divider } from '@mui/material'
+import { Stack } from '@mui/material'
 import { Fragment } from 'react'
 import { NoDataFound } from '../common'
 import { WorkItem } from './work-item'
@@ -13,24 +13,20 @@ export interface WorkListProps {
 export function WorkList({ workList, isLoading }: WorkListProps) {
   if (isLoading)
     return (
-      <Box>
+      <Stack spacing={2}>
         {Array.from({ length: 3 }).map((_, index) => (
           <Fragment key={index}>
             <WorkSkeleton />
-            <Divider sx={{ my: 3 }} />
           </Fragment>
         ))}
-      </Box>
+      </Stack>
     )
   if (workList.length === 0) return <NoDataFound />
   return (
-    <Box>
+    <Stack spacing={2}>
       {workList.map((work) => (
-        <Fragment key={work.id}>
-          <WorkItem work={work} />
-          <Divider sx={{ my: 3 }} />
-        </Fragment>
+        <WorkItem key={work.id} work={work} />
       ))}
-    </Box>
+    </Stack>
   )
 }

@@ -3,8 +3,10 @@ slug: reactjs-interview-question
 title: ReactJS Interview Question 🎉
 author: Pin Nguyen
 author_title: Software Developer
-tags: [reactjs, interview reactjs]
+author_image_url: https://avatars.githubusercontent.com/Pinnguyen
+tags: [ReactJS, JavaScript, TypeScript]
 date: '2024-07-29T12:00:00Z'
+image: https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1200&auto=format&fit=crop&q=80
 ---
 
 Many of you may feel nervous and anxious when preparing for an upcoming ReactJS interview, right? Understanding this, I've written down a few notes. Hopefully, this will help you grasp the format of a ReactJS interview, what topics are commonly discussed, and boost your confidence. 🙂

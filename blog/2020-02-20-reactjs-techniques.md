@@ -2,8 +2,11 @@
 slug: reactjs-techniques-hooks
 title: Reactjs - Techniques useEffect & useLayoutEffect hooks
 author: Pin Nguyen
-tags: [reactjs, useEffect, useEffect]
+author_title: Software Developer
+author_image_url: https://avatars.githubusercontent.com/Pinnguyen
+tags: [ReactJS, TypeScript, JavaScript]
 date: '2024-07-29T12:00:00Z'
+image: https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&auto=format&fit=crop&q=80
 ---
 
 useEffect and useLayoutEffect are both hooks in React that are used to handle side effects in functional components. However, they have different timing for when they are executed within the component lifecycle.

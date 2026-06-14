@@ -1,30 +1,121 @@
 import { Post } from '@/models'
-import { Box, CardContent, Divider, Stack, Typography } from '@mui/material'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
 import { format } from 'date-fns'
-import * as React from 'react'
+import Link from 'next/link'
 
 export interface PostItemProps {
   post: Post
 }
 
 export function PostItem({ post }: PostItemProps) {
-  return (
-    <Box>
-      <CardContent>
-        <Typography variant="h5" fontWeight="bold">
-          {post.title}
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const href = post.slug ? `/blog/${post.slug}` : undefined
+
+  const card = (
+    <Box
+      sx={{
+        p: 2.5,
+        borderRadius: 2,
+        height: '100%',
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+        bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+        cursor: href ? 'pointer' : 'default',
+        transition: 'border-color 0.2s, transform 0.2s, box-shadow 0.2s',
+        '&:hover': {
+          borderColor: href
+            ? 'rgba(22,163,74,0.35)'
+            : isDark
+              ? 'rgba(255,255,255,0.18)'
+              : 'rgba(0,0,0,0.18)',
+          transform: 'translateY(-2px)',
+          boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.08)',
+        },
+        '&:hover .read-more-cta': { gap: 1 },
+      }}
+    >
+      <Stack direction="row" spacing={0.75} mb={2} flexWrap="wrap" useFlexGap>
+        {post.tagList.slice(0, 3).map((tag) => (
+          <Chip
+            key={tag}
+            label={tag}
+            size="small"
+            sx={{
+              fontSize: '0.68rem',
+              height: 20,
+              bgcolor: isDark ? 'rgba(22,163,74,0.1)' : 'rgba(22,163,74,0.07)',
+              color: '#16a34a',
+              border: '1px solid rgba(22,163,74,0.18)',
+              fontWeight: 500,
+            }}
+          />
+        ))}
+      </Stack>
+
+      <Typography
+        variant="h6"
+        fontWeight={600}
+        mb={1.25}
+        sx={{
+          fontSize: { xs: '0.95rem', md: '1.05rem' },
+          lineHeight: 1.4,
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {post.title}
+      </Typography>
+
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        mb={2.5}
+        sx={{
+          lineHeight: 1.65,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          fontSize: '0.85rem',
+        }}
+      >
+        {post.description}
+      </Typography>
+
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          fontWeight={500}
+          sx={{ fontSize: '0.75rem' }}
+        >
+          {format(new Date(post.publishedDate), 'MMM dd, yyyy')}
         </Typography>
-        <Stack direction="row" my={2}>
-          <Typography variant="body1">
-            {format(new Date(post.publishedDate), 'dd MMM yyyy')}
+        <Stack
+          className="read-more-cta"
+          direction="row"
+          alignItems="center"
+          spacing={0.5}
+          sx={{ color: '#16a34a', transition: 'gap 0.15s' }}
+        >
+          <Typography component="span" fontSize="0.8rem" fontWeight={500} color="#16a34a">
+            Read more
           </Typography>
-          <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
-          <Typography variant="body1" color="GrayText">
-            {post.tagList.join(', ')}
-          </Typography>
+          <ArrowForwardIcon sx={{ fontSize: 13, color: '#16a34a' }} />
         </Stack>
-        <Typography variant="body2">{post.description}</Typography>
-      </CardContent>
+      </Stack>
     </Box>
+  )
+
+  if (!href) return card
+
+  return (
+    <Link
+      href={href}
+      style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}
+      aria-label={post.title}
+    >
+      {card}
+    </Link>
   )
 }

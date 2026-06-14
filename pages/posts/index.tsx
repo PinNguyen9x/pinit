@@ -1,9 +1,10 @@
-import { GetStaticProps, GetStaticPropsContext } from "next";
+import { safeFetchJson } from "@/utils";
+import { GetStaticProps } from "next";
 import Link from "next/link";
 import * as React from "react";
 
 export interface PostsPageProps {
-  posts: any[];
+  posts: { id: string; title: string }[];
 }
 
 export default function PostsPage(props: PostsPageProps) {
@@ -20,18 +21,15 @@ export default function PostsPage(props: PostsPageProps) {
   );
 }
 
-export const getStaticProps: GetStaticProps<PostsPageProps> = async (
-  context: GetStaticPropsContext
-) => {
-  // server-side code
-  // build -times
-  const response = await fetch(
+export const getStaticProps: GetStaticProps<PostsPageProps> = async () => {
+  const data = await safeFetchJson<{ data: { id: string; title: string }[] }>(
     "https://js-post-api.herokuapp.com/api/posts?_page=1"
   );
-  const data = await response.json();
   return {
     props: {
-      posts: data.data.map((x: any) => ({ id: x.id, title: x.title })),
+      posts:
+        data?.data?.map((x) => ({ id: x.id, title: x.title })) ?? [],
     },
+    revalidate: 60,
   };
 };
