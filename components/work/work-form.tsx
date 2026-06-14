@@ -4,7 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { Box, Button } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import * as yup from 'yup'
-import { AutocompleteField, EditorField, InputField, PhotoField } from '../form'
+import { AutocompleteField, InputField, MarkdownField, PhotoField } from '../form'
 
 export interface WorkFormProps {
   initialValues?: Partial<WorkPayload>
@@ -104,7 +104,12 @@ export function WorkForm({ initialValues, onSubmit }: WorkFormProps) {
         isOptionEqualToValue={(option, value) => option === value}
       />
       <PhotoField name="thumbnail" control={control} label="Thumbnail" />
-      <EditorField name="fullDescription" control={control} label="Full description" />
+      <MarkdownField
+        name="fullDescription"
+        control={control}
+        label="Full description (Markdown)"
+        placeholder={`## Architecture\n\`\`\`mermaid\nflowchart LR\n  UI[Next.js] --> API[json-server] --> DB[(Works)]\n\`\`\`\n\n## Key decisions & trade-offs\n> ...\n\n## Risks & Issues\n> ...`}
+      />
       <Button variant="contained" type="submit" size="medium" disabled={!isValid}>
         {!!initialValues?.id ? 'Save' : 'Submit'}
       </Button>

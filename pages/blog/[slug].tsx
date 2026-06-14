@@ -8,64 +8,11 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import { Avatar, Box, Chip, Container, Grid, Stack, Typography, useTheme } from '@mui/material'
 import { format } from 'date-fns'
+import { renderMarkdown } from '@/utils/markdown'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect } from 'react'
-import rehypeAutolinkHeadings from 'rehype-autolink-headings'
-import rehypeFormat from 'rehype-format'
-import rehypeRaw from 'rehype-raw'
-import rehypeSlug from 'rehype-slug'
-import rehypeStringify from 'rehype-stringify'
-import remarkGfm from 'remark-gfm'
-import remarkParse from 'remark-parse'
-import remarkRehype from 'remark-rehype'
-import remarkToc from 'remark-toc'
-import { unified } from 'unified'
-import { visit } from 'unist-util-visit'
-
-// remark-prism emits text nodes with pre-escaped HTML entities (e.g. "&gt;").
-// Rehype later escapes the `&`, producing "&amp;gt;" in the output, which the
-// browser renders as literal "&gt;". Decode the entities so stringify re-escapes cleanly.
-function rehypeDecodePrismEntities() {
-  const decode = (s: string) =>
-    s.replace(/&(amp|lt|gt|quot|#39|apos|#x27);/g, (_, e) => {
-      const map: Record<string, string> = {
-        amp: '&',
-        lt: '<',
-        gt: '>',
-        quot: '"',
-        '#39': "'",
-        apos: "'",
-        '#x27': "'",
-      }
-      return map[e] ?? _
-    })
-  return (tree: any) => {
-    visit(tree, 'element', (node: any) => {
-      if (node.tagName !== 'code' && node.tagName !== 'pre') return
-      visit(node, 'text', (t: any) => {
-        if (typeof t.value === 'string') t.value = decode(t.value)
-      })
-    })
-  }
-}
-
-// Convert ```mermaid fenced blocks into <div class="mermaid"> so the client-side
-// mermaid.run() can render them (e.g. git gitGraph). Must run BEFORE remark-prism
-// so Prism doesn't tokenize/escape the diagram source.
-function remarkMermaid() {
-  const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
-  return (tree: any) => {
-    visit(tree, 'code', (node: any, index: any, parent: any) => {
-      if (node.lang !== 'mermaid' || !parent || index == null) return
-      parent.children[index] = {
-        type: 'html',
-        value: `<div class="mermaid">${escapeHtml(node.value)}</div>`,
-      }
-    })
-  }
-}
 
 export interface BlogDetailPageProps {
   post: Post
@@ -551,35 +498,8 @@ export const getStaticProps: GetStaticProps<BlogDetailPageProps> = async (
   const post = postList.find((x: Post) => x.slug === slug)
   if (!post) return { notFound: true }
 
-  const file = await unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .use(remarkToc, { heading: 'agenda.*' })
-    .use(remarkMermaid)
-    .use(require('remark-prism'))
-    .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeRaw)
-    .use(rehypeDecodePrismEntities)
-    .use(rehypeSlug)
-    .use(rehypeAutolinkHeadings, { behavior: 'wrap' })
-    .use(rehypeFormat)
-    .use(rehypeStringify)
-    .process(post.mdContent || '')
-
-  const htmlContent = file.toString()
+  const { html: htmlContent, toc } = await renderMarkdown(post.mdContent || '')
   post.htmlContent = htmlContent
-
-  // Extract TOC from generated HTML (headings h2–h4 with slug IDs)
-  const toc: TocItem[] = []
-  const tocPattern = /<h([2-4])\s[^>]*id="([^"]*)"[^>]*>([\s\S]*?)<\/h[2-4]>/g
-  let match
-  while ((match = tocPattern.exec(htmlContent)) !== null) {
-    toc.push({
-      level: parseInt(match[1]),
-      id: match[2],
-      text: match[3].replace(/<[^>]+>/g, '').trim(),
-    })
-  }
 
   // Reading time: average 200 wpm
   const wordCount = (post.mdContent || '').trim().split(/\s+/).length

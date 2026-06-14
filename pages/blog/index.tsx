@@ -55,8 +55,9 @@ function BlogPageIntro({ totalCount }: { totalCount: number }) {
             fontFamily: '"Fraunces", Georgia, serif',
             fontWeight: 600,
             fontSize: { xs: '2.4rem', sm: '3rem', md: '3.5rem' },
-            lineHeight: 1.02,
+            lineHeight: 1.12,
             letterSpacing: '-0.025em',
+            pb: '0.08em',
             mb: 1.75,
           }}
         >
