@@ -5,6 +5,8 @@ import { NextPageWithLayout } from '@/models'
 import { keyframes } from '@emotion/react'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import CheckIcon from '@mui/icons-material/Check'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SearchIcon from '@mui/icons-material/Search'
 import {
@@ -67,6 +69,7 @@ const Glossary: NextPageWithLayout = () => {
   const [cat, setCat] = useState('All')
   const [openTerm, setOpenTerm] = useState<string | null>(null)
   const [flashTerm, setFlashTerm] = useState<string | null>(null)
+  const [copiedTerm, setCopiedTerm] = useState<string | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const cardRefs = useRef<Record<string, HTMLElement | null>>({})
@@ -131,11 +134,19 @@ const Glossary: NextPageWithLayout = () => {
     window.scrollTo({ top: y, behavior: 'smooth' })
   }, [])
 
-  // Jump to a specific term (from a related chip) and open it.
+  // Jump to a specific term (from a related chip or deep-link) and open it.
   const goToTerm = useCallback((termName: string) => {
     setQuery('')
     setCat('All')
     setOpenTerm(termName)
+    const nextHash = '#' + encodeURIComponent(termName)
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState(
+        null,
+        '',
+        window.location.pathname + window.location.search + nextHash
+      )
+    }
     requestAnimationFrame(() => {
       setTimeout(() => {
         const el = cardRefs.current[termName]
@@ -146,6 +157,43 @@ const Glossary: NextPageWithLayout = () => {
         setTimeout(() => setFlashTerm(null), 1000)
       }, 60)
     })
+  }, [])
+
+  // Deep-link: read URL hash on mount + react to hashchange (back/forward, paste).
+  useEffect(() => {
+    const handleHash = () => {
+      const raw = window.location.hash.slice(1)
+      if (!raw) return
+      let decoded: string
+      try {
+        decoded = decodeURIComponent(raw)
+      } catch {
+        return
+      }
+      if (!GLOSSARY.some((x) => x.term === decoded)) return
+      goToTerm(decoded)
+    }
+    handleHash()
+    window.addEventListener('hashchange', handleHash)
+    return () => window.removeEventListener('hashchange', handleHash)
+  }, [goToTerm])
+
+  const copyLink = useCallback((termName: string) => {
+    const url =
+      window.location.origin +
+      window.location.pathname +
+      '#' +
+      encodeURIComponent(termName)
+    const done = () => {
+      setCopiedTerm(termName)
+      setTimeout(
+        () => setCopiedTerm((cur) => (cur === termName ? null : cur)),
+        1500
+      )
+    }
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).then(done).catch(() => {})
+    }
   }, [])
 
   const toggle = (term: string) =>
@@ -486,6 +534,40 @@ const Glossary: NextPageWithLayout = () => {
                             }}
                           >
                             {d.cat}
+                          </Box>
+                          <Box
+                            component="button"
+                            aria-label={`Copy link to ${d.term}`}
+                            title={copiedTerm === d.term ? 'Đã copy!' : 'Copy deep-link'}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              copyLink(d.term)
+                            }}
+                            sx={{
+                              display: 'grid',
+                              placeItems: 'center',
+                              width: 24,
+                              height: 24,
+                              p: 0,
+                              border: `1px solid ${line}`,
+                              borderRadius: '6px',
+                              bgcolor: 'transparent',
+                              color:
+                                copiedTerm === d.term ? accent : 'text.secondary',
+                              cursor: 'pointer',
+                              transition: '0.15s',
+                              '&:hover': {
+                                color: accent,
+                                borderColor: `${accent}66`,
+                                bgcolor: `${accent}14`,
+                              },
+                            }}
+                          >
+                            {copiedTerm === d.term ? (
+                              <CheckIcon sx={{ fontSize: 14 }} />
+                            ) : (
+                              <ContentCopyIcon sx={{ fontSize: 13 }} />
+                            )}
                           </Box>
                           <ExpandMoreIcon
                             sx={{
