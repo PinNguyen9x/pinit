@@ -15,6 +15,7 @@ export type GlossaryCategory =
   | 'AI'
   | 'Messaging'
   | 'General'
+  | 'Mobile'
 
 export interface GlossaryTerm {
   term: string
@@ -685,5 +686,31 @@ export const GLOSSARY: GlossaryTerm[] = [
     detail:
       'RabbitMQ là message broker dựa trên giao thức AMQP, định tuyến message qua exchange tới các queue; message thường bị xoá sau khi consumer ack. Khác Kafka (lưu log đọc lại được), RabbitMQ mạnh ở định tuyến linh hoạt và tác vụ kiểu hàng đợi/RPC. Chọn nhầm công cụ cho bài toán là "issue" ở tầng kiến trúc. 💡 Dễ nhớ: RabbitMQ là bưu cục chia thư theo địa chỉ rồi giao là xong; Kafka là cuốn sổ lưu lại mọi bức thư.',
     related: ['Kafka', 'Dead Letter Queue', 'Topic', 'Backpressure'],
+  },
+
+  // ─────────────────────────── Mobile ───────────────────────────
+  {
+    term: 'React Native',
+    cat: 'Mobile',
+    short: 'Framework viết app iOS & Android bằng JavaScript/TypeScript, dùng chung codebase.',
+    detail:
+      'React Native là framework do Meta phát triển, cho phép viết ứng dụng di động native cho iOS và Android bằng JavaScript/TypeScript với cú pháp React. Code JS chạy trong runtime riêng và gọi sang các component native thật (UIView, View) qua cầu nối (bridge/JSI), thay vì render ra WebView như app lai. Một codebase dùng được cho cả hai nền tảng, tái sử dụng kỹ năng React của frontend developer. 💡 Dễ nhớ: viết một lần như React web, nhưng render ra "đồ thật" của iOS/Android chứ không phải HTML.',
+    related: ['Framework', 'SDK', 'APK', 'Push Notification'],
+  },
+  {
+    term: 'APK',
+    cat: 'Mobile',
+    short: 'Gói cài đặt ứng dụng Android — file .apk để cài lên máy.',
+    detail:
+      'APK (Android Package Kit) là định dạng file đóng gói toàn bộ ứng dụng Android: mã đã biên dịch (DEX), tài nguyên (ảnh, layout), thư viện native và file AndroidManifest.xml mô tả quyền/component. Người dùng cài qua Play Store hoặc sideload thủ công file .apk. Bản phát hành lên Play Store hiện ưu tiên định dạng AAB (Android App Bundle), Google sẽ tự tạo APK tối ưu theo từng thiết bị. 💡 Dễ nhớ: APK trên Android ≈ file .ipa trên iOS — một "hộp" chứa đủ thứ để app chạy được trên máy.',
+    related: ['React Native', 'SDK', 'Container'],
+  },
+  {
+    term: 'Push Notification',
+    cat: 'Mobile',
+    short: 'Thông báo do server đẩy xuống thiết bị dù app đang đóng.',
+    detail:
+      'Push Notification là cơ chế server gửi thông báo tới thiết bị di động qua dịch vụ trung gian của hệ điều hành — FCM (Firebase Cloud Messaging) cho Android và APNs (Apple Push Notification service) cho iOS. App đăng ký nhận một device token, server dùng token đó gọi FCM/APNs, dịch vụ này đẩy thông báo xuống máy ngay cả khi app không chạy. Khác với in-app notification (chỉ thấy khi app đang mở). 💡 Dễ nhớ: server không gọi thẳng máy người dùng — nó nhờ "bưu tá" FCM/APNs đem thông báo tới hộp thư của từng thiết bị.',
+    related: ['API', 'Webhook', 'WebSocket', 'Token / JWT'],
   },
 ]
