@@ -13,6 +13,7 @@ export type GlossaryCategory =
   | 'Database'
   | 'Security'
   | 'AI'
+  | 'Messaging'
   | 'General'
 
 export interface GlossaryTerm {
@@ -231,7 +232,7 @@ export const GLOSSARY: GlossaryTerm[] = [
     short: 'Chạy code mà không cần quản lý server — trả tiền theo lần dùng.',
     detail:
       'Serverless là mô hình cloud nơi nhà cung cấp tự quản lý hạ tầng; developer chỉ viết hàm (function) và nó chạy khi có sự kiện, tự scale, tính tiền theo số lần gọi (vd: AWS Lambda, Vercel Functions). Không phải là "không có server" mà là bạn không phải lo về server. 💡 Dễ nhớ: như đi taxi thay vì mua xe — chỉ trả tiền khi thực sự đi.',
-    related: ['Cloud', 'Microservices', 'API'],
+    related: ['Container', 'Microservices', 'API'],
   },
   {
     term: 'SQL',
@@ -506,5 +507,175 @@ export const GLOSSARY: GlossaryTerm[] = [
     detail:
       'Computer Vision (thị giác máy tính) là lĩnh vực AI giúp máy phân tích hình ảnh/video: nhận diện vật thể, khuôn mặt, đọc chữ (OCR), phân vùng ảnh. Ứng dụng từ xe tự lái tới y tế, kiểm soát chất lượng. 💡 Dễ nhớ: NLP lo phần "đọc/nghe chữ", Computer Vision lo phần "nhìn".',
     related: ['Deep Learning', 'Neural Network', 'Multimodal', 'NLP'],
+  },
+
+  // ─────────────────── Messaging / Kafka (gỡ lỗi về topic) ───────────────────
+  {
+    term: 'Kafka',
+    cat: 'Messaging',
+    short: 'Nền tảng streaming phân tán — đường ống truyền sự kiện thông lượng cao.',
+    detail:
+      'Apache Kafka là nền tảng event streaming phân tán, lưu các message dưới dạng log bền vững theo topic/partition. Producer ghi vào, consumer đọc ra theo tốc độ riêng; dữ liệu được giữ lại theo thời gian (retention) nên có thể đọc lại. Khác message queue truyền thống ở chỗ message không bị xoá ngay sau khi đọc. 💡 Dễ nhớ: Kafka không phải hàng đợi "đọc xong là mất" — nó là cuốn nhật ký ghi lại mọi sự kiện để ai cần thì giở lại.',
+    related: ['Topic', 'Partition', 'Consumer Group', 'Offset', 'Broker', 'RabbitMQ'],
+  },
+  {
+    term: 'Topic',
+    cat: 'Messaging',
+    short: 'Kênh/danh mục logic để phân loại luồng message trong Kafka.',
+    detail:
+      'Topic là tên gọi của một luồng dữ liệu trong Kafka — producer gửi message vào topic, consumer đăng ký đọc từ topic đó. Mỗi topic được chia thành nhiều partition để scale. Khi gặp issue, kiểm tra số partition, replication factor và retention của topic là việc đầu tiên (`kafka-topics --describe`). 💡 Dễ nhớ: topic như một kênh truyền hình — đài (producer) phát vào kênh, người xem (consumer) bắt đúng kênh để xem.',
+    related: ['Kafka', 'Partition', 'Replication Factor', 'Retention', 'Consumer Group'],
+  },
+  {
+    term: 'Partition',
+    cat: 'Messaging',
+    short: 'Lát cắt song song của một topic — đơn vị scale và đảm bảo thứ tự.',
+    detail:
+      'Partition là phần chia nhỏ của topic; mỗi partition là một log có thứ tự, message mới được append vào cuối. Kafka chỉ đảm bảo thứ tự TRONG một partition, không đảm bảo giữa các partition. Số partition quyết định mức song song tối đa của consumer group. Issue hay gặp: thiếu partition gây nghẽn, hoặc chọn sai key khiến message dồn lệch vào một partition (hot partition). 💡 Dễ nhớ: muốn nhiều người đọc song song thì phải nhiều partition — 1 partition chỉ 1 consumer trong group đọc được.',
+    related: ['Topic', 'Partition Key', 'Consumer Group', 'Offset', 'Hot Partition'],
+  },
+  {
+    term: 'Partition Key',
+    cat: 'Messaging',
+    short: 'Khóa quyết định message rơi vào partition nào.',
+    detail:
+      'Khi producer gửi message kèm key, Kafka băm (hash) key để chọn partition — cùng key luôn vào cùng partition, nhờ đó giữ đúng thứ tự cho các sự kiện liên quan (vd mọi event của một userId). Không có key thì message được rải đều (round-robin/sticky). Chọn key có phân bố kém là nguyên nhân chính của hot partition. 💡 Dễ nhớ: cùng key = cùng partition = đúng thứ tự; chọn key lệch = một partition gánh hết.',
+    related: ['Partition', 'Hot Partition', 'Producer', 'Topic'],
+  },
+  {
+    term: 'Offset',
+    cat: 'Messaging',
+    short: 'Số thứ tự của message trong partition — đánh dấu "đã đọc tới đâu".',
+    detail:
+      'Offset là chỉ số tăng dần định danh vị trí mỗi message trong một partition. Consumer commit offset để ghi nhớ đã xử lý tới đâu; khi restart nó đọc tiếp từ offset đã commit. Commit sai thời điểm gây mất message (commit trước khi xử lý) hoặc xử lý trùng (commit sau, bị crash giữa chừng). 💡 Dễ nhớ: offset như cái kẹp sách (bookmark) — đánh dấu trang đang đọc để lần sau mở đúng chỗ.',
+    related: ['Partition', 'Consumer Group', 'Consumer Lag', 'Idempotency'],
+  },
+  {
+    term: 'Consumer Group',
+    cat: 'Messaging',
+    short: 'Nhóm consumer chia nhau đọc các partition của một topic.',
+    detail:
+      'Consumer Group là tập các consumer cùng group.id chia nhau các partition để xử lý song song — mỗi partition chỉ được gán cho ĐÚNG MỘT consumer trong group tại một thời điểm. Nếu số consumer > số partition thì sẽ có consumer ngồi chơi. Mỗi group giữ offset riêng nên nhiều group đọc cùng topic độc lập với nhau. 💡 Dễ nhớ: nhiều consumer cùng group = chia việc; khác group = ai cũng đọc đủ bản sao của mình.',
+    related: ['Partition', 'Offset', 'Rebalancing', 'Consumer Lag', 'Topic'],
+  },
+  {
+    term: 'Consumer Lag',
+    cat: 'Messaging',
+    short: 'Khoảng cách giữa message mới nhất và offset consumer đã xử lý.',
+    detail:
+      'Consumer Lag = offset cuối của partition − offset consumer đã commit, tức số message còn tồn chưa xử lý. Lag tăng dần liên tục là dấu hiệu consumer xử lý chậm hơn tốc độ producer ghi vào — chỉ số quan trọng nhất cần theo dõi khi gặp issue về topic. Khắc phục: thêm partition + consumer, tối ưu xử lý, hoặc tăng throughput. 💡 Dễ nhớ: lag như chồng việc tồn đọng trên bàn — càng cao nghĩa là bạn càng đuối so với việc đổ về.',
+    related: ['Offset', 'Consumer Group', 'Backpressure', 'Throughput', 'Partition'],
+  },
+  {
+    term: 'Rebalancing',
+    cat: 'Messaging',
+    short: 'Quá trình chia lại partition cho consumer khi group thay đổi.',
+    detail:
+      'Rebalancing xảy ra khi có consumer tham gia/rời nhóm, thêm partition, hoặc một consumer bị coi là "chết" (quá session.timeout). Kafka phân bổ lại partition cho các consumer còn lại — trong lúc này việc tiêu thụ bị tạm dừng ("stop-the-world"). Rebalance liên tục (do xử lý lâu hơn max.poll.interval) là issue kinh điển làm lag tăng vọt. 💡 Dễ nhớ: như chia lại bàn cho nhân viên khi có người vào/ra ca — đang chia thì quán ngừng phục vụ một lúc.',
+    related: ['Consumer Group', 'Partition', 'Consumer Lag', 'Offset'],
+  },
+  {
+    term: 'Broker',
+    cat: 'Messaging',
+    short: 'Một node server Kafka lưu trữ dữ liệu partition.',
+    detail:
+      'Broker là một máy chủ trong cụm Kafka, chịu trách nhiệm lưu các partition và phục vụ producer/consumer. Nhiều broker hợp thành cluster; mỗi partition có một broker làm leader (nhận đọc/ghi) và các broker khác làm follower (sao chép). Broker chết khiến leader của các partition trên đó được bầu lại — nếu mất quá nhiều bản sao có thể gây gián đoạn. 💡 Dễ nhớ: broker là từng chi nhánh kho; cluster là cả chuỗi kho cùng chia nhau giữ hàng.',
+    related: ['Kafka', 'Partition', 'Replication Factor', 'ISR', 'Leader / Follower'],
+  },
+  {
+    term: 'Replication Factor',
+    cat: 'Messaging',
+    short: 'Số bản sao của mỗi partition trên các broker khác nhau.',
+    detail:
+      'Replication Factor (RF) là số bản sao của một partition giữ trên các broker khác nhau để chịu lỗi. RF=3 nghĩa là mỗi partition có 1 leader + 2 follower; mất 1–2 broker vẫn không mất dữ liệu. RF quá thấp (=1) là nguyên nhân mất dữ liệu khi một broker hỏng — điểm cần kiểm tra ngay khi điều tra sự cố topic. 💡 Dễ nhớ: RF như số bản photo của một tài liệu quan trọng — càng nhiều bản, cháy một tủ vẫn còn.',
+    related: ['Partition', 'Broker', 'ISR', 'Leader / Follower'],
+  },
+  {
+    term: 'ISR',
+    cat: 'Messaging',
+    short: 'In-Sync Replicas — các bản sao đang theo kịp leader.',
+    detail:
+      'ISR (In-Sync Replicas) là tập các bản sao của một partition đang đồng bộ kịp với leader. Chỉ replica trong ISR mới đủ điều kiện được bầu làm leader mới. ISR co lại (under-replicated) là cảnh báo follower đang tụt hậu — kết hợp với acks=all, nếu ISR < min.insync.replicas thì producer sẽ bị từ chối ghi. Đây là một trong các metric quan trọng khi topic gặp sự cố. 💡 Dễ nhớ: ISR là nhóm "học trò chép bài kịp thầy" — chỉ ai theo kịp mới được cử lên thay thầy.',
+    related: ['Replication Factor', 'Broker', 'Leader / Follower', 'Acks'],
+  },
+  {
+    term: 'Leader / Follower',
+    cat: 'Messaging',
+    short: 'Mỗi partition có 1 leader nhận đọc/ghi, follower sao chép theo.',
+    detail:
+      'Với mỗi partition, một broker giữ vai trò leader (xử lý mọi request đọc/ghi), các broker khác là follower chỉ sao chép dữ liệu từ leader. Khi leader chết, một follower trong ISR được bầu lên làm leader mới (leader election). Sự cố thường gặp: leader election dồn dập khi broker không ổn định gây gián đoạn ngắn. 💡 Dễ nhớ: leader là người phát ngôn duy nhất; follower đứng sau chép lại, sẵn sàng thay khi cần.',
+    related: ['Broker', 'Partition', 'ISR', 'Replication Factor'],
+  },
+  {
+    term: 'Retention',
+    cat: 'Messaging',
+    short: 'Thời gian/dung lượng Kafka giữ lại message trước khi xoá.',
+    detail:
+      'Retention quy định message trong topic được giữ bao lâu (retention.ms) hoặc tới dung lượng nào (retention.bytes) trước khi bị xoá — mặc định thường 7 ngày. Đây là nguyên nhân hay bị bỏ sót: consumer chết vài ngày, khi sống lại thì message đã hết hạn → "mất" dữ liệu dù chưa đọc. Cần cân nhắc retention theo tốc độ tiêu thụ của consumer chậm nhất. 💡 Dễ nhớ: retention như hạn dùng của thực phẩm trong tủ lạnh — quá hạn là bị dọn đi, dù bạn chưa kịp ăn.',
+    related: ['Topic', 'Log Compaction', 'Offset', 'Consumer Lag'],
+  },
+  {
+    term: 'Log Compaction',
+    cat: 'Messaging',
+    short: 'Chính sách chỉ giữ bản ghi mới nhất cho mỗi key.',
+    detail:
+      'Log Compaction (cleanup.policy=compact) là chế độ Kafka giữ lại message MỚI NHẤT cho mỗi key thay vì xoá theo thời gian — hữu ích cho topic dạng "trạng thái hiện tại" (vd snapshot cấu hình, changelog). Khác với retention xoá theo tuổi. Nhầm lẫn giữa delete và compact là issue cấu hình hay gặp. 💡 Dễ nhớ: compaction như danh bạ — chỉ giữ số điện thoại mới nhất của mỗi người, số cũ bị ghi đè.',
+    related: ['Retention', 'Topic', 'Partition Key', 'Offset'],
+  },
+  {
+    term: 'Producer',
+    cat: 'Messaging',
+    short: 'Bên ghi message vào topic của Kafka.',
+    detail:
+      'Producer là ứng dụng gửi message vào topic. Các tham số quan trọng khi gỡ lỗi: acks (0/1/all — mức đảm bảo ghi), retries, batch.size/linger.ms (gộp message tăng throughput), và enable.idempotence để tránh ghi trùng. acks=all + min.insync.replicas cho độ bền cao nhất nhưng chậm hơn. 💡 Dễ nhớ: producer như người gửi thư — chọn gửi thường (acks=0, nhanh, dễ mất) hay gửi bảo đảm có ký nhận (acks=all).',
+    related: ['Topic', 'Acks', 'Partition Key', 'Idempotency', 'Throughput'],
+  },
+  {
+    term: 'Acks',
+    cat: 'Messaging',
+    short: 'Mức xác nhận producer chờ khi ghi message (0 / 1 / all).',
+    detail:
+      'Acks quy định producer chờ bao nhiêu bản sao xác nhận đã nhận message: acks=0 (không chờ, nhanh nhất, dễ mất), acks=1 (chờ leader, mất nếu leader chết trước khi follower chép), acks=all (chờ tất cả replica trong ISR, an toàn nhất). Kết hợp với min.insync.replicas để đảm bảo độ bền. Cấu hình acks sai là nguyên nhân gốc của mất message. 💡 Dễ nhớ: acks=0 thả thư rồi đi; acks=1 đợi bưu cục nhận; acks=all đợi cả kho xác nhận.',
+    related: ['Producer', 'ISR', 'Replication Factor', 'Idempotency'],
+  },
+  {
+    term: 'Dead Letter Queue',
+    cat: 'Messaging',
+    short: 'Nơi chứa các message xử lý thất bại để xử lý lại sau.',
+    detail:
+      'Dead Letter Queue (DLQ) là topic/queue riêng để đẩy các message mà consumer xử lý lỗi nhiều lần (poison message), tránh chúng chặn cả partition hay gây retry vô hạn. Sau đó team có thể điều tra, sửa và replay. Không có DLQ thì một message hỏng có thể làm kẹt toàn bộ consumer — issue rất hay gặp trong thực tế. 💡 Dễ nhớ: DLQ như khay "hồ sơ lỗi để xử lý sau" — gạt sang một bên để dây chuyền vẫn chạy.',
+    related: ['Consumer Group', 'Offset', 'Idempotency', 'Backpressure'],
+  },
+  {
+    term: 'Backpressure',
+    cat: 'Messaging',
+    short: 'Cơ chế ghìm tốc độ khi bên nhận xử lý không kịp bên gửi.',
+    detail:
+      'Backpressure là tình huống (và cơ chế xử lý) khi consumer/đầu nhận không theo kịp tốc độ message đổ về, khiến hàng tồn (lag) tăng. Cách giảm: tăng số partition + consumer, xử lý theo batch, giới hạn max.poll.records, hoặc đẩy bớt sang DLQ. Bỏ qua backpressure dẫn tới lag tăng không kiểm soát và có thể OOM. 💡 Dễ nhớ: như vòi nước chảy mạnh hơn cống thoát — không ghìm lại thì tràn bồn.',
+    related: ['Consumer Lag', 'Throughput', 'Dead Letter Queue', 'Partition'],
+  },
+  {
+    term: 'Throughput',
+    cat: 'Messaging',
+    short: 'Số message/dữ liệu xử lý được trên một đơn vị thời gian.',
+    detail:
+      'Throughput là lượng message hoặc byte mà hệ thống ghi/đọc được mỗi giây. Trong Kafka, throughput tăng nhờ nhiều partition, gộp batch (linger.ms/batch.size), nén (compression) và đủ consumer. Khác với latency (độ trễ một message). Khi điều tra issue, cần soi cả throughput lẫn lag để biết nghẽn ở producer hay consumer. 💡 Dễ nhớ: throughput là "bao nhiêu xe qua cầu mỗi phút"; latency là "một xe mất bao lâu để qua".',
+    related: ['Consumer Lag', 'Backpressure', 'Partition', 'Latency'],
+  },
+  {
+    term: 'Hot Partition',
+    cat: 'Messaging',
+    short: 'Một partition nhận lượng dữ liệu lệch hẳn so với các partition khác.',
+    detail:
+      'Hot Partition là tình trạng một partition gánh phần lớn lưu lượng do partition key phân bố kém (vd dùng cùng một key cho hầu hết message). Hậu quả: consumer của partition đó quá tải và lag cao trong khi các consumer khác rảnh — mất tác dụng song song. Khắc phục bằng thiết kế lại key hoặc tăng độ phân tán. 💡 Dễ nhớ: như một quầy thu ngân bị xếp hàng dài trong khi các quầy khác vắng tanh.',
+    related: ['Partition', 'Partition Key', 'Consumer Lag', 'Throughput'],
+  },
+  {
+    term: 'RabbitMQ',
+    cat: 'Messaging',
+    short: 'Message broker truyền thống theo mô hình hàng đợi (queue).',
+    detail:
+      'RabbitMQ là message broker dựa trên giao thức AMQP, định tuyến message qua exchange tới các queue; message thường bị xoá sau khi consumer ack. Khác Kafka (lưu log đọc lại được), RabbitMQ mạnh ở định tuyến linh hoạt và tác vụ kiểu hàng đợi/RPC. Chọn nhầm công cụ cho bài toán là "issue" ở tầng kiến trúc. 💡 Dễ nhớ: RabbitMQ là bưu cục chia thư theo địa chỉ rồi giao là xong; Kafka là cuốn sổ lưu lại mọi bức thư.',
+    related: ['Kafka', 'Dead Letter Queue', 'Topic', 'Backpressure'],
   },
 ]

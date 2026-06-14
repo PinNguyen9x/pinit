@@ -4,6 +4,7 @@ import { WorkDetailSkeleton } from '@/components/work'
 import { useAuth, useRenderTagIcon } from '@/hooks'
 import { Work, WorkStatus } from '@/models'
 import { API_BASE, safeFetchJson } from '@/utils'
+import { renderMarkdown } from '@/utils/markdown'
 import { Box, Container, Stack, useTheme } from '@mui/material'
 import { format } from 'date-fns'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
@@ -12,7 +13,6 @@ import { useRouter } from 'next/router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FaGithub } from 'react-icons/fa'
 import { MdEdit, MdLaunch, MdOpenInNew } from 'react-icons/md'
-import sanitizeHtml from 'sanitize-html'
 
 export interface WorkDetailsProps {
   work: Work
@@ -93,6 +93,75 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
     window.addEventListener('scroll', updateActive, { passive: true })
     return () => window.removeEventListener('scroll', updateActive)
   }, [updateActive])
+
+  // Decorate code blocks in the markdown narrative with a language label + copy
+  // button (mirrors the blog article body).
+  useEffect(() => {
+    const body = document.getElementById('work-article-body')
+    if (!body) return
+    const preBlocks = body.querySelectorAll<HTMLPreElement>('pre[class*="language-"]')
+    preBlocks.forEach((pre) => {
+      if (pre.parentElement?.dataset.codeWrapper === 'true') return
+      const wrapper = document.createElement('div')
+      wrapper.dataset.codeWrapper = 'true'
+      wrapper.className = 'code-block-wrapper'
+      pre.parentNode?.insertBefore(wrapper, pre)
+      wrapper.appendChild(pre)
+
+      const langMatch = pre.className.match(/language-(\w+)/)
+      if (langMatch && langMatch[1] !== 'none') {
+        const label = document.createElement('span')
+        label.className = 'code-lang-label'
+        label.textContent = langMatch[1]
+        wrapper.appendChild(label)
+      }
+
+      const btn = document.createElement('button')
+      btn.className = 'code-copy-btn'
+      btn.textContent = 'Copy'
+      wrapper.appendChild(btn)
+
+      btn.addEventListener('click', () => {
+        const code = pre.querySelector('code')
+        if (!code) return
+        navigator.clipboard.writeText(code.innerText).then(() => {
+          btn.textContent = 'Copied!'
+          btn.classList.add('copied')
+          setTimeout(() => {
+            btn.textContent = 'Copy'
+            btn.classList.remove('copied')
+          }, 2000)
+        })
+      })
+    })
+  }, [work?.fullDescription])
+
+  // Render mermaid diagrams (architecture flowcharts, ...) client-side. mermaid
+  // is browser-only and heavy, so it's dynamically imported.
+  useEffect(() => {
+    let cancelled = false
+    const body = document.getElementById('work-article-body')
+    if (!body) return
+    const nodes = body.querySelectorAll<HTMLElement>('.mermaid')
+    if (nodes.length === 0) return
+
+    import('mermaid' as any).then((mod: any) => {
+      if (cancelled) return
+      const mermaid = mod.default
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'default',
+        securityLevel: 'loose',
+      })
+      mermaid
+        .run({ nodes: Array.from(nodes) })
+        .catch((err: any) => console.error('Mermaid render error:', err))
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [work?.fullDescription, isDark])
 
   if (router.isFallback) return <WorkDetailSkeleton />
   if (!work) return <NoDataFound />
@@ -612,6 +681,7 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
               <Box component="section" id="narrative" sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <SectionHead num="02" title="Project narrative." meta="from the maker" accent={accent} line={line} inkFaint={inkFaint} ink={ink} />
                 <Box
+                  id="work-article-body"
                   sx={{
                     color: inkDim,
                     fontSize: '16px',
@@ -620,8 +690,21 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
                     '& em': { color: ink },
                     '& p': { m: 0, mb: '1em' },
                     '& a': { color: accent },
-                    '& h1,& h2,& h3,& h4': { color: ink, fontFamily: SERIF, fontWeight: 600, letterSpacing: '-0.01em' },
-                    '& code': {
+                    '& h1,& h2,& h3,& h4': { color: ink, fontFamily: SERIF, fontWeight: 600, letterSpacing: '-0.01em', scrollMarginTop: '90px' },
+                    '& h2 a,& h3 a,& h4 a': { color: 'inherit', textDecoration: 'none' },
+                    '& ul,& ol': { pl: '1.5em', mb: '1em' },
+                    '& li': { mb: '0.4em' },
+                    '& blockquote': {
+                      m: '0 0 1.25em',
+                      pl: '18px',
+                      py: '8px',
+                      borderLeft: `3px solid ${accent}`,
+                      bgcolor: accentSoft,
+                      borderRadius: '0 8px 8px 0',
+                      color: inkDim,
+                      '& p': { m: 0 },
+                    },
+                    '& code:not(pre code)': {
                       fontFamily: MONO,
                       fontSize: '0.92em',
                       bgcolor: bg2,
@@ -639,6 +722,17 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
                       borderRadius: '10px',
                       p: '16px',
                       overflowX: 'auto',
+                    },
+                    '& .mermaid': {
+                      display: 'flex',
+                      justifyContent: 'center',
+                      my: '24px',
+                      p: '20px',
+                      bgcolor: bg1,
+                      border: `1px solid ${line}`,
+                      borderRadius: '14px',
+                      overflowX: 'auto',
+                      '& svg': { maxWidth: '100%', height: 'auto' },
                     },
                   }}
                   dangerouslySetInnerHTML={{ __html: work.fullDescription }}
@@ -1238,11 +1332,11 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
   if (!data || !data.id) {
     return { notFound: true, revalidate: 60 }
   }
-  data.fullDescription = sanitizeHtml(data.fullDescription ?? '', {
-    allowedAttributes: {
-      span: ['style', 'class'],
-    },
-  })
+  // fullDescription is authored by the admin as Markdown (with ```mermaid
+  // diagrams). Render it through the shared pipeline; legacy HTML round-trips
+  // via rehype-raw, so older Quill-authored entries still display.
+  const raw = (data.fullDescription ?? '').trim()
+  data.fullDescription = raw ? (await renderMarkdown(raw)).html : ''
   return {
     props: {
       work: data as Work,
