@@ -195,6 +195,14 @@ export const GLOSSARY: GlossaryTerm[] = [
     related: ['API', 'Framework', 'Authentication'],
   },
   {
+    term: 'Mirror',
+    cat: 'General',
+    short: 'Bản sao đồng bộ như tấm gương — dữ liệu bên này hiện đúng y bên kia.',
+    detail:
+      'Mirror (gương soi / bản sao đồng bộ) là kỹ thuật giữ một bản sao trùng khớp của dữ liệu hoặc kho lưu trữ để dự phòng và tăng tốc. Có nhiều dạng: database mirror (bản sao cơ sở dữ liệu luôn cập nhật để chuyển sang khi bản chính chết), disk mirror tức RAID-1 (ghi đồng thời lên hai ổ đĩa, hỏng một ổ vẫn còn ổ kia), và repository mirror (vd mirror của npm hoặc git đặt gần người dùng để tải nhanh, giảm tải cho server gốc). Khác backup ở chỗ mirror cập nhật liên tục theo thời gian thực, còn backup là bản chụp tại một thời điểm. 💡 Dễ nhớ: mirror như tấm gương — bạn làm gì bên này, hình trong gương lặp lại y hệt ngay lập tức.',
+    related: ['Database', 'Replication Factor', 'CDN', 'Git'],
+  },
+  {
     term: 'OAuth',
     cat: 'Security',
     short: 'Chuẩn cho phép đăng nhập bằng tài khoản bên thứ ba an toàn.',
