@@ -15,6 +15,7 @@ export type GlossaryCategory =
   | 'AI'
   | 'Messaging'
   | 'General'
+  | 'Blockchain'
 
 export interface GlossaryTerm {
   term: string
@@ -685,5 +686,31 @@ export const GLOSSARY: GlossaryTerm[] = [
     detail:
       'RabbitMQ là message broker dựa trên giao thức AMQP, định tuyến message qua exchange tới các queue; message thường bị xoá sau khi consumer ack. Khác Kafka (lưu log đọc lại được), RabbitMQ mạnh ở định tuyến linh hoạt và tác vụ kiểu hàng đợi/RPC. Chọn nhầm công cụ cho bài toán là "issue" ở tầng kiến trúc. 💡 Dễ nhớ: RabbitMQ là bưu cục chia thư theo địa chỉ rồi giao là xong; Kafka là cuốn sổ lưu lại mọi bức thư.',
     related: ['Kafka', 'Dead Letter Queue', 'Topic', 'Backpressure'],
+  },
+
+  // ─────────────────────────── Blockchain ───────────────────────────
+  {
+    term: 'Smart Contract',
+    cat: 'Blockchain',
+    short: 'Đoạn code tự chạy trên blockchain — "nếu… thì…" không cần bên trung gian.',
+    detail:
+      'Smart Contract (hợp đồng thông minh) là chương trình được triển khai lên blockchain (vd Ethereum), tự động thực thi các điều khoản khi đủ điều kiện mà không cần bên thứ ba đứng giữa. Code là luật: một khi đã deploy thì không sửa được, mọi node đều chạy lại và đồng thuận về kết quả. Là nền tảng của DeFi, NFT, DAO. 💡 Dễ nhớ: như máy bán nước tự động — bỏ đủ tiền (điều kiện) là nhận lon nước (kết quả), không cần nhân viên.',
+    related: ['Gas Fee', 'Wallet', 'API', 'Idempotency'],
+  },
+  {
+    term: 'Wallet',
+    cat: 'Blockchain',
+    short: 'Ví giữ khóa riêng — công cụ ký giao dịch và chứng minh quyền sở hữu tài sản.',
+    detail:
+      'Wallet (ví blockchain) thực ra không "chứa" tiền mà giữ cặp khóa: khóa công khai (public key) sinh ra địa chỉ ai cũng thấy, và khóa riêng (private key) dùng để ký giao dịch. Tài sản nằm trên blockchain, ví chỉ chứng minh bạn có quyền điều khiển nó. Mất private key (hoặc seed phrase) = mất tài sản vĩnh viễn, không ai khôi phục được. Có ví nóng (online, tiện nhưng dễ bị tấn công) và ví lạnh (offline, an toàn hơn). 💡 Dễ nhớ: ví không phải túi tiền — nó là chùm chìa khóa mở két; mất chìa là mất két.',
+    related: ['Smart Contract', 'Authentication', 'Token / JWT', 'OAuth'],
+  },
+  {
+    term: 'Gas Fee',
+    cat: 'Blockchain',
+    short: 'Phí trả cho mạng để thực thi giao dịch hay smart contract.',
+    detail:
+      'Gas Fee là khoản phí (tính bằng coin gốc của mạng, vd ETH) người dùng trả để miner/validator xử lý giao dịch hoặc chạy smart contract. Mỗi thao tác tiêu tốn một lượng gas nhất định; tổng phí = gas × gas price. Khi mạng đông, gas price tăng — giao dịch trả thấp bị bỏ lại chờ hoặc thất bại. Tối ưu gas là kỹ năng quan trọng khi viết smart contract để tránh đốt tiền người dùng. 💡 Dễ nhớ: gas như xăng cho xe — đi xa hay xe ngốn xăng (contract phức tạp) thì tốn nhiều; giờ cao điểm (mạng nghẽn) giá xăng còn đội lên.',
+    related: ['Smart Contract', 'Wallet', 'Throughput', 'Latency'],
   },
 ]
