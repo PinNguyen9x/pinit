@@ -8,6 +8,8 @@ pipeline {
   }
 
   environment {
+    // Jenkins (launchd) có PATH tối giản, không thấy /usr/local/bin nơi có docker
+    PATH        = "/usr/local/bin:/opt/homebrew/bin:$PATH"
     IMAGE_NAME  = 'learn-nextjs'
     IMAGE_TAG   = "${env.BUILD_NUMBER}"
     // VPS đích: user@ip
