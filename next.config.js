@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
+  output: 'standalone', // đóng gói tối giản để build Docker image nhẹ
   images: {
     unoptimized: true, // bypass Next.js 15.5 LRUCache bug; images still serve via remote CDN
     dangerouslyAllowSVG: true,
