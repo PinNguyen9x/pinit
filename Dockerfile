@@ -22,6 +22,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
 # Chạy bằng user không phải root cho an toàn
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
