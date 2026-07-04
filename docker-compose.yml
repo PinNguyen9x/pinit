@@ -1,0 +1,15 @@
+services:
+  web:
+    image: ${IMAGE:-learn-nextjs:latest}
+    container_name: learn-nextjs
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - API_URL=${API_URL}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

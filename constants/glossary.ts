@@ -15,6 +15,8 @@ export type GlossaryCategory =
   | 'AI'
   | 'Messaging'
   | 'General'
+  | 'Mobile'
+  | 'Blockchain'
 
 export interface GlossaryTerm {
   term: string
@@ -193,6 +195,14 @@ export const GLOSSARY: GlossaryTerm[] = [
     detail:
       'Middleware là đoạn code chạy xen giữa khi nhận request và khi trả response — dùng để xác thực, logging, parse dữ liệu, xử lý lỗi... Trong Express/Next.js, middleware xếp thành chuỗi, mỗi cái xử lý rồi chuyển tiếp. 💡 Dễ nhớ: như các cửa an ninh ở sân bay — request phải qua từng trạm trước khi tới cổng.',
     related: ['API', 'Framework', 'Authentication'],
+  },
+  {
+    term: 'Mirror',
+    cat: 'General',
+    short: 'Bản sao đồng bộ như tấm gương — dữ liệu bên này hiện đúng y bên kia.',
+    detail:
+      'Mirror (gương soi / bản sao đồng bộ) là kỹ thuật giữ một bản sao trùng khớp của dữ liệu hoặc kho lưu trữ để dự phòng và tăng tốc. Có nhiều dạng: database mirror (bản sao cơ sở dữ liệu luôn cập nhật để chuyển sang khi bản chính chết), disk mirror tức RAID-1 (ghi đồng thời lên hai ổ đĩa, hỏng một ổ vẫn còn ổ kia), và repository mirror (vd mirror của npm hoặc git đặt gần người dùng để tải nhanh, giảm tải cho server gốc). Khác backup ở chỗ mirror cập nhật liên tục theo thời gian thực, còn backup là bản chụp tại một thời điểm. 💡 Dễ nhớ: mirror như tấm gương — bạn làm gì bên này, hình trong gương lặp lại y hệt ngay lập tức.',
+    related: ['Database', 'Replication Factor', 'CDN', 'Git'],
   },
   {
     term: 'OAuth',
@@ -677,5 +687,56 @@ export const GLOSSARY: GlossaryTerm[] = [
     detail:
       'RabbitMQ là message broker dựa trên giao thức AMQP, định tuyến message qua exchange tới các queue; message thường bị xoá sau khi consumer ack. Khác Kafka (lưu log đọc lại được), RabbitMQ mạnh ở định tuyến linh hoạt và tác vụ kiểu hàng đợi/RPC. Chọn nhầm công cụ cho bài toán là "issue" ở tầng kiến trúc. 💡 Dễ nhớ: RabbitMQ là bưu cục chia thư theo địa chỉ rồi giao là xong; Kafka là cuốn sổ lưu lại mọi bức thư.',
     related: ['Kafka', 'Dead Letter Queue', 'Topic', 'Backpressure'],
+  },
+
+  // ─────────────────────────── Mobile ───────────────────────────
+  {
+    term: 'React Native',
+    cat: 'Mobile',
+    short: 'Framework viết app iOS & Android bằng JavaScript/TypeScript, dùng chung codebase.',
+    detail:
+      'React Native là framework do Meta phát triển, cho phép viết ứng dụng di động native cho iOS và Android bằng JavaScript/TypeScript với cú pháp React. Code JS chạy trong runtime riêng và gọi sang các component native thật (UIView, View) qua cầu nối (bridge/JSI), thay vì render ra WebView như app lai. Một codebase dùng được cho cả hai nền tảng, tái sử dụng kỹ năng React của frontend developer. 💡 Dễ nhớ: viết một lần như React web, nhưng render ra "đồ thật" của iOS/Android chứ không phải HTML.',
+    related: ['Framework', 'SDK', 'APK', 'Push Notification'],
+  },
+  {
+    term: 'APK',
+    cat: 'Mobile',
+    short: 'Gói cài đặt ứng dụng Android — file .apk để cài lên máy.',
+    detail:
+      'APK (Android Package Kit) là định dạng file đóng gói toàn bộ ứng dụng Android: mã đã biên dịch (DEX), tài nguyên (ảnh, layout), thư viện native và file AndroidManifest.xml mô tả quyền/component. Người dùng cài qua Play Store hoặc sideload thủ công file .apk. Bản phát hành lên Play Store hiện ưu tiên định dạng AAB (Android App Bundle), Google sẽ tự tạo APK tối ưu theo từng thiết bị. 💡 Dễ nhớ: APK trên Android ≈ file .ipa trên iOS — một "hộp" chứa đủ thứ để app chạy được trên máy.',
+    related: ['React Native', 'SDK', 'Container'],
+  },
+  {
+    term: 'Push Notification',
+    cat: 'Mobile',
+    short: 'Thông báo do server đẩy xuống thiết bị dù app đang đóng.',
+    detail:
+      'Push Notification là cơ chế server gửi thông báo tới thiết bị di động qua dịch vụ trung gian của hệ điều hành — FCM (Firebase Cloud Messaging) cho Android và APNs (Apple Push Notification service) cho iOS. App đăng ký nhận một device token, server dùng token đó gọi FCM/APNs, dịch vụ này đẩy thông báo xuống máy ngay cả khi app không chạy. Khác với in-app notification (chỉ thấy khi app đang mở). 💡 Dễ nhớ: server không gọi thẳng máy người dùng — nó nhờ "bưu tá" FCM/APNs đem thông báo tới hộp thư của từng thiết bị.',
+    related: ['API', 'Webhook', 'WebSocket', 'Token / JWT'],
+  },
+  // ─────────────────────────── Blockchain ───────────────────────────
+  {
+    term: 'Smart Contract',
+    cat: 'Blockchain',
+    short: 'Đoạn code tự chạy trên blockchain — "nếu… thì…" không cần bên trung gian.',
+    detail:
+      'Smart Contract (hợp đồng thông minh) là chương trình được triển khai lên blockchain (vd Ethereum), tự động thực thi các điều khoản khi đủ điều kiện mà không cần bên thứ ba đứng giữa. Code là luật: một khi đã deploy thì không sửa được, mọi node đều chạy lại và đồng thuận về kết quả. Là nền tảng của DeFi, NFT, DAO. 💡 Dễ nhớ: như máy bán nước tự động — bỏ đủ tiền (điều kiện) là nhận lon nước (kết quả), không cần nhân viên.',
+    related: ['Gas Fee', 'Wallet', 'API', 'Idempotency'],
+  },
+  {
+    term: 'Wallet',
+    cat: 'Blockchain',
+    short: 'Ví giữ khóa riêng — công cụ ký giao dịch và chứng minh quyền sở hữu tài sản.',
+    detail:
+      'Wallet (ví blockchain) thực ra không "chứa" tiền mà giữ cặp khóa: khóa công khai (public key) sinh ra địa chỉ ai cũng thấy, và khóa riêng (private key) dùng để ký giao dịch. Tài sản nằm trên blockchain, ví chỉ chứng minh bạn có quyền điều khiển nó. Mất private key (hoặc seed phrase) = mất tài sản vĩnh viễn, không ai khôi phục được. Có ví nóng (online, tiện nhưng dễ bị tấn công) và ví lạnh (offline, an toàn hơn). 💡 Dễ nhớ: ví không phải túi tiền — nó là chùm chìa khóa mở két; mất chìa là mất két.',
+    related: ['Smart Contract', 'Authentication', 'Token / JWT', 'OAuth'],
+  },
+  {
+    term: 'Gas Fee',
+    cat: 'Blockchain',
+    short: 'Phí trả cho mạng để thực thi giao dịch hay smart contract.',
+    detail:
+      'Gas Fee là khoản phí (tính bằng coin gốc của mạng, vd ETH) người dùng trả để miner/validator xử lý giao dịch hoặc chạy smart contract. Mỗi thao tác tiêu tốn một lượng gas nhất định; tổng phí = gas × gas price. Khi mạng đông, gas price tăng — giao dịch trả thấp bị bỏ lại chờ hoặc thất bại. Tối ưu gas là kỹ năng quan trọng khi viết smart contract để tránh đốt tiền người dùng. 💡 Dễ nhớ: gas như xăng cho xe — đi xa hay xe ngốn xăng (contract phức tạp) thì tốn nhiều; giờ cao điểm (mạng nghẽn) giá xăng còn đội lên.',
+    related: ['Smart Contract', 'Wallet', 'Throughput', 'Latency'],
   },
 ]
