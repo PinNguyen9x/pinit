@@ -63,6 +63,7 @@ pipeline {
             scp -o StrictHostKeyChecking=no docker-compose.yml $VPS_HOST:$DEPLOY_DIR/docker-compose.yml
 
             ssh -o StrictHostKeyChecking=no $VPS_HOST "\
+              docker network create webnet 2>/dev/null || true; \
               cd $DEPLOY_DIR && \
               IMAGE=$IMAGE_NAME:$IMAGE_TAG API_URL='$API_URL' \
               docker compose up -d --remove-orphans && \
