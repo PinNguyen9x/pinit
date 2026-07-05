@@ -29,6 +29,7 @@ pipeline {
         sh '''
           docker build \
             --platform linux/amd64 \
+            --provenance=false \
             --build-arg API_URL=$API_URL \
             -t $IMAGE:$IMAGE_TAG \
             -t $IMAGE:latest .
