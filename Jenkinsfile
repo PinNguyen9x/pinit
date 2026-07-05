@@ -10,13 +10,11 @@ pipeline {
   environment {
     // Jenkins (launchd) có PATH tối giản, không thấy /usr/local/bin nơi có docker
     PATH        = "/usr/local/bin:/opt/homebrew/bin:$PATH"
-    IMAGE_NAME  = 'learn-nextjs'
+    // Image trên GitHub Container Registry — path BẮT BUỘC lowercase
+    IMAGE       = 'ghcr.io/pinnguyen9x/learn-nextjs'
     IMAGE_TAG   = "${env.BUILD_NUMBER}"
-    // VPS đích: user@ip
     VPS_HOST    = 'pin@149.28.18.204'
-    // Thư mục deploy trên VPS
     DEPLOY_DIR  = '/opt/learn-nextjs'
-    // Secret text credential trong Jenkins: URL backend production
     API_URL     = credentials('app-api-url')
   }
 
@@ -32,24 +30,25 @@ pipeline {
           docker build \
             --platform linux/amd64 \
             --build-arg API_URL=$API_URL \
-            -t $IMAGE_NAME:$IMAGE_TAG \
-            -t $IMAGE_NAME:latest .
+            -t $IMAGE:$IMAGE_TAG \
+            -t $IMAGE:latest .
         '''
       }
     }
 
-    stage('Ship image to VPS') {
+    stage('Push to ghcr') {
       steps {
-        sshagent(credentials: ['vps-ssh']) {
+        withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GHCR_USER', passwordVariable: 'GHCR_PAT')]) {
           sh '''
-            # Nén image và stream qua SSH (không cần Docker registry)
-            docker save $IMAGE_NAME:$IMAGE_TAG | gzip | \
-              ssh -o StrictHostKeyChecking=no $VPS_HOST "gunzip | docker load"
+            echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            docker push $IMAGE:$IMAGE_TAG
+            docker push $IMAGE:latest
+            docker logout ghcr.io
           '''
         }
-        // Đã ship xong -> xóa TẤT CẢ tag của app trên Mac (cả latest), không đụng image khác
+        // Push xong -> xóa image app trên Mac (cả latest), không đụng image khác
         sh '''
-          docker images $IMAGE_NAME --format '{{.Repository}}:{{.Tag}}' \
+          docker images $IMAGE --format '{{.Repository}}:{{.Tag}}' \
             | xargs -r docker rmi -f || true
         '''
       }
@@ -57,25 +56,29 @@ pipeline {
 
     stage('Deploy') {
       steps {
-        sshagent(credentials: ['vps-ssh']) {
-          sh '''
-            ssh -o StrictHostKeyChecking=no $VPS_HOST "mkdir -p $DEPLOY_DIR"
-            scp -o StrictHostKeyChecking=no docker-compose.yml $VPS_HOST:$DEPLOY_DIR/docker-compose.yml
+        withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GHCR_USER', passwordVariable: 'GHCR_PAT')]) {
+          sshagent(credentials: ['vps-ssh']) {
+            sh '''
+              ssh -o StrictHostKeyChecking=no $VPS_HOST "mkdir -p $DEPLOY_DIR"
+              scp -o StrictHostKeyChecking=no docker-compose.yml $VPS_HOST:$DEPLOY_DIR/docker-compose.yml
 
-            ssh -o StrictHostKeyChecking=no $VPS_HOST "\
-              docker network create webnet 2>/dev/null || true; \
-              cd $DEPLOY_DIR && \
-              IMAGE=$IMAGE_NAME:$IMAGE_TAG API_URL='$API_URL' \
-              docker compose up -d --remove-orphans && \
-              docker image prune -af"
-          '''
+              ssh -o StrictHostKeyChecking=no $VPS_HOST "\
+                echo '$GHCR_PAT' | docker login ghcr.io -u '$GHCR_USER' --password-stdin; \
+                docker network create webnet 2>/dev/null || true; \
+                export IMAGE=$IMAGE:$IMAGE_TAG; export API_URL='$API_URL'; \
+                cd $DEPLOY_DIR && \
+                docker compose pull && \
+                docker compose up -d --remove-orphans && \
+                docker image prune -af"
+            '''
+          }
         }
       }
     }
   }
 
   post {
-    success { echo "✅ Deploy thành công build #${IMAGE_TAG} -> http://149.28.18.204" }
+    success { echo "✅ Deploy thành công build #${IMAGE_TAG} -> https://nipit.pro" }
     failure { echo "❌ Build/deploy thất bại — xem log stage lỗi phía trên" }
   }
 }

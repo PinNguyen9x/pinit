@@ -1,6 +1,6 @@
 services:
   web:
-    image: ${IMAGE:-learn-nextjs:latest}
+    image: ${IMAGE:-ghcr.io/pinnguyen9x/learn-nextjs:latest}
     container_name: learn-nextjs
     restart: unless-stopped
     ports:
