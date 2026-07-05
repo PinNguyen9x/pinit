@@ -53,6 +53,16 @@ pipeline {
       }
     }
 
+    stage('Approve deploy to PROD') {
+      steps {
+        // Dừng chờ người duyệt trước khi lên prod (mô phỏng gate của công ty).
+        // Không ai bấm trong 30' -> tự huỷ, không deploy.
+        timeout(time: 30, unit: 'MINUTES') {
+          input message: "Đã build & push ghcr #${env.BUILD_NUMBER}. Deploy lên PROD (https://nipit.pro)?", ok: 'Deploy ngay'
+        }
+      }
+    }
+
     stage('Deploy') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GHCR_USER', passwordVariable: 'GHCR_PAT')]) {
