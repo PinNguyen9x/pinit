@@ -7,11 +7,19 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - API_URL=${API_URL}
+      # Gọi backend qua tên container trên network nội bộ webnet (không hairpin ra IP public)
+      - API_URL=http://json-server-blog:4000
       # Next standalone server.js bind vào HOSTNAME; Docker đặt = container ID -> phải ép 0.0.0.0
       - HOSTNAME=0.0.0.0
+    networks:
+      - webnet
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000"]
       interval: 30s
       timeout: 5s
       retries: 3
+
+# Network dùng chung với backend (tạo sẵn bằng: docker network create webnet)
+networks:
+  webnet:
+    external: true
