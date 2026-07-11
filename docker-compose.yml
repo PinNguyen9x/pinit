@@ -1,15 +1,16 @@
 services:
   web:
     image: ${IMAGE:-ghcr.io/pinnguyen9x/learn-nextjs:latest}
-    container_name: learn-nextjs
+    container_name: ${CONTAINER:-learn-nextjs}
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      # Prod: 3000, Staging: 3001 (map ra host); trong container luôn 3000
+      - "${HOST_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
-      # Gọi backend qua tên container trên network nội bộ webnet (không hairpin ra IP public)
-      - API_URL=http://json-server-blog:4000
-      # Next standalone server.js bind vào HOSTNAME; Docker đặt = container ID -> phải ép 0.0.0.0
+      # Gọi backend qua tên container trên webnet (prod: json-server-blog, staging: json-server-blog-staging)
+      - API_URL=${API_TARGET:-http://json-server-blog:4000}
+      # Next standalone bind vào HOSTNAME; Docker đặt = container ID -> ép 0.0.0.0
       - HOSTNAME=0.0.0.0
     networks:
       - webnet
@@ -19,7 +20,7 @@ services:
       timeout: 5s
       retries: 3
 
-# Network dùng chung với backend (tạo sẵn bằng: docker network create webnet)
+# Network dùng chung prod + staging + backend (tạo sẵn: docker network create webnet)
 networks:
   webnet:
     external: true

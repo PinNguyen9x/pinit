@@ -739,4 +739,126 @@ export const GLOSSARY: GlossaryTerm[] = [
       'Gas Fee là khoản phí (tính bằng coin gốc của mạng, vd ETH) người dùng trả để miner/validator xử lý giao dịch hoặc chạy smart contract. Mỗi thao tác tiêu tốn một lượng gas nhất định; tổng phí = gas × gas price. Khi mạng đông, gas price tăng — giao dịch trả thấp bị bỏ lại chờ hoặc thất bại. Tối ưu gas là kỹ năng quan trọng khi viết smart contract để tránh đốt tiền người dùng. 💡 Dễ nhớ: gas như xăng cho xe — đi xa hay xe ngốn xăng (contract phức tạp) thì tốn nhiều; giờ cao điểm (mạng nghẽn) giá xăng còn đội lên.',
     related: ['Smart Contract', 'Wallet', 'Throughput', 'Latency'],
   },
+
+  // ─────────────────────────── DevOps / CI-CD ───────────────────────────
+  {
+    term: 'Pipeline',
+    cat: 'DevOps',
+    short: 'Chuỗi các bước tự động nối tiếp: build → test → deploy.',
+    detail:
+      'Pipeline (đường ống) là chuỗi các stage chạy nối tiếp mỗi khi có thay đổi code: lấy source, build, test, đóng gói, rồi deploy. Mỗi stage đạt mới qua stage sau; hỏng ở đâu dừng ở đó. Định nghĩa bằng file (vd Jenkinsfile) nên chính pipeline cũng được version trong Git. 💡 Dễ nhớ: như dây chuyền lắp ráp — nguyên liệu (code) đi qua từng trạm, cuối dây là sản phẩm chạy trên server.',
+    related: ['CI/CD', 'Jenkins', 'Artifact', 'Approval Gate'],
+  },
+  {
+    term: 'Jenkins',
+    cat: 'DevOps',
+    short: 'Máy chủ tự động hóa CI/CD phổ biến, chạy pipeline build & deploy.',
+    detail:
+      'Jenkins là công cụ tự động hóa mã nguồn mở dùng để chạy pipeline CI/CD: nhận sự kiện (push/webhook), build, test, rồi deploy. Mở rộng bằng hàng nghìn plugin; pipeline viết trong Jenkinsfile. Có thể chạy trên server riêng hoặc ngay máy dev cho dự án nhỏ. 💡 Dễ nhớ: như một người thợ máy không bao giờ mệt — cứ có code mới là tự tay build và mang đi triển khai.',
+    related: ['CI/CD', 'Pipeline', 'Webhook'],
+  },
+  {
+    term: 'Container Registry',
+    cat: 'DevOps',
+    short: 'Kho lưu trữ image container để push lên và pull về.',
+    detail:
+      'Container Registry là nơi lưu trữ và phân phối các Docker image (vd Docker Hub, ghcr.io, Harbor, Nexus). CI build xong đẩy (push) image kèm tag lên registry; server cần chạy thì kéo (pull) về. Là điểm trung chuyển chuẩn giữa nơi build và nơi chạy, thay cho việc bắn file image thủ công. 💡 Dễ nhớ: như kho tổng của siêu thị — hàng (image) nhập vào một chỗ, các cửa hàng (server) lấy về bán.',
+    related: ['Docker', 'Container', 'Artifact'],
+  },
+  {
+    term: 'Artifact',
+    cat: 'DevOps',
+    short: 'Sản phẩm build ra để đem đi deploy — thường là image hoặc gói nén.',
+    detail:
+      'Artifact là kết quả đóng gói của quá trình build: một Docker image, file .jar, gói .zip... — thứ bất biến được đem đi deploy. Nguyên tắc vàng: build một lần, dùng lại cho mọi môi trường (cùng artifact chạy ở staging rồi prod) để đảm bảo cái chạy prod đúng bằng cái đã test. 💡 Dễ nhớ: như món ăn đã nấu xong đóng hộp — đem tới bàn nào cũng y một hộp đó, không nấu lại.',
+    related: ['Pipeline', 'Container Registry', 'Promotion'],
+  },
+  {
+    term: 'GitOps',
+    cat: 'DevOps',
+    short: 'Lấy Git làm nguồn chân lý duy nhất cho hạ tầng & triển khai.',
+    detail:
+      'GitOps là cách vận hành trong đó trạng thái mong muốn của hệ thống (manifest Kubernetes...) được khai báo trong Git, và một công cụ (vd ArgoCD) liên tục đồng bộ cụm cho khớp. Muốn đổi gì thì commit vào Git — không gõ lệnh trực tiếp lên cụm; sửa tay bị công cụ tự kéo về. Mọi thay đổi có lịch sử, review, rollback bằng Git. 💡 Dễ nhớ: Git là bản thiết kế gốc; hệ thống thật luôn phải giống bản thiết kế, lệch là tự nắn lại.',
+    related: ['ArgoCD', 'Kubernetes', 'Git', 'Reconciliation'],
+  },
+  {
+    term: 'ArgoCD',
+    cat: 'DevOps',
+    short: 'Công cụ GitOps đồng bộ manifest trong Git vào cụm Kubernetes.',
+    detail:
+      'ArgoCD là công cụ Continuous Delivery theo mô hình GitOps cho Kubernetes. Nó theo dõi một repo chứa manifest, so sánh trạng thái mong muốn (Git) với trạng thái thật (cụm), và tự đồng bộ (sync). Có UI trực quan hiển thị cây tài nguyên, trạng thái Synced/Healthy, và tự sửa khi cụm bị lệch (self-heal). 💡 Dễ nhớ: như người quản gia luôn dọn nhà cho đúng như bản vẽ chủ nhà để trong Git.',
+    related: ['GitOps', 'Kubernetes', 'Reconciliation', 'k3s'],
+  },
+  {
+    term: 'Reconciliation',
+    cat: 'DevOps',
+    short: 'Vòng lặp liên tục kéo trạng thái thật về khớp trạng thái mong muốn.',
+    detail:
+      'Reconciliation (điều hòa) là vòng lặp cốt lõi của Kubernetes và GitOps: liên tục so sánh trạng thái mong muốn (desired) với trạng thái hiện tại (actual) và hành động để xóa khoảng cách. Vd khai báo 3 pod mà chỉ có 2 thì tạo thêm 1; ai xóa bớt thì tạo lại. Nhờ vậy hệ thống tự phục hồi mà không cần can thiệp. 💡 Dễ nhớ: như máy điều hòa nhiệt độ — đặt 25 độ thì cứ tự bật/tắt để phòng luôn quanh mức đó.',
+    related: ['GitOps', 'ArgoCD', 'Kubernetes'],
+  },
+  {
+    term: 'Reverse Proxy',
+    cat: 'Web',
+    short: 'Máy chủ đứng trước, nhận request rồi chuyển tới dịch vụ phía sau.',
+    detail:
+      'Reverse proxy là lớp trung gian đứng trước các server ứng dụng: nhận request từ client rồi chuyển tiếp tới dịch vụ backend phù hợp, đồng thời lo TLS/HTTPS, nén, cache, định tuyến theo tên miền/đường dẫn. Nginx và Traefik là ví dụ phổ biến. Khác với "forward proxy" vốn đại diện cho client đi ra ngoài. 💡 Dễ nhớ: như lễ tân khách sạn — khách chỉ nói chuyện với lễ tân, lễ tân mới dẫn tới đúng phòng ban bên trong.',
+    related: ['Load Balancer', 'Ingress', 'DNS', 'CDN'],
+  },
+  {
+    term: 'Staging',
+    cat: 'DevOps',
+    short: 'Môi trường bản sao gần giống prod để test trước khi lên thật.',
+    detail:
+      'Staging là môi trường trung gian giữa dev và production, dựng gần giống prod nhất có thể, dùng để kiểm thử bản build trước khi phát hành. Giúp phát hiện lỗi cấu hình, tích hợp, dữ liệu... mà không ảnh hưởng người dùng thật. Sau khi staging chạy ổn mới thăng cấp (promote) lên production. 💡 Dễ nhớ: như buổi tổng duyệt trước đêm diễn chính thức — sai ở đây còn sửa kịp.',
+    related: ['CI/CD', 'Promotion', 'Rollback', 'Approval Gate'],
+  },
+  {
+    term: 'Rollback',
+    cat: 'DevOps',
+    short: 'Quay lại phiên bản trước khi bản mới gặp sự cố.',
+    detail:
+      'Rollback là thao tác đưa hệ thống về một phiên bản đã chạy ổn trước đó khi bản deploy mới lỗi. Nhờ artifact bất biến và tag phiên bản, rollback thường chỉ là deploy lại tag cũ; trong GitOps thì đơn giản là revert commit trong Git rồi để công cụ tự đồng bộ. Rollback nhanh là chỉ số quan trọng của một hệ thống deploy trưởng thành. 💡 Dễ nhớ: như nút Undo — lỡ tay là bấm quay lại bản trước.',
+    related: ['Pipeline', 'GitOps', 'Artifact'],
+  },
+  {
+    term: 'Approval Gate',
+    cat: 'DevOps',
+    short: 'Chốt chặn cần người bấm duyệt trước khi deploy lên prod.',
+    detail:
+      'Approval gate (cổng duyệt) là một bước dừng có chủ đích trong pipeline: build/test xong nhưng chưa deploy production, phải chờ người có thẩm quyền bấm phê duyệt. Mục đích là kiểm soát và gắn trách nhiệm cho lần phát hành quan trọng, phục vụ yêu cầu compliance. Thường chỉ áp cho prod; staging thì deploy tự động. 💡 Dễ nhớ: như barie ở bãi xe — mọi thứ sẵn sàng nhưng phải có người gật đầu mới cho qua.',
+    related: ['Pipeline', 'CI/CD', 'Staging'],
+  },
+  {
+    term: 'k3s',
+    cat: 'DevOps',
+    short: 'Bản Kubernetes gọn nhẹ, chạy được trên máy yếu / 1 node.',
+    detail:
+      'k3s là bản phân phối Kubernetes nhẹ (một binary nhỏ) do Rancher phát triển, lược bớt thành phần nặng để chạy tốt trên thiết bị ít tài nguyên, edge, hoặc để học trên máy cá nhân. Tương thích API Kubernetes chuẩn nên dùng kubectl như thường. Trên máy dev thường chạy qua k3d (k3s trong Docker). 💡 Dễ nhớ: k3s là Kubernetes bản rút gọn — vẫn là K8s nhưng đủ nhẹ để nhét vào máy con.',
+    related: ['Kubernetes', 'ArgoCD', 'Container'],
+  },
+  {
+    term: 'Ingress',
+    cat: 'Cloud',
+    short: 'Cửa ngõ định tuyến HTTP từ ngoài vào các dịch vụ trong Kubernetes.',
+    detail:
+      'Ingress là tài nguyên Kubernetes định nghĩa quy tắc định tuyến HTTP/HTTPS từ bên ngoài vào các Service bên trong cụm — theo tên miền hoặc đường dẫn. Một Ingress Controller (Traefik, Nginx Ingress...) thực thi các quy tắc đó và lo luôn TLS. Nhờ vậy nhiều dịch vụ dùng chung một điểm vào thay vì mỗi cái mở một cổng. 💡 Dễ nhớ: như bảng chỉ dẫn ở sảnh tòa nhà — khách vào một cửa, bảng chỉ tới đúng phòng ban.',
+    related: ['Kubernetes', 'Load Balancer', 'Reverse Proxy'],
+  },
+  {
+    term: 'Tunnel',
+    cat: 'DevOps',
+    short: 'Đường hầm đưa dịch vụ localhost ra một URL public.',
+    detail:
+      'Tunnel (đường hầm) là kỹ thuật để dịch vụ chạy sau NAT/firewall (vd Jenkins ở localhost) nhận được kết nối từ internet: một agent local mở kết nối ra ngoài tới máy chủ tunnel, máy chủ này cấp một URL public và chuyển ngược request về. Công cụ phổ biến là ngrok, cloudflared. Hữu ích cho webhook, demo, dev — nhưng chỉ sống khi agent còn chạy. 💡 Dễ nhớ: như thuê hộp thư bưu điện có địa chỉ công khai, thư gửi tới đó rồi được chuyển về nhà bạn (máy không có địa chỉ).',
+    related: ['Webhook', 'Reverse Proxy'],
+  },
+  {
+    term: 'Promotion',
+    cat: 'DevOps',
+    short: 'Thăng cấp cùng một bản build từ môi trường thấp lên cao (staging → prod).',
+    detail:
+      'Promotion là việc đưa một thay đổi/artifact đã kiểm thử ở môi trường thấp (staging) lên môi trường cao (production). Cách chuẩn là promote đúng artifact đã test (retag/deploy cùng digest) để đảm bảo prod chạy y hệt cái đã kiểm; cách đơn giản hơn là build lại từ nhánh main. Thường đi kèm approval gate. 💡 Dễ nhớ: như thí sinh qua vòng loại (staging) mới được vào chung kết (prod) — vẫn là người đó, không thay người.',
+    related: ['Staging', 'Artifact', 'GitOps', 'Rollback'],
+  },
 ]
