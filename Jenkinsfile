@@ -78,22 +78,20 @@ pipeline {
 
     stage('Deploy') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GHCR_USER', passwordVariable: 'GHCR_PAT')]) {
-          sshagent(credentials: ['vps-ssh']) {
-            sh '''
-              ssh -o StrictHostKeyChecking=no $VPS_HOST "mkdir -p $DEPLOY_DIR"
-              scp -o StrictHostKeyChecking=no docker-compose.yml $VPS_HOST:$DEPLOY_DIR/docker-compose.yml
+        // Image ghcr đã public -> VPS pull KHÔNG cần login (bỏ withCredentials)
+        sshagent(credentials: ['vps-ssh']) {
+          sh '''
+            ssh -o StrictHostKeyChecking=no $VPS_HOST "mkdir -p $DEPLOY_DIR"
+            scp -o StrictHostKeyChecking=no docker-compose.yml $VPS_HOST:$DEPLOY_DIR/docker-compose.yml
 
-              ssh -o StrictHostKeyChecking=no $VPS_HOST "\
-                echo '$GHCR_PAT' | docker login ghcr.io -u '$GHCR_USER' --password-stdin; \
-                docker network create webnet 2>/dev/null || true; \
-                export IMAGE=$IMAGE:$IMAGE_TAG CONTAINER=$CONTAINER HOST_PORT=$HOST_PORT API_TARGET=$API_TARGET; \
-                cd $DEPLOY_DIR && \
-                docker compose pull && \
-                docker compose up -d --remove-orphans && \
-                docker image prune -af"
-            '''
-          }
+            ssh -o StrictHostKeyChecking=no $VPS_HOST "\
+              docker network create webnet 2>/dev/null || true; \
+              export IMAGE=$IMAGE:$IMAGE_TAG CONTAINER=$CONTAINER HOST_PORT=$HOST_PORT API_TARGET=$API_TARGET; \
+              cd $DEPLOY_DIR && \
+              docker compose pull && \
+              docker compose up -d --remove-orphans && \
+              docker image prune -af"
+          '''
         }
       }
     }
