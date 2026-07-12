@@ -98,7 +98,29 @@ networks:
 - **networks: webnet**: cả frontend và backend cùng một mạng ảo, nên frontend gọi backend bằng **tên container** (`json-server-blog`) thay vì IP. Nhờ vậy backend **không cần mở cổng ra internet** — ẩn hoàn toàn.
 - **healthcheck**: Docker định kỳ "bắt mạch" container; hỏng thì báo `unhealthy`.
 
-## 5. Ghép lại: một lần deploy trên VPS
+## 5. Khoan — file docker-compose.yml nằm ở đâu trên VPS?
+
+Câu hỏi rất dễ nhầm: `docker compose up` đọc file `docker-compose.yml` **trong thư mục nó đang đứng** — vậy file đó ở đâu ra trên VPS? Bạn **không viết tay** nó trên server.
+
+File gốc nằm trong **Git repo** (có version), và pipeline **tự copy (scp) nó lên VPS** ngay trước khi chạy. Nhìn vào stage Deploy của Jenkins:
+
+```bash
+# 1. Ship file compose TỪ repo (workspace Jenkins) LÊN VPS
+scp docker-compose.yml  pin@vps:/opt/learn-nextjs/docker-compose.yml
+# 2. Vào đúng thư mục đó rồi chạy
+ssh pin@vps "cd /opt/learn-nextjs && docker compose pull && docker compose up -d"
+```
+
+Luồng đầy đủ:
+
+```
+docker-compose.yml (Git repo)  ──scp──►  /opt/.../docker-compose.yml (VPS)  ──compose up──►  container
+     ↑ nơi bạn SỬA                            ↑ bản triển khai, bị ghi đè mỗi lần deploy
+```
+
+Điểm mấu chốt: **bản trên VPS chỉ là "bản sao được ship tới"**, bị `scp` đè mỗi lần deploy. Muốn đổi cấu hình vĩnh viễn thì sửa trong **repo** rồi push — nếu sửa tay trên VPS, lần deploy sau bị đè mất. Giống hệt image: không nằm cố định trên VPS mà `pull` từ ghcr; compose file cũng đến từ repo. Cả **"cái gì chạy"** (image) lẫn **"chạy thế nào"** (compose) đều bắt nguồn từ Git.
+
+## 6. Ghép lại: một lần deploy trên VPS
 
 Sau khi image đã ở trên ghcr, phần deploy trên VPS gọn lỏn:
 
@@ -113,7 +135,7 @@ docker image prune -af         # dọn image cũ không dùng
 - `up -d`: Compose so sánh tờ khai với thực tế, container nào đổi thì tạo lại (`-d` = chạy nền).
 - `prune -af`: xóa image cũ để đĩa VPS không phình.
 
-## 6. Vì sao tách image (ghcr) khỏi cách chạy (compose)?
+## 7. Vì sao tách image (ghcr) khỏi cách chạy (compose)?
 
 Điểm hay của mô hình này:
 - **Image bất biến** trên ghcr = "cái gì chạy" — có phiên bản, rollback được.
@@ -121,7 +143,7 @@ docker image prune -af         # dọn image cũ không dùng
 
 Hai thứ tách bạch: đổi phiên bản app chỉ là đổi **tag image**; đổi cấu hình chạy chỉ là sửa **compose**. Cùng một image `prod-14` có thể chạy ở prod (cổng 3000) hay staging (cổng 3001) chỉ bằng cách truyền biến khác — không build lại.
 
-## 7. Kết
+## 8. Kết
 
 Docker Compose + Registry là bộ đôi biến việc deploy từ "ssh vào gõ một tràng lệnh" thành "kéo image + đọc một tờ khai". Nắm được:
 - **Image** là sản phẩm bất biến, sống trên **registry** (ghcr), có tag/phiên bản.
