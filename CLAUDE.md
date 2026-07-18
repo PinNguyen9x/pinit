@@ -25,3 +25,9 @@ Ví dụ:
 - Không `git push` — để tôi tự push
 - Không `--force`, không `git reset --hard`, không sửa lịch sử commit
 - Không sửa file trong `.next/`, `node_modules/`
+
+## Git workflow
+- Đồng bộ với main: dùng `git rebase origin/main`, KHÔNG `git merge main`
+- Nếu rebase có conflict: dừng lại, báo tôi, không tự resolve
+- Không rebase branch đã push lên remote
+- Merge feature về `main`: dùng `git merge --no-ff` (việc này do tôi hoặc agent integrator làm)
