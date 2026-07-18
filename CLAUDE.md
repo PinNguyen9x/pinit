@@ -31,3 +31,10 @@ Ví dụ:
 - Nếu rebase có conflict: dừng lại, báo tôi, không tự resolve
 - Không rebase branch đã push lên remote
 - Merge feature về `main`: dùng `git merge --no-ff` (việc này do tôi hoặc agent integrator làm)
+
+## Bàn giao khi kết thúc phiên
+Khi tôi nói "handoff", ghi file `HANDOFF.md` trong worktree gồm:
+- Đang làm gì, đã xong đến đâu
+- File nào đã sửa, còn dở chỗ nào
+- Bước tiếp theo
+Không commit file này.
