@@ -189,6 +189,22 @@ export const GLOSSARY: GlossaryTerm[] = [
     related: ['Container', 'Kubernetes', 'API'],
   },
   {
+    term: 'Upstream',
+    cat: 'General',
+    short: 'Thành phần nằm "phía trước" trong luồng dữ liệu — nơi dữ liệu/yêu cầu xuất phát.',
+    detail:
+      'Upstream (thượng nguồn) chỉ thành phần đứng trước trong một luồng — nơi dữ liệu, sự kiện hoặc phụ thuộc bắt nguồn rồi chảy xuống cho thành phần khác dùng. Trong Kafka, producer là upstream của consumer; trong pipeline dữ liệu, hệ nguồn (database, API) là upstream của hệ đích. Khi upstream chậm hoặc lỗi, mọi thành phần downstream đều bị ảnh hưởng dây chuyền. Từ này cũng dùng trong Git (nhánh gốc bạn theo dõi) và mạng (chiều tải dữ liệu lên). 💡 Dễ nhớ: như dòng sông — thượng nguồn ở trên đổ xuống; nước bẩn ở đầu nguồn thì cả hạ nguồn lãnh đủ.',
+    related: ['Downstream', 'Producer', 'Pipeline', 'Microservices', 'Kafka'],
+  },
+  {
+    term: 'Downstream',
+    cat: 'General',
+    short: 'Thành phần nằm "phía sau" trong luồng dữ liệu — nơi tiêu thụ dữ liệu từ upstream.',
+    detail:
+      'Downstream (hạ nguồn) chỉ thành phần đứng sau trong một luồng — nơi nhận và tiêu thụ dữ liệu/sự kiện do upstream tạo ra. Trong Kafka, consumer là downstream của producer; trong pipeline, kho phân tích hay dịch vụ đích là downstream của hệ nguồn. Thiết kế tốt là làm downstream chịu lỗi độc lập (retry, backpressure, DLQ) để một sự cố upstream không kéo sập toàn bộ. 💡 Dễ nhớ: hạ nguồn hứng nước từ thượng nguồn — bạn ở cuối dòng, nhận mọi thứ (tốt lẫn xấu) trôi xuống.',
+    related: ['Upstream', 'Consumer Group', 'Backpressure', 'Pipeline', 'Microservices'],
+  },
+  {
     term: 'Middleware',
     cat: 'Web',
     short: 'Lớp xử lý trung gian nằm giữa request và response.',
@@ -687,6 +703,14 @@ export const GLOSSARY: GlossaryTerm[] = [
     detail:
       'RabbitMQ là message broker dựa trên giao thức AMQP, định tuyến message qua exchange tới các queue; message thường bị xoá sau khi consumer ack. Khác Kafka (lưu log đọc lại được), RabbitMQ mạnh ở định tuyến linh hoạt và tác vụ kiểu hàng đợi/RPC. Chọn nhầm công cụ cho bài toán là "issue" ở tầng kiến trúc. 💡 Dễ nhớ: RabbitMQ là bưu cục chia thư theo địa chỉ rồi giao là xong; Kafka là cuốn sổ lưu lại mọi bức thư.',
     related: ['Kafka', 'Dead Letter Queue', 'Topic', 'Backpressure'],
+  },
+  {
+    term: 'Kafka Connect',
+    cat: 'Messaging',
+    short: 'Khung tích hợp sẵn để bơm dữ liệu vào/ra Kafka mà không phải viết code.',
+    detail:
+      'Kafka Connect là framework chạy sẵn cùng Kafka để kết nối Kafka với hệ thống ngoài qua cấu hình (JSON) thay vì tự viết producer/consumer. Có hai loại connector: Source connector kéo dữ liệu từ nguồn ngoài (database, file, API) đổ VÀO topic Kafka; Sink connector đẩy dữ liệu TỪ topic ra hệ đích (Elasticsearch, S3, database). Connect chạy phân tán qua các worker, tự chia task, tự lưu offset và khởi động lại khi lỗi. Kết hợp với công cụ như Debezium, Source connector đọc changelog của database để làm CDC (Change Data Capture). 💡 Dễ nhớ: Source là "ống hút" kéo dữ liệu vào Kafka, Sink là "ống xả" đẩy dữ liệu ra — bạn chỉ khai báo, không phải viết code đường ống.',
+    related: ['Kafka', 'Topic', 'Producer', 'Consumer Group', 'Upstream', 'Downstream'],
   },
 
   // ─────────────────────────── Mobile ───────────────────────────
