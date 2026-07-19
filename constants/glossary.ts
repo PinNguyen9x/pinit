@@ -712,6 +712,30 @@ export const GLOSSARY: GlossaryTerm[] = [
       'Kafka Connect là framework chạy sẵn cùng Kafka để kết nối Kafka với hệ thống ngoài qua cấu hình (JSON) thay vì tự viết producer/consumer. Có hai loại connector: Source connector kéo dữ liệu từ nguồn ngoài (database, file, API) đổ VÀO topic Kafka; Sink connector đẩy dữ liệu TỪ topic ra hệ đích (Elasticsearch, S3, database). Connect chạy phân tán qua các worker, tự chia task, tự lưu offset và khởi động lại khi lỗi. Kết hợp với công cụ như Debezium, Source connector đọc changelog của database để làm CDC (Change Data Capture). 💡 Dễ nhớ: Source là "ống hút" kéo dữ liệu vào Kafka, Sink là "ống xả" đẩy dữ liệu ra — bạn chỉ khai báo, không phải viết code đường ống.',
     related: ['Kafka', 'Topic', 'Producer', 'Consumer Group', 'Upstream', 'Downstream'],
   },
+  {
+    term: 'Schema Registry',
+    cat: 'Messaging',
+    short: 'Kho quản lý schema tập trung để producer và consumer thống nhất định dạng message.',
+    detail:
+      'Schema Registry là dịch vụ lưu và quản lý phiên bản schema (thường Avro, Protobuf, JSON Schema) cho message Kafka. Producer đăng ký schema, message chỉ mang một schema ID nhỏ gọn thay vì kèm toàn bộ định nghĩa; consumer tra ID đó để giải mã. Nó áp luật tương thích (compatibility) BACKWARD/FORWARD/FULL — schema mới phải hợp lệ với schema cũ trước khi được chấp nhận, nhờ đó đổi format không làm vỡ consumer đang chạy. Đây là mảnh ghép hay đi kèm converter của Kafka Connect. 💡 Dễ nhớ: như một "từ điển chung" mọi bên phải tra — không ai tự chế định dạng riêng khiến bên kia đọc không hiểu.',
+    related: ['Kafka', 'Kafka Connect', 'Producer', 'Consumer Group', 'Topic'],
+  },
+  {
+    term: 'CDC / Debezium',
+    cat: 'Messaging',
+    short: 'Bắt mọi thay đổi trong database và phát thành luồng sự kiện real-time.',
+    detail:
+      'CDC (Change Data Capture) là kỹ thuật ghi lại mọi thay đổi (INSERT/UPDATE/DELETE) trong database và phát ra dưới dạng luồng sự kiện, thay vì poll bảng định kỳ. Debezium là bộ Source connector CDC phổ biến nhất cho Kafka Connect: nó đọc thẳng transaction log của database (WAL của Postgres, binlog của MySQL) nên bắt được từng thay đổi ngay khi xảy ra mà gần như không tải thêm cho DB. Mỗi event thường kèm cả giá trị trước (before) và sau (after). Lần chạy đầu Debezium thường snapshot toàn bộ bảng trước khi stream tiếp. 💡 Dễ nhớ: thay vì cứ vài giây hỏi "có gì mới không?", CDC cắm thẳng vào nhật ký của database để nghe mọi thay đổi ngay lúc nó được ghi.',
+    related: ['Kafka Connect', 'Kafka', 'Topic', 'Database', 'Log Compaction'],
+  },
+  {
+    term: 'KRaft',
+    cat: 'Messaging',
+    short: 'Cơ chế đồng thuận nội bộ của Kafka quản lý metadata, thay thế ZooKeeper.',
+    detail:
+      'KRaft (Kafka Raft) là chế độ Kafka tự quản lý metadata cluster (danh sách topic, partition, leader, cấu hình) bằng giao thức đồng thuận Raft ngay trong Kafka, thay cho việc phụ thuộc hệ thống ZooKeeper bên ngoài. Một nhóm broker đóng vai controller lập thành quorum để bầu ra controller leader. Ưu điểm: kiến trúc gọn (khỏi vận hành thêm ZooKeeper), khởi động và failover nhanh hơn, chịu được số partition lớn hơn nhiều. Từ Kafka 3.x KRaft ổn định cho production, tới Kafka 4.0 ZooKeeper bị loại bỏ hoàn toàn. 💡 Dễ nhớ: trước đây Kafka thuê "thư ký ngoài" (ZooKeeper) giữ sổ sách cluster; KRaft là Kafka tự giữ sổ, bớt được một hệ thống phải nuôi.',
+    related: ['Kafka', 'Broker', 'Leader / Follower', 'ISR'],
+  },
 
   // ─────────────────────────── Mobile ───────────────────────────
   {
