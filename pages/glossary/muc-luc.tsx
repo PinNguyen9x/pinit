@@ -26,7 +26,6 @@ const GlossaryIndex: NextPageWithLayout = () => {
   const isDark = theme.palette.mode === 'dark'
   const accent = theme.palette.primary.main
   const line = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
-  const chipBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
   const cardBg = isDark ? 'rgba(14,18,15,0.5)' : 'rgba(255,255,255,0.65)'
 
   const [query, setQuery] = useState('')
