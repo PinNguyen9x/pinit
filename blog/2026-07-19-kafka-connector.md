@@ -130,7 +130,61 @@ Mỗi lần có `INSERT`/`UPDATE`/`DELETE` trên bảng `orders`, Debezium sinh 
 
 Từ đây, database của bạn trở thành một nguồn phát sự kiện real-time cho toàn hệ thống mà **không phải sửa một dòng code nào của ứng dụng đang chạy**. Đây là nền tảng của rất nhiều kiến trúc event-driven và **[microservices](/glossary#Microservices)** hiện đại.
 
-## 6. Những lỗi thực tế hay gặp
+## 6. Single Message Transforms (SMT): nắn dữ liệu ngay trên đường ống
+
+Đôi khi dữ liệu không cần logic phức tạp, chỉ cần **chỉnh nhẹ** trước khi vào/ra Kafka: đổi tên field, bỏ cột nhạy cảm, thêm timestamp, đổi topic đích... Viết hẳn một service cho việc này thì phí. **SMT (Single Message Transforms)** cho phép biến đổi **từng message một** ngay trong connector — vẫn chỉ bằng cấu hình.
+
+SMT nằm chèn giữa connector và Kafka:
+
+```
+Source:  Nguồn ──▶ [ SMT ] ──▶ Topic Kafka
+Sink:    Topic Kafka ──▶ [ SMT ] ──▶ Hệ đích
+```
+
+Bạn khai báo một **chuỗi** transform (chạy tuần tự) qua key `transforms`. Ví dụ Sink connector ở mục 3, giờ thêm: che số điện thoại (mask PII), bỏ field nội bộ, và gắn thời điểm xử lý:
+
+```json
+{
+  "name": "orders-to-elasticsearch",
+  "config": {
+    "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+    "topics": "orders",
+    "connection.url": "http://elasticsearch:9200",
+
+    "transforms": "maskPhone,dropInternal,addTs",
+
+    "transforms.maskPhone.type": "org.apache.kafka.connect.transforms.MaskField$Value",
+    "transforms.maskPhone.fields": "phone",
+    "transforms.maskPhone.replacement": "***",
+
+    "transforms.dropInternal.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+    "transforms.dropInternal.exclude": "internal_note",
+
+    "transforms.addTs.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+    "transforms.addTs.timestamp.field": "ingested_at"
+  }
+}
+```
+
+Vài SMT có sẵn hay dùng:
+
+| SMT | Việc nó làm |
+|---|---|
+| `MaskField` | Che giá trị field nhạy cảm (PII: phone, email, CCCD) |
+| `ReplaceField` | Bỏ (`exclude`) hoặc đổi tên (`renames`) field |
+| `InsertField` | Chèn thêm field (timestamp, topic, partition, static value) |
+| `Cast` | Ép kiểu dữ liệu (string → int, ...) |
+| `TimestampConverter` | Đổi định dạng thời gian (unix ↔ ISO string) |
+| `RegexRouter` | Đổi **topic đích** theo regex — vd gộp `cdc.public.orders` → `orders` |
+| `ExtractField` | Rút một field con lên làm toàn bộ key/value |
+
+Có thể gắn thêm **predicate** để SMT chỉ chạy với message thỏa điều kiện (vd chỉ mask khi topic khớp một tên nhất định).
+
+**Ranh giới cần nhớ:** SMT xử lý **đúng một message tại một thời điểm** — nó **không** join hai luồng, **không** aggregate, **không** nhớ trạng thái giữa các message. Cần những việc đó thì đây là ranh giới để chuyển sang **Kafka Streams** hoặc Flink (xem mục 8). Ngoài ra chuỗi SMT quá dài cũng bào throughput — nặng thì tách ra stream processing riêng.
+
+> 💡 Dễ nhớ: SMT như trạm chỉnh trang cuối băng chuyền — dán nhãn, che tem, bỏ bớt phụ kiện cho **từng món**; nhưng nó không ghép hai món lại thành một.
+
+## 7. Những lỗi thực tế hay gặp
 
 Connect "không cần code" không có nghĩa là "không cần hiểu". Đây là các vết xe đổ phổ biến:
 
@@ -149,11 +203,11 @@ Connect "không cần code" không có nghĩa là "không cần hiểu". Đây l
 
 **5. CDC đầu tiên "đơ" vì snapshot.** Debezium lần đầu thường chụp toàn bộ bảng (initial snapshot) trước khi stream. Bảng lớn → snapshot lâu, dễ tưởng nhầm là treo. Biết trước để không hoảng.
 
-## 7. Khi nào KHÔNG nên dùng Kafka Connect
+## 8. Khi nào KHÔNG nên dùng Kafka Connect
 
 Connect tuyệt vời cho việc **bê dữ liệu tiêu chuẩn**, nhưng không phải viên đạn bạc:
 
-- Cần **biến đổi dữ liệu phức tạp** (join nhiều luồng, aggregate theo cửa sổ thời gian) → dùng **Kafka Streams** hoặc Flink, đừng nhồi vào SMT (Single Message Transforms) của Connect.
+- Cần **biến đổi dữ liệu phức tạp** (join nhiều luồng, aggregate theo cửa sổ thời gian) → dùng **Kafka Streams** hoặc Flink, đừng cố nhồi vào SMT (mục 6) của Connect.
 - Chỉ có **một luồng nhỏ, một lần** → có khi tự viết một script consumer còn nhanh hơn dựng cả cụm Connect.
 - Hệ đích **không có connector sẵn** và bạn không muốn tự viết plugin → cân nhắc lại.
 
@@ -164,6 +218,7 @@ Kafka Connect biến bài toán tích hợp dữ liệu từ "viết và bảo t
 - **Source** kéo dữ liệu từ upstream **vào** Kafka; **Sink** đẩy dữ liệu **ra** downstream.
 - Bạn nhận được retry, quản lý offset, scale theo task, chịu lỗi qua rebalance — miễn phí.
 - **Debezium + CDC** biến database thành nguồn sự kiện real-time mà không đụng vào app.
+- **SMT** nắn nhẹ từng message (mask, rename, route) ngay trên đường ống — nhưng dừng lại ở đó, việc nặng để cho Kafka Streams.
 - Cạm bẫy nằm ở **converter/schema**, **poison message**, và **lag ở Sink** — hiểu chúng là vận hành được yên tâm.
 
 Muốn ôn lại các khái niệm nền, ghé qua **[Kafka Connect](/glossary#Kafka%20Connect)**, **[Upstream](/glossary#Upstream)**, **[Downstream](/glossary#Downstream)** trong từ điển thuật ngữ nhé. 🔌
