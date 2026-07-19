@@ -244,6 +244,25 @@ const Glossary: NextPageWithLayout = () => {
           >
             Click vào thuật ngữ để xem giải thích chi tiết và các thuật ngữ liên quan.
           </Typography>
+
+          {/* Cross-link to the category index (mục lục) */}
+          <Box
+            component={Link}
+            href="/glossary/muc-luc"
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.6,
+              mt: 2,
+              fontSize: '0.84rem',
+              fontWeight: 600,
+              color: accent,
+              transition: '0.15s',
+              '&:hover': { opacity: 0.8 },
+            }}
+          >
+            Xem mục lục theo chủ đề <ArrowForwardIcon sx={{ fontSize: 15 }} />
+          </Box>
         </Box>
 
         {/* Search + tools */}
