@@ -79,7 +79,8 @@ type CategoryGroup = {
   - `filtered = useMemo(...)`: lọc theo `term/short/detail.toLowerCase().includes(q)`.
   - `groups = useMemo(...)`: gom theo `cat`, sort term alpha, sort nhóm theo `count` desc → `cat` alpha.
   - Sub-blocks: Header (Seo + tiêu đề), SearchBox, count line, danh sách category section, empty state, cross-link về `/glossary` và trang chủ.
-  - Reuse: `Seo`, `BackgroundFx`, `Highlight` (có thể tái dùng logic highlight cho tên term khi search — optional).
+  - Mỗi category section: heading `Cat (count)` + các term là link **inline, ngăn bằng dấu `·`**, tự wrap xuống dòng (compact directory). KHÔNG grid/không mỗi term một dòng.
+  - **Không highlight** đoạn khớp trong tên term: search chỉ lọc danh sách. Trang **self-contained**, chỉ reuse `Seo`, `BackgroundFx`, `MainLayout`; KHÔNG phụ thuộc `Highlight` (hàm này local trong `glossary.tsx`, không export) → không đụng file trang chi tiết cho việc render.
 - **Frontend (sửa nhẹ)** — `pages/glossary.tsx`: thêm 1 link/nút trỏ tới `/glossary/muc-luc` (cross-link chiều ngược). Thay đổi tối thiểu, không đụng logic.
 - **Backend / storage**: không có.
 - **Third-party**: không có.
@@ -93,6 +94,8 @@ type CategoryGroup = {
 - **Link `/glossary#term` thay vì render chi tiết tại chỗ**: tái dùng deep-link + flash sẵn có, một nguồn sự thật cho phần chi tiết.
 - **Category sắp theo count desc**: nhóm lớn (AI, Messaging) lên trước, phản ánh trọng tâm nội dung.
 - **Alternatives đã cân nhắc**: (a) toggle A-Z/Category trên trang cũ — phức tạp hơn, đụng logic hiện có; (b) replace grouping — mất A-Z jump; (c) render card theo category — nặng, trùng lặp. Đều bị loại theo xác nhận của user.
+- **Highlight (đã chốt Phase 3)**: KHÔNG highlight đoạn khớp ở mục lục. Lý do: giữ trang self-contained, tránh sửa/refactor `glossary.tsx` đang chạy ổn (Highlight là hàm local, không export). Alternatives loại: (a) tách Highlight ra shared component — phải sửa trang chi tiết; (b) nhân bản helper — trùng code. Nếu sau này cần dùng highlight ở nhiều nơi mới tách shared.
+- **Trình bày list (đã chốt Phase 3)**: term dạng link **inline ngăn bằng `·`**, tự wrap. Lý do: gọn nhất, quét nhanh cả nhóm lớn (AI=30) mà không tốn chiều cao. Alternatives loại: grid nhiều cột (cao hơn, giống card) và list dọc (quá dài với 109 từ).
 
 ## Non-Functional Requirements
 **How should the system perform?**
