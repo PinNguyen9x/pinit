@@ -17,21 +17,21 @@ description: Chiến lược kiểm thử trang mục lục thuật ngữ
 ## Unit Tests
 **What individual components need testing?** (logic thuần, có thể tách khỏi React nếu thêm test sau)
 
-> **Legend**: [x] = đã verify (build/HTML tĩnh), [~] = cần dev server / manual.
+> **Legend**: [x] = đã verify. Nguồn: (build) = HTML build tĩnh, (e2e) = Chrome headless + puppeteer-core trên `next dev` :3939.
 
 ### Filtering (`filtered`)
-- [x] Query rỗng → trả về đủ 109 term (count line "109 / 109" trong HTML build).
-- [~] Query khớp `term` (vd "kafka") → chỉ term liên quan. (interactive)
-- [~] Query khớp `short`/`detail` (không có trong tên) → vẫn lọt. (interactive)
-- [~] Query không khớp gì → mảng rỗng (kích hoạt empty state). (interactive)
-- [~] Không phân biệt hoa/thường (case-insensitive). (interactive; logic dùng toLowerCase)
+- [x] Query rỗng → trả về đủ 109 term (build: count line "109/109"; e2e: 109 link).
+- [x] Query khớp `term`/`detail` (vd "kafka") → chỉ term liên quan (e2e: n=17, gồm "Kafka").
+- [x] Query khớp `short`/`detail` (không có trong tên) → vẫn lọt (e2e: 17 kết quả gồm term chỉ nhắc "kafka" trong detail).
+- [x] Query không khớp gì → empty state (e2e: "Không tìm thấy thuật ngữ nào", "0 / 109 … 0 nhóm").
+- [x] Không phân biệt hoa/thường (logic `toLowerCase`; e2e).
 
 ### Grouping & sorting (`groups`)
-- [x] Gom đúng theo `cat`, tổng số term = 109 khi query rỗng (109 link `/glossary#` trong HTML).
-- [x] Category sắp theo count **giảm dần** (AI→Messaging→DevOps→Web→General→…).
-- [x] Khi count bằng nhau (Cloud/Database=4; Blockchain/Mobile/Security=3) → sắp `cat` theo alpha (thứ tự h2 xác nhận: Cloud<Database, Blockchain<Mobile<Security).
+- [x] Gom đúng theo `cat`, tổng số term = 109 khi query rỗng (build + e2e: 109 link, 10 nhóm).
+- [x] Category sắp theo count **giảm dần** (e2e: AI, Messaging, DevOps… đầu danh sách).
+- [x] Khi count bằng nhau (Cloud/Database=4; Blockchain/Mobile/Security=3) → sắp `cat` theo alpha (build: thứ tự h2 Cloud<Database, Blockchain<Mobile<Security).
 - [x] Term trong mỗi nhóm sắp theo alpha (case-insensitive) — `localeCompare` sensitivity base.
-- [~] Sau filter, nhóm còn 0 term bị loại khỏi danh sách render. (interactive; `groups` chỉ chứa nhóm có term)
+- [x] Sau filter, nhóm còn 0 term bị loại khỏi render (e2e: empty state "0 nhóm").
 
 ### Href encoding
 - [x] `term` thường → href `/glossary#<term>` đúng.
@@ -40,20 +40,20 @@ description: Chiến lược kiểm thử trang mục lục thuật ngữ
 ## Integration Tests
 **How do we test component interactions?**
 
-- [~] Click term ở mục lục → URL đổi sang `/glossary#<term>` và trang chi tiết mở đúng card (deep-link cũ chạy). (href đúng đã verify trong HTML; nav interactive cần dev server)
-- [x] Cross-link 2 chiều tồn tại: `href="/glossary/muc-luc"` trong `glossary.html`, `href="/glossary"` trong `muc-luc.html`. [~] Điều hướng thực tế: manual.
-- [~] Điều hướng bằng bàn phím (tab tới link, Enter) hoạt động. (link là `<a>` thật)
-- [~] Ctrl/Cmd+F focus vào ô search của trang (không mở find của trình duyệt) — đã triển khai như trang chi tiết.
+- [x] Click term ở mục lục → URL đổi sang `/glossary#<term>` và trang chi tiết mở đúng card (e2e: click "LLM" → `location = /glossary#LLM`; deep-link scroll `scrollY=4004`, `.MuiCollapse-entered` = 1, card Kafka mở + highlight + hiện related chips).
+- [x] Cross-link 2 chiều: `href="/glossary/muc-luc"` trong `glossary.html`, `href="/glossary"` trong `muc-luc.html` (build); e2e điều hướng muc-luc → glossary OK.
+- [x] Link là `<a>` thật (tab/Enter điều hướng được).
+- [x] Ctrl/Cmd+F focus ô search (e2e: `document.activeElement` là INPUT).
 
 ## End-to-End Tests
 **What user flows need validation?**
 
-- [ ] User flow 1: mở `/glossary/muc-luc` → thấy 10 category, đếm "109 / 109".
-- [ ] User flow 2: gõ "rag" → danh sách rút gọn, đếm cập nhật, nhóm rỗng ẩn.
-- [ ] User flow 3: xóa search (Clear) → khôi phục đủ 109.
-- [ ] User flow 4: click "LLM" → tới `/glossary#LLM`, card mở + flash.
-- [ ] Critical path: `/glossary` chi tiết vẫn hoạt động y cũ (A-Z, filter, deep-link) — không regression.
-- [ ] Regression: deep-link paste trực tiếp `/glossary#Kafka` vẫn mở đúng.
+- [x] User flow 1: mở `/glossary/muc-luc` → 10 category, đếm "109 / 109" (e2e).
+- [x] User flow 2: gõ "kafka" → danh sách rút gọn (17), đếm cập nhật, nhóm rỗng ẩn (e2e).
+- [x] User flow 3: xóa search → khôi phục đủ 109 (e2e).
+- [x] User flow 4: click "LLM" → tới `/glossary#LLM`, card mở (e2e).
+- [x] Critical path: `/glossary` chi tiết vẫn hoạt động (A-Z render, deep-link) — không regression (e2e).
+- [x] Regression: deep-link paste trực tiếp `/glossary#Kafka` vẫn mở đúng (e2e: scroll + collapse mở + related chips).
 
 ## Test Data
 **What data do we use for testing?**
@@ -72,10 +72,10 @@ description: Chiến lược kiểm thử trang mục lục thuật ngữ
 ## Manual Testing
 **What requires human validation?**
 
-- [ ] UI/UX: bố cục section category rõ ràng, đọc tốt; empty state hiển thị khi không khớp.
-- [ ] Accessibility: tương phản chữ/nền đạt; focus ring thấy được; link có text rõ.
-- [ ] Theme sáng & tối đều đẹp, đồng nhất với trang chi tiết.
-- [ ] Responsive: mobile (1 cột), desktop (nhiều cột nếu dùng grid) không vỡ layout, không cuộn ngang.
+- [x] UI/UX: bố cục section category rõ ràng, empty state hiển thị khi không khớp (screenshot desktop dark).
+- [x] Theme tối đẹp, đồng nhất trang chi tiết (screenshot). [~] Theme sáng: chưa chụp (dùng chung token nên kỳ vọng OK).
+- [~] Accessibility: focus ring ô search thấy được (screenshot); còn cần soát tương phản chip đầy đủ.
+- [~] Responsive mobile (1 cột): chưa test viewport nhỏ (grid `auto-fill minmax(340px,1fr)` → tự về 1 cột khi hẹp).
 - [ ] Smoke test sau deploy: mở `/glossary/muc-luc` trên production.
 
 ## Performance Testing
