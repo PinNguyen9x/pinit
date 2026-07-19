@@ -1,8 +1,6 @@
 {
   "version": "0.47.0",
-  "environments": [
-    "claude"
-  ],
+  "environments": ["claude"],
   "phases": [
     "requirements",
     "design",
@@ -13,6 +11,13 @@
     "monitoring"
   ],
   "createdAt": "2026-07-19T05:58:46.601Z",
+  "mcpServers": {
+    "memory": {
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@ai-devkit/memory"]
+    }
+  },
   "skills": [
     {
       "registry": "codeaholicguy/ai-devkit",
