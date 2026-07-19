@@ -101,7 +101,7 @@ Kafka Connect chạy như một cụm các **worker** (tiến trình JVM). Khi b
 
 ## 5. Ngôi sao thực sự: CDC với Debezium
 
-Source connector mạnh nhất khi kết hợp với **CDC (Change Data Capture)**. Thay vì cứ vài giây lại `SELECT * FROM orders` (nặng và trễ), **Debezium** đọc thẳng **transaction log** của database (WAL của Postgres, binlog của MySQL) để bắt **mọi** thay đổi ngay khi nó xảy ra.
+Source connector mạnh nhất khi kết hợp với **[CDC (Change Data Capture)](/glossary#CDC%20%2F%20Debezium)**. Thay vì cứ vài giây lại `SELECT * FROM orders` (nặng và trễ), **Debezium** đọc thẳng **transaction log** của database (WAL của Postgres, binlog của MySQL) để bắt **mọi** thay đổi ngay khi nó xảy ra.
 
 ```json
 {
@@ -188,7 +188,7 @@ Có thể gắn thêm **predicate** để SMT chỉ chạy với message thỏa 
 
 Connect "không cần code" không có nghĩa là "không cần hiểu". Đây là các vết xe đổ phổ biến:
 
-**1. Schema và converter lệch nhau.** Đây là lỗi số một. Cấu hình `key.converter` / `value.converter` (JSON, Avro, Protobuf) ở producer và ở connector phải khớp. Dùng Avro thì thường cần thêm **Schema Registry**. Sai converter → Connect ném lỗi deserialize và task chết ngay message đầu tiên.
+**1. Schema và converter lệch nhau.** Đây là lỗi số một. Cấu hình `key.converter` / `value.converter` (JSON, Avro, Protobuf) ở producer và ở connector phải khớp. Dùng Avro thì thường cần thêm **[Schema Registry](/glossary#Schema%20Registry)**. Sai converter → Connect ném lỗi deserialize và task chết ngay message đầu tiên.
 
 **2. Một message hỏng làm chết cả task (poison message).** Mặc định, gặp message không parse được là task dừng. Hãy bật cơ chế bỏ qua và đẩy vào **[dead letter queue](/glossary#Dead%20Letter%20Queue)**:
 

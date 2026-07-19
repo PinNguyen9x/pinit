@@ -51,7 +51,7 @@ Apache **[Kafka](/glossary#Kafka)** là một **distributed event streaming plat
 
 - **Producer** ghi message vào **Topic** trên **Broker**.
 - **Consumer** (thường nhóm thành **Consumer Group**) đọc message từ topic.
-- **Cluster** gồm nhiều broker; metadata (topic, partition, leader...) được quản lý bởi **KRaft** (Kafka Raft — thay thế ZooKeeper từ Kafka 3.x, ZooKeeper đã bị loại bỏ hoàn toàn từ Kafka 4.0).
+- **Cluster** gồm nhiều broker; metadata (topic, partition, leader...) được quản lý bởi **[KRaft](/glossary#KRaft)** (Kafka Raft — thay thế ZooKeeper từ Kafka 3.x, ZooKeeper đã bị loại bỏ hoàn toàn từ Kafka 4.0).
 
 ## 3. Các thành phần cốt lõi
 
@@ -189,7 +189,7 @@ Khi consumer join/leave group (deploy, crash, scale), Kafka **phân chia lại p
 └──────────┘   └─────────────────┘   └───────┘   └────────────────┘   └───────────────┘
 ```
 
-- **Source Connector**: kéo data từ ngoài **vào** Kafka (VD: Debezium đọc binlog MySQL → CDC events).
+- **Source Connector**: kéo data từ ngoài **vào** Kafka (VD: **[Debezium](/glossary#CDC%20%2F%20Debezium)** đọc binlog MySQL → CDC events).
 - **Sink Connector**: đẩy data từ Kafka **ra** ngoài (VD: S3 Sink ghi Parquet lên data lake).
 
 > Muốn đào sâu Source/Sink, CDC với Debezium và SMT, xem bài riêng: [Kafka Connect: bơm dữ liệu vào/ra Kafka không cần viết code](/blog/kafka-connector-source-sink-cdc).
@@ -386,7 +386,7 @@ msg/s │  produce rate ────────────────── 1
 
 **Tình huống:** producer đổi format (xóa field, đổi type) → consumer deserialize fail hàng loạt.
 
-**Giải pháp:** dùng **Schema Registry** (Avro/Protobuf) với compatibility mode `BACKWARD` — mọi schema mới phải được registry chấp nhận trước khi producer dùng, đảm bảo consumer cũ vẫn đọc được.
+**Giải pháp:** dùng **[Schema Registry](/glossary#Schema%20Registry)** (Avro/Protobuf) với compatibility mode `BACKWARD` — mọi schema mới phải được registry chấp nhận trước khi producer dùng, đảm bảo consumer cũ vẫn đọc được.
 
 ## 7. Checklist config production tham khảo
 
