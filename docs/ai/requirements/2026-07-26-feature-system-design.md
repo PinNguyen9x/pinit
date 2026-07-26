@@ -115,7 +115,7 @@ Nội dung lộ trình là **System Design** (thiết kế hệ thống phân t�
 4. Bật cả 4 tính năng: checklist tiến độ, flashcard, mermaid diagram, search + cross-link glossary.
 5. Mỗi buổi ~800–1200 từ.
 6. AI soạn toàn bộ nội dung 13 buổi; là kiến thức system design phổ thông, không phải slide khóa học.
-7. Tab thêm vào `ROUTE_LIST` trong `components/common/header/routes.ts` (không thêm Glossary vào header — ngoài scope).
+7. ~~Tab thêm vào `ROUTE_LIST` trong `components/common/header/routes.ts` (không thêm Glossary vào header — ngoài scope).~~ **Sai — đã sửa 2026-07-26 khi kiểm trên trình duyệt.** Repo có **hai** header: `components/common/header/index.tsx` (mảng `navItems` hardcode) là cái `MainLayout` thực sự dùng; `header-desktop.tsx` + `header-mobile.tsx` dùng `ROUTE_LIST` nhưng **không được import ở đâu cả** — code chết. Tab phải thêm vào `navItems`. Hệ quả thứ hai: `/glossary` **vốn đã có tab** trong `navItems` — nhận định "glossary không có tab" ở phần Constraints là sai, do đọc nhầm file chết.
 8. Buổi 13 chuyển thành trang **tự luyện** mock interview.
 9. Mermaid: tách `hooks/use-mermaid.ts` mới, **không** refactor 2 trang cũ.
 10. Có trang cheat sheet riêng tại `/system-design/cheat-sheet`.

@@ -11,7 +11,7 @@ description: Nhật ký triển khai — M1 hạ tầng đã xong, ghi lại quy
 
 | Milestone | Trạng thái | Ghi chú |
 |---|---|---|
-| M1 — Hạ tầng & khung dữ liệu | ✅ **Xong** (8/8 task) | Đi được từ header → lộ trình → trang chi tiết; tiến độ lưu được |
+| M1 — Hạ tầng & khung dữ liệu | ✅ **Xong** (8/8 task), **đã kiểm trên trình duyệt** | Cổng M1 pass — xem mục Kiểm chứng |
 | M2 — Vertical slice buổi 1–2 | ⬜ Chưa bắt đầu | Cổng chặn: chốt data model |
 | M3–M6 | ⬜ Chưa bắt đầu | |
 
@@ -70,6 +70,24 @@ Quy ước: file kebab-case, barrel `index.ts` mỗi thư mục — bám theo re
 | Không nhắc `tokens.ts` | Thêm `components/system-design/tokens.ts` | 6 component cùng cần một bảng màu; lặp lại 6 lần là sai |
 | Model có `LessonTrack` là union literal | Thêm mảng `LESSON_TRACKS` rồi suy ra type | Cần giá trị runtime để test kiểm `track` hợp lệ |
 | Trang lộ trình có CTA sang cheat sheet | **Đã bỏ khỏi M1** | `/system-design/cheat-sheet` tới T5.2 mới tồn tại; không ship link 404. Có comment đánh dấu chỗ thêm lại |
+| Tab thêm vào `ROUTE_LIST` (`routes.ts`) | Thêm vào `navItems` trong `components/common/header/index.tsx` | `ROUTE_LIST` là **code chết** — xem mục dưới |
+
+### Sự cố: sửa nhầm vào code chết
+
+Bản sửa T1.8 đầu tiên (`ad8769b`) thêm mục vào `components/common/header/routes.ts` và **không có tác dụng gì**. Phát hiện khi mở trình duyệt: tab không xuất hiện.
+
+Repo có **hai** implementation header:
+
+| File | Nguồn menu | Được dùng? |
+|---|---|---|
+| `components/common/header/index.tsx` | mảng `navItems` hardcode trong file | ✅ **Có** — `MainLayout` import động file này |
+| `components/common/header/header-desktop.tsx` + `header-mobile.tsx` | `ROUTE_LIST` từ `routes.ts` | ❌ **Không** — `grep` toàn repo cho 0 lượt import |
+
+Đã `git revert ad8769b` rồi sửa lại vào `navItems` (`4214ac6`).
+
+**Hai bài học:**
+1. `next build` và `npm test` đều **không** phát hiện được lỗi này — sửa vào code chết vẫn compile sạch, vẫn pass hết test. Chỉ mở trình duyệt mới thấy.
+2. Nhận định trong requirements rằng "`/glossary` không có tab" là **sai** — nó vốn đã có trong `navItems`. Sai vì đọc `routes.ts` (file chết) thay vì file thật.
 
 ### Edge case đã xử lý
 
@@ -117,6 +135,32 @@ Quy ước: file kebab-case, barrel `index.ts` mỗi thư mục — bám theo re
 - Mermaid dùng `securityLevel: 'strict'` (hai trang cũ trong repo dùng `'loose'`). Diagram do repo kiểm soát, không cần click handler.
 - `localStorage` chỉ chứa mảng slug — không dữ liệu nhạy cảm.
 - Không secret, không biến môi trường mới.
+
+## Kiểm chứng cổng M1 (2026-07-26, trình duyệt thật)
+
+Chạy trên **production server** (`npm run build && npm start`), không phải dev server — dev mode ở repo này compile 48-50s mỗi route (27k module) và tự restart vì chạm ngưỡng RAM, không kiểm được.
+
+| Hạng mục | Kết quả |
+|---|---|
+| Tab "System Design" trên header, trạng thái active | ✅ hiện đúng, bold khi ở `/system-design` và cả trang chi tiết |
+| 13 buổi đúng thứ tự trên trang lộ trình | ✅ 13 link duy nhất trong HTML |
+| Tick 3 buổi → phần trăm | ✅ "Đã ôn 3/13 buổi — 23%" (khớp ca test `computeProgressPercent(3,13) === 23`) |
+| Reload → tiến độ còn | ✅ vẫn 3/13, đúng 3 buổi đó |
+| Giá trị `localStorage` | ✅ `["nguyen-ly-cap-microservices","load-balancer-va-database","networking-he-phan-tan"]` — lưu **slug**, không phải index |
+| Click tick không điều hướng | ✅ vẫn ở `/system-design` |
+| Tiến độ dùng chung index ↔ trang chi tiết | ✅ nút "Đã ôn xong buổi này" ở buổi 3 hiện trạng thái đã bật |
+| Trang chi tiết: chip, keyTakeaway, prev/next | ✅ đủ |
+| Buổi chưa có nội dung | ✅ "Nội dung buổi này đang được biên soạn." |
+| Search "sharding" | ✅ "1 / 13 buổi khớp từ khóa", đúng buổi 2 |
+| Search không khớp | ✅ "0 / 13" + empty state có gợi ý xóa từ khóa |
+| Nút "Đặt lại tiến độ" | ✅ về 0/13 — 0% |
+| Theme sáng | ✅ tương phản tốt, accent xanh đọc rõ |
+| Console | ✅ **không** hydration warning, không lỗi. Chỉ có `fetch profile error` từ hook auth — có sẵn, không liên quan |
+| Route `/system-design/cheat-sheet` | ✅ trả 404, **không** bị `[slug]` nuốt |
+| Slug lạ | ✅ 404 |
+| Regression `/`, `/glossary`, `/glossary/muc-luc`, `/blog` | ✅ đều 200 |
+
+**Chưa kiểm** (để M6): mermaid render thật (M1 chưa có diagram nào), flashcard lật (chưa có thẻ nào), màn hình 360px, Safari private mode, VoiceOver.
 
 ## Follow-up
 
