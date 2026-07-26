@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GLOSSARY } from './glossary'
-import { LESSONS } from './system-design'
+import { INTERVIEW_STEPS, LESSONS } from './system-design'
 import { parseTermMarkers } from '@/utils/system-design'
 
 // Chuẩn nội dung cho một buổi đã biên soạn xong. Danh sách SLUGS_DA_VIET mở
@@ -10,6 +10,8 @@ const SLUGS_DA_VIET = [
   'load-balancer-va-database',
   'networking-he-phan-tan',
   'caching-message-queue-monitoring',
+  'cdn-blobstore-search-logging',
+  'framework-tra-loi-phong-van',
 ]
 
 const MIN_WORDS = 800
@@ -59,6 +61,35 @@ describe('nội dung các buổi đã biên soạn', () => {
     const lesson = written.find((l) => l.slug === slug)!
     const invalid = lesson.flashcards.filter((c) => !c.question.trim() || !c.answer.trim())
     expect(invalid).toEqual([])
+  })
+})
+
+// INTERVIEW_STEPS được trang cheat-sheet và buổi 13 dùng lại. Bảng khung thời
+// gian in trong buổi 6 phải khớp với nó, nếu không người học sẽ thấy hai bản
+// khác nhau của cùng một khung.
+describe('INTERVIEW_STEPS', () => {
+  it('order là 1..n, không thiếu, không trùng', () => {
+    const orders = INTERVIEW_STEPS.map((s) => s.order).sort((a, b) => a - b)
+    expect(orders).toEqual(INTERVIEW_STEPS.map((_, i) => i + 1))
+  })
+
+  it('tổng thời gian đúng 45 phút của một buổi phỏng vấn', () => {
+    expect(INTERVIEW_STEPS.reduce((sum, s) => sum + s.minutes, 0)).toBe(45)
+  })
+
+  it('mỗi bước có tên và ít nhất một mục checklist', () => {
+    const invalid = INTERVIEW_STEPS.filter((s) => !s.name.trim() || s.checklist.length === 0)
+    expect(invalid.map((s) => s.name)).toEqual([])
+  })
+
+  it('bảng khung thời gian in trong buổi 6 khớp với INTERVIEW_STEPS', () => {
+    const lesson = LESSONS.find((l) => l.slug === 'framework-tra-loi-phong-van')!
+    const table = lesson.sections.map((s) => s.table).find((t) => t?.headers[0] === 'Bước')
+    expect(table).toBeDefined()
+    expect(table!.rows.map((row) => row[1])).toEqual(INTERVIEW_STEPS.map((s) => s.name))
+    expect(table!.rows.map((row) => row[2])).toEqual(
+      INTERVIEW_STEPS.map((s) => `${s.minutes} phút`),
+    )
   })
 })
 

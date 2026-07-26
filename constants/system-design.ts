@@ -13,7 +13,80 @@
 //
 // sections/flashcards được điền dần theo milestone M2-M5 của kế hoạch.
 
-import { Lesson } from '@/models/system-design'
+import { InterviewStep, Lesson } from '@/models/system-design'
+
+/**
+ * Khung 45 phút của một buổi System Design Interview.
+ * Nguồn sự thật dùng chung cho buổi 6, trang cheat-sheet và buổi 13 tự luyện.
+ * Bảng in trong buổi 6 phải khớp với danh sách này — có ca kiểm thử chặn lệch.
+ */
+export const INTERVIEW_STEPS: InterviewStep[] = [
+  {
+    order: 1,
+    name: 'Làm rõ yêu cầu',
+    minutes: 5,
+    checklist: [
+      'Chốt các chức năng bắt buộc, nói rõ phần để ngoài phạm vi',
+      'Hỏi số người dùng hoạt động mỗi ngày và tỉ lệ đọc trên ghi',
+      'Hỏi độ trễ chấp nhận được và mức nhất quán cần thiết',
+      'Ghi ràng buộc đã chốt lên góc bảng và giữ nguyên suốt buổi',
+    ],
+  },
+  {
+    order: 2,
+    name: 'Ước lượng quy mô',
+    minutes: 5,
+    checklist: [
+      'Số request mỗi giây trung bình, rồi nhân hệ số đỉnh hai tới ba lần',
+      'Dung lượng lưu trữ mỗi ngày và theo thời hạn cần giữ',
+      'Băng thông ra vào nếu có tệp lớn hoặc video',
+      'Nói to phép tính, làm tròn mạnh tay để lấy đúng bậc độ lớn',
+    ],
+  },
+  {
+    order: 3,
+    name: 'Thiết kế API và mô hình dữ liệu',
+    minutes: 8,
+    checklist: [
+      'Ba tới năm endpoint quan trọng nhất',
+      'Các thực thể chính và quan hệ giữa chúng',
+      'Khóa truy cập: truy vấn luôn đi qua trường nào',
+      'Từ khóa truy cập suy ra loại database và khóa chia dữ liệu',
+    ],
+  },
+  {
+    order: 4,
+    name: 'Kiến trúc tổng thể',
+    minutes: 12,
+    checklist: [
+      'Bắt đầu từ phương án đơn giản nhất chạy được',
+      'Đi theo đường của một request từ client vào tới nơi lưu dữ liệu',
+      'Chỉ thêm cache, hàng đợi, CDN ở chỗ có lý do rõ ràng',
+      'Mỗi thành phần thêm vào phải kèm một lý do và một cái giá',
+    ],
+  },
+  {
+    order: 5,
+    name: 'Đi sâu một thành phần',
+    minutes: 10,
+    checklist: [
+      'Chọn phần khó nhất, thường là chỗ xung đột giữa quy mô và nhất quán',
+      'Trình bày cấu trúc dữ liệu và thuật toán cụ thể',
+      'Nêu phương án thay thế đã cân nhắc và lý do không chọn',
+    ],
+  },
+  {
+    order: 6,
+    name: 'Điểm nghẽn và đánh đổi',
+    minutes: 5,
+    checklist: [
+      'Chỗ nào vỡ trước khi tải tăng mười lần',
+      'Điểm chết duy nhất và điểm nóng dữ liệu',
+      'Điều gì xảy ra khi một thành phần chết',
+      'Tóm tắt: ưu tiên gì, hy sinh gì, khi nào sẽ chọn khác đi',
+    ],
+  },
+]
 
 export const LESSONS: Lesson[] = [
   {
@@ -606,8 +679,120 @@ export const LESSONS: Lesson[] = [
     track: 'Kiến thức lõi',
     keywords: ['CDN', 'blobstore', 'S3', 'Elasticsearch', 'Solr', 'logging'],
     readingMinutes: 14,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'CDN: rút ngắn quãng đường vật lý',
+        body: [
+          '[[CDN]] đặt bản sao nội dung tại hàng trăm điểm hiện diện gần người dùng. Lợi ích lớn nhất không phải tiết kiệm băng thông mà là giảm [[Latency]]: ánh sáng trong cáp quang có tốc độ hữu hạn, nên một vòng đi về xuyên lục địa không thể dưới khoảng 100 mili giây dù máy chủ của bạn nhanh đến đâu. Đưa nội dung tới gần là cách duy nhất phá được giới hạn đó.',
+          'Có hai kiểu nạp nội dung. Kiểu kéo: điểm biên chưa có thì đi lấy từ máy chủ gốc rồi giữ lại — đơn giản, tự động, nhưng người dùng đầu tiên ở mỗi vùng phải chịu lần trượt. Kiểu đẩy: chủ động đưa nội dung ra biên trước — phù hợp với tệp lớn phát hành theo lịch, ví dụ bản cập nhật game hay video vừa xuất bản.',
+          'Vấn đề khó nhất vẫn là làm mới. Xóa nội dung khỏi hàng trăm điểm biên tốn thời gian và thường bị giới hạn số lần. Cách làm thực dụng hơn là đánh dấu phiên bản ngay trong tên tệp hoặc chuỗi truy vấn: mỗi lần đổi nội dung thì tên đổi theo, nên không cần xóa gì cả và có thể đặt thời hạn sống rất dài. Với nội dung động, hãy đặt thời hạn ngắn hoặc dùng cơ chế xác thực lại thay vì đệm cứng.',
+          'Một chi tiết hay bị bỏ sót là khóa đệm. Nếu khóa gồm cả các header không cần thiết hoặc toàn bộ chuỗi truy vấn kể cả tham số theo dõi quảng cáo, cùng một nội dung sẽ bị lưu thành hàng chục bản khác nhau và tỉ lệ trúng tụt thảm hại.',
+        ],
+        callout:
+          'Đặt phiên bản trong tên tệp rồi cho thời hạn sống một năm sẽ khỏe hơn nhiều so với đặt thời hạn ngắn rồi xóa liên tục.',
+      },
+      {
+        heading: 'Blobstore: metadata ở database, byte ở kho đối tượng',
+        body: [
+          'Nguyên tắc cốt lõi khi thiết kế lưu trữ tệp: [[Database]] chỉ giữ metadata — id, tên, kích thước, chủ sở hữu, đường dẫn — còn byte thật nằm trong kho đối tượng. Nhồi tệp vào database làm sao lưu phình to, nhân bản chậm và chi phí tăng vọt mà chẳng được lợi gì.',
+          'Luồng tải lên đúng cách không đi qua tầng ứng dụng. Client xin một đường dẫn có chữ ký với thời hạn ngắn, rồi tải thẳng lên kho đối tượng. Tầng ứng dụng chỉ cấp phép và ghi metadata, nên không phải gánh băng thông của tệp lớn. Tải xuống làm ngược lại: tầng ứng dụng kiểm tra quyền rồi trả về đường dẫn có chữ ký, hoặc phục vụ qua [[CDN]].',
+          'Với tệp rất lớn, tải lên phải chia thành nhiều phần. Lợi ích là tải lại được đúng phần bị hỏng thay vì làm lại từ đầu, và tải song song nhiều phần cùng lúc. Kèm theo đó cần cơ chế dọn dẹp những lần tải lên dở dang, nếu không kho sẽ đầy rác không ai biết.',
+          'Về độ bền, kho đối tượng đạt độ bền rất cao bằng cách nhân bản dữ liệu qua nhiều vùng sẵn sàng hoặc dùng mã sửa lỗi để giảm chi phí lưu trữ. Điểm cần nhớ khi phỏng vấn: độ bền và tính sẵn sàng là hai chỉ số khác nhau — dữ liệu có thể không bao giờ mất nhưng vẫn có lúc không truy cập được.',
+        ],
+        diagram: `flowchart LR
+  C["Client"] -->|"1. Xin quyền tải lên"| A["App service"]
+  A -->|"2. Trả đường dẫn có chữ ký"| C
+  C -->|"3. Tải tệp thẳng lên"| B[("Blobstore")]
+  A -->|"4. Ghi metadata"| DB[("Database")]
+  B --> CDN["CDN phục vụ tải xuống"]`,
+        callout:
+          'Câu hỏi đánh giá ngay được kinh nghiệm: "tệp đi qua tầng ứng dụng hay tải thẳng lên kho?". Trả lời đúng là tải thẳng bằng đường dẫn có chữ ký.',
+      },
+      {
+        heading: 'Tìm kiếm phân tán: chỉ mục đảo ngược',
+        body: [
+          'Câu hỏi mở đầu quen thuộc là vì sao không dùng câu lệnh khớp chuỗi của [[Database]] quan hệ. Lý do là nó phải quét toàn bộ bảng, không tận dụng được chỉ mục thông thường, và không xếp hạng được theo mức độ liên quan.',
+          'Giải pháp là chỉ mục đảo ngược: thay vì lưu tài liệu chứa từ nào, ta lưu mỗi từ xuất hiện trong những tài liệu nào. Trước đó văn bản được tách từ, đưa về chữ thường, cắt về dạng gốc và loại bỏ từ dừng. Nhờ vậy tra một từ khóa chỉ là tra bảng, và ghép nhiều từ khóa là phép giao trên các danh sách.',
+          'Ở quy mô lớn, chỉ mục vừa được chia nhỏ vừa được nhân bản. Chia theo tài liệu là cách phổ biến: mỗi shard giữ một tập tài liệu và có chỉ mục đầy đủ của riêng nó, truy vấn được gửi tới mọi shard rồi gộp kết quả và xếp hạng lại. Nhân bản mỗi shard giúp chịu tải đọc và sống sót khi máy chết.',
+          'Hai đánh đổi cần nói được. Thứ nhất, chỉ mục không cập nhật tức thì: tài liệu mới thường xuất hiện trong kết quả sau một khoảng ngắn, vì việc ghi được gom lô để đổi lấy [[Throughput]]. Thứ hai, hệ tìm kiếm nên là bản sao phục vụ đọc chứ không phải nguồn sự thật — dữ liệu gốc vẫn nằm ở [[Database]], và đồng bộ sang chỉ mục qua luồng sự kiện, thường là [[Kafka]]. Như vậy khi chỉ mục hỏng thì dựng lại được từ đầu.',
+        ],
+        table: {
+          headers: ['Nhu cầu', 'Công cụ phù hợp', 'Lý do'],
+          rows: [
+            ['Tra cứu chính xác theo khóa', 'Database quan hệ hoặc kho khóa-giá trị', 'Nhanh, nhất quán, không cần xếp hạng'],
+            ['Tìm toàn văn, xếp hạng liên quan', 'Hệ tìm kiếm với chỉ mục đảo ngược', 'Tách từ, chấm điểm, gợi ý sửa lỗi chính tả'],
+            ['Lọc theo nhiều thuộc tính kết hợp', 'Hệ tìm kiếm hoặc chỉ mục chuyên biệt', 'Giao nhiều danh sách hiệu quả'],
+          ],
+        },
+      },
+      {
+        heading: 'Logging phân tán: tìm được thứ mình cần lúc 2 giờ sáng',
+        body: [
+          'Khi hệ thống chỉ có một máy chủ, đọc nhật ký là chuyện mở tệp ra xem. Khi có hàng trăm tiến trình, nhật ký phải được gom về một nơi, nếu không việc điều tra sự cố trở thành đăng nhập từng máy để tìm.',
+          'Đường đi tiêu chuẩn gồm bốn chặng: ứng dụng ghi nhật ký có cấu trúc, một tác nhân trên mỗi máy thu thập, đẩy qua một hàng đợi đệm để chịu được đỉnh tải, rồi nạp vào kho có thể tìm kiếm. Hàng đợi ở giữa là chi tiết quan trọng — không có nó, một đợt lỗi bùng phát sẽ đánh sập chính hệ thống nhật ký đúng lúc bạn cần nó nhất.',
+          'Nhật ký phải có cấu trúc, nghĩa là mỗi dòng là một bản ghi có trường rõ ràng chứ không phải câu văn tự do. Trường quan trọng nhất là mã tương quan đi xuyên suốt một request qua mọi dịch vụ — không có nó thì không ghép lại được câu chuyện của một request cụ thể. Kèm theo là mức độ, tên dịch vụ, phiên bản, và id người dùng nếu được phép.',
+          'Chi phí là ràng buộc thật. Ghi mọi thứ ở mức chi tiết nhất sẽ tốn hơn cả hệ thống chính. Cách xử lý gồm lấy mẫu với nhật ký khối lượng lớn nhưng giữ toàn bộ bản ghi lỗi, đặt thời hạn lưu theo tầng — vài ngày ở kho nóng tra cứu nhanh, vài tháng ở kho lạnh giá rẻ — và tuyệt đối không ghi dữ liệu nhạy cảm vào nhật ký vì gỡ ra sau đó rất khó.',
+        ],
+        diagram: `flowchart LR
+  S["Dịch vụ ghi log có cấu trúc"] --> AG["Agent trên mỗi máy"]
+  AG --> Q["Hàng đợi đệm"]
+  Q --> IX["Kho tìm kiếm — dữ liệu nóng vài ngày"]
+  Q --> CO["Kho lạnh — lưu dài hạn giá rẻ"]`,
+        callout:
+          'Mã tương quan là thứ rẻ nhất để thêm và đắt nhất khi thiếu. Thêm ngay từ đầu, đừng đợi tới lúc có sự cố.',
+      },
+      {
+        heading: 'Điểm chung của cả bốn thành phần',
+        body: [
+          'Bốn thứ trong buổi này — [[CDN]], kho đối tượng, hệ tìm kiếm, hệ nhật ký — đều phục vụ cùng một mục đích: gỡ tải khỏi tầng ứng dụng và tầng dữ liệu chính. Nội dung tĩnh ra biên, byte tệp ra kho đối tượng, truy vấn toàn văn sang hệ tìm kiếm, và nhật ký sang một đường ống riêng.',
+          'Điểm chung thứ hai là ba trong bốn thứ này đều là bản sao phục vụ đọc, không phải nguồn sự thật. Chỉ mục tìm kiếm, bộ đệm ở biên và kho nhật ký đều có thể dựng lại từ dữ liệu gốc. Nói được điều này cho thấy bạn hiểu đường phục hồi khi chúng hỏng — mà chúng sẽ hỏng.',
+        ],
+      },
+    ],
+    flashcards: [
+      {
+        question: 'CDN kiểu kéo và kiểu đẩy khác nhau thế nào?',
+        answer:
+          'Kiểu kéo: điểm biên chưa có nội dung thì đi lấy từ máy chủ gốc rồi giữ lại — đơn giản, tự động, nhưng người dùng đầu tiên ở mỗi vùng chịu lần trượt. Kiểu đẩy: chủ động đưa nội dung ra biên trước khi có ai yêu cầu — hợp với tệp lớn phát hành theo lịch như bản cập nhật hoặc video vừa xuất bản.',
+        pitfall:
+          'Quên bàn về cách làm mới. Xóa nội dung khỏi hàng trăm điểm biên chậm và thường bị giới hạn số lần — đặt phiên bản trong tên tệp là cách thực dụng hơn.',
+      },
+      {
+        question: 'Tệp người dùng tải lên nên đi đường nào?',
+        answer:
+          'Không đi qua tầng ứng dụng. Client xin một đường dẫn có chữ ký với thời hạn ngắn rồi tải thẳng lên kho đối tượng; tầng ứng dụng chỉ cấp phép và ghi metadata. Database giữ metadata, kho đối tượng giữ byte. Với tệp rất lớn thì chia phần để tải lại được đúng phần hỏng và tải song song.',
+        pitfall:
+          'Cho tệp đi xuyên qua tầng ứng dụng. Nó biến máy chủ ứng dụng thành nút cổ chai băng thông một cách không cần thiết.',
+      },
+      {
+        question: 'Vì sao không dùng khớp chuỗi của database quan hệ để làm tìm kiếm?',
+        answer:
+          'Vì nó phải quét toàn bộ bảng, không tận dụng được chỉ mục thông thường và không xếp hạng theo mức độ liên quan. Hệ tìm kiếm dùng chỉ mục đảo ngược: lưu mỗi từ xuất hiện trong những tài liệu nào, sau khi đã tách từ, đưa về chữ thường, cắt về dạng gốc và loại từ dừng. Nhờ vậy tra từ khóa chỉ là tra bảng.',
+        pitfall:
+          'Coi hệ tìm kiếm là nguồn sự thật. Nó nên là bản sao phục vụ đọc, đồng bộ từ database qua luồng sự kiện để dựng lại được khi hỏng.',
+      },
+      {
+        question: 'Vì sao đường ống log cần một hàng đợi ở giữa?',
+        answer:
+          'Để chịu được đỉnh tải. Một đợt lỗi bùng phát sinh ra lượng log tăng vọt; không có hàng đợi đệm thì chính hệ thống log bị đánh sập đúng lúc bạn cần nó nhất để điều tra. Hàng đợi cũng tách rời tốc độ ghi của ứng dụng khỏi tốc độ nạp của kho tìm kiếm.',
+        pitfall:
+          'Cho ứng dụng ghi thẳng vào kho tìm kiếm. Khi kho chậm hoặc đầy, ứng dụng bị kéo chậm theo.',
+      },
+      {
+        question: 'Trường quan trọng nhất trong log có cấu trúc là gì?',
+        answer:
+          'Mã tương quan đi xuyên suốt một request qua mọi dịch vụ. Không có nó thì không ghép lại được câu chuyện của một request cụ thể khi nó đi qua nhiều dịch vụ. Kèm theo là mức độ, tên dịch vụ, phiên bản và id người dùng nếu được phép ghi.',
+        pitfall:
+          'Ghi log dạng câu văn tự do. Không lọc được, không tổng hợp được, và tới lúc cần thì chỉ còn cách đọc bằng mắt.',
+      },
+      {
+        question: 'Chi phí lưu log kiểm soát bằng cách nào?',
+        answer:
+          'Lấy mẫu với nhật ký khối lượng lớn nhưng giữ toàn bộ bản ghi lỗi; đặt thời hạn lưu theo tầng, vài ngày ở kho nóng tra cứu nhanh và vài tháng ở kho lạnh giá rẻ; và không ghi dữ liệu nhạy cảm vì gỡ ra sau đó rất khó.',
+        pitfall:
+          'Ghi mọi thứ ở mức chi tiết nhất và giữ mãi. Hệ thống log khi đó tốn hơn cả hệ thống chính.',
+      },
+    ],
     keyTakeaway:
       'File lớn đi thẳng vào blobstore qua pre-signed URL, database chỉ giữ metadata.',
     relatedTerms: ['CDN', 'Latency'],
@@ -621,8 +806,129 @@ export const LESSONS: Lesson[] = [
     track: 'Framework',
     keywords: ['framework', 'phỏng vấn', 'requirement', 'ước lượng', 'trade-off'],
     readingMinutes: 12,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Vì sao cần một khung cố định',
+        body: [
+          'Bốn mươi lăm phút trôi nhanh hơn bạn tưởng. Không có khung, phần lớn ứng viên tiêu hai mươi phút đầu vẽ hộp và mũi tên, rồi hết giờ trước khi kịp chạm tới phần thú vị nhất — điểm nghẽn và đánh đổi, vốn là nơi người phỏng vấn chấm điểm nặng nhất.',
+          'Khung cố định giải quyết hai việc. Nó bảo đảm bạn không bỏ sót bước nào dưới áp lực, và nó cho người phỏng vấn thấy bạn có phương pháp làm việc chứ không phải ứng biến may rủi. Ngay cả khi bị hỏi một đề chưa từng gặp, có khung nghĩa là bạn vẫn biết bước tiếp theo phải làm gì.',
+          'Điều quan trọng: khung là để bám, không phải để đọc thuộc lòng. Người phỏng vấn có thể cắt ngang, đổi hướng, thêm ràng buộc giữa chừng. Lúc đó hãy điều chỉnh và nói rõ mình đang quay lại bước nào.',
+        ],
+        diagram: `flowchart LR
+  S1["1. Làm rõ yêu cầu — 5'"] --> S2["2. Ước lượng quy mô — 5'"]
+  S2 --> S3["3. API và mô hình dữ liệu — 8'"]
+  S3 --> S4["4. Kiến trúc tổng thể — 12'"]
+  S4 --> S5["5. Đi sâu một thành phần — 10'"]
+  S5 --> S6["6. Điểm nghẽn và đánh đổi — 5'"]
+  S6 -. "bị hỏi thêm ràng buộc" .-> S1`,
+        table: {
+          headers: ['Bước', 'Tên', 'Thời gian', 'Kết quả cần có'],
+          rows: [
+            ['1', 'Làm rõ yêu cầu', '5 phút', 'Danh sách chức năng trong phạm vi và ngoài phạm vi'],
+            ['2', 'Ước lượng quy mô', '5 phút', 'Vài con số về lưu lượng, dung lượng, băng thông'],
+            ['3', 'Thiết kế API và mô hình dữ liệu', '8 phút', 'Vài endpoint chính và các thực thể'],
+            ['4', 'Kiến trúc tổng thể', '12 phút', 'Sơ đồ các thành phần và luồng dữ liệu'],
+            ['5', 'Đi sâu một thành phần', '10 phút', 'Chi tiết phần khó nhất hoặc phần được hỏi'],
+            ['6', 'Điểm nghẽn và đánh đổi', '5 phút', 'Chỗ sẽ vỡ trước và cách xử lý'],
+          ],
+        },
+        callout:
+          'Nói to khung của bạn ngay đầu buổi: "tôi sẽ làm rõ yêu cầu, ước lượng quy mô, phác API và dữ liệu, rồi vẽ kiến trúc và đi sâu vào phần khó". Câu này một mình đã tạo ấn tượng tốt.',
+      },
+      {
+        heading: 'Bước 1: làm rõ yêu cầu — nơi ăn điểm dễ nhất',
+        body: [
+          'Đề bài luôn cố tình mơ hồ. "Thiết kế Twitter" có thể là hệ thống đăng bài, có thể là bảng tin, có thể là tìm kiếm — và bạn không đủ thời gian làm tất cả. Việc đầu tiên là thu hẹp.',
+          'Hỏi về chức năng: những thao tác nào bắt buộc phải có? Người dùng làm gì với hệ thống? Sau đó chốt rõ phần nào để ngoài phạm vi và nói thành lời — "tôi sẽ không làm phần quảng cáo và kiểm duyệt nội dung trong buổi này". Nói ra phần bỏ qua là dấu hiệu của người biết quản lý phạm vi, không phải người thiếu sót.',
+          'Hỏi về yêu cầu phi chức năng, vốn quyết định kiến trúc nhiều hơn cả chức năng: bao nhiêu người dùng hoạt động mỗi ngày, tỉ lệ đọc trên ghi, độ trễ chấp nhận được, mức nhất quán cần thiết, và hệ thống phải sống sót ở mức nào khi có sự cố. Bốn câu này gần như luôn dùng được cho mọi đề.',
+          'Ghi những gì chốt được lên góc bảng và giữ nguyên ở đó suốt buổi. Về sau khi bảo vệ một lựa chọn, bạn chỉ cần chỉ vào ràng buộc đã chốt thay vì tranh luận cảm tính.',
+        ],
+      },
+      {
+        heading: 'Bước 2: ước lượng quy mô — cần đúng bậc, không cần chính xác',
+        body: [
+          'Mục đích của ước lượng không phải ra con số đúng, mà là biết mình đang ở bậc độ lớn nào. Một triệu request mỗi ngày và một tỉ request mỗi ngày dẫn tới hai kiến trúc hoàn toàn khác nhau; nhầm bậc là hỏng cả thiết kế.',
+          'Cách làm gọn: bắt đầu từ số người dùng hoạt động mỗi ngày, nhân với số thao tác mỗi người, chia cho số giây trong ngày để ra số request trung bình mỗi giây, rồi nhân hệ số đỉnh khoảng hai tới ba lần. Với dung lượng, nhân số bản ghi mỗi ngày với kích thước một bản ghi rồi nhân số ngày cần lưu.',
+          'Vài con số nên thuộc để ước lượng nhanh: một ngày có khoảng 86 nghìn giây, tiện làm tròn thành 100 nghìn. Một vòng đi về trong cùng vùng khoảng 1–2 mili giây, xuyên lục địa khoảng 100–150 mili giây. Đọc tuần tự từ ổ SSD nhanh hơn ổ đĩa quay hàng chục lần, và đọc từ bộ nhớ nhanh hơn SSD lại hàng trăm lần.',
+          'Nói to phép tính của bạn. Người phỏng vấn quan tâm cách bạn suy luận hơn kết quả cuối. Làm tròn mạnh tay và nói rõ mình đang làm tròn là chuyện hoàn toàn bình thường.',
+        ],
+        callout:
+          'Một câu dùng được cho mọi đề: "tôi sẽ làm tròn để lấy đúng bậc độ lớn, vì điều tôi cần biết là hệ thống này ở mức nghìn hay mức triệu request mỗi giây".',
+      },
+      {
+        heading: 'Bước 3 và 4: từ API tới kiến trúc',
+        body: [
+          'Phác vài [[Endpoint]] chính trước khi vẽ hộp. Việc này ép bạn nghĩ theo hướng người dùng cần gì thay vì nghĩ theo công nghệ, và nó lộ ra ngay những chỗ mô hình dữ liệu chưa ổn. Không cần đầy đủ — ba tới năm endpoint quan trọng nhất là đủ.',
+          'Tiếp đó là mô hình dữ liệu: các thực thể chính, quan hệ giữa chúng, và quan trọng nhất là khóa truy cập. Truy vấn sẽ luôn đi qua trường nào? Câu trả lời quyết định chọn loại [[Database]] và chọn khóa chia dữ liệu về sau.',
+          'Khi vẽ kiến trúc, hãy đi theo đường của một request từ client vào tới nơi lưu dữ liệu rồi quay ra. Bắt đầu từ phương án đơn giản nhất chạy được — client, [[Load Balancer]], vài máy chủ ứng dụng, một database — rồi mới thêm [[Cache]], hàng đợi, [[CDN]] ở đúng chỗ có lý do. Vẽ ngay một kiến trúc mười thành phần từ đầu khiến bạn không giải thích được vì sao cần từng thứ.',
+          'Vừa vẽ vừa nói lý do. Mỗi lần thêm một thành phần, nói nó giải quyết vấn đề gì và tốn thêm cái gì. Đó chính là thứ đang được chấm.',
+        ],
+      },
+      {
+        heading: 'Bước 5 và 6: đi sâu, rồi nói về chỗ sẽ vỡ',
+        body: [
+          'Người phỏng vấn thường chọn một thành phần và yêu cầu đi sâu. Nếu được tự chọn, hãy chọn phần khó nhất của bài — thường là chỗ có xung đột giữa quy mô và tính nhất quán. Với bảng tin thì đó là cách phát tán bài viết; với hệ đặt chỗ thì đó là chống đặt trùng; với hệ nhắn tin thì đó là quản lý kết nối dài.',
+          'Phần cuối là chỗ nhiều ứng viên bỏ lỡ vì hết giờ, mà lại là phần ăn điểm nặng nhất. Hãy chủ động chỉ ra chỗ nào trong chính thiết kế của bạn sẽ vỡ trước khi tải tăng mười lần, và bạn sẽ làm gì khi đó. Nói về điểm chết duy nhất, về [[Hot Partition]], về chuyện điều gì xảy ra khi một thành phần chết.',
+          'Kết thúc bằng một câu tóm tắt các đánh đổi đã chọn: bạn ưu tiên gì, hy sinh gì, và trong hoàn cảnh nào bạn sẽ chọn khác đi. Đây là câu phân biệt rõ nhất giữa ứng viên đã làm hệ thống thật và ứng viên mới đọc lý thuyết.',
+        ],
+        table: {
+          headers: ['Lỗi trừ điểm', 'Vì sao mất điểm', 'Làm thế nào cho đúng'],
+          rows: [
+            ['Vẽ ngay khi vừa nghe đề', 'Thiết kế không có ràng buộc để bảo vệ', 'Dành 5 phút làm rõ yêu cầu trước'],
+            ['Không đưa ra con số nào', 'Mọi lựa chọn công nghệ thành cảm tính', 'Ước lượng thô, nói to phép tính'],
+            ['Kể tên công nghệ mà không nói vì sao', 'Nghe như thuộc lòng', 'Mỗi thành phần kèm một lý do và một cái giá'],
+            ['Chỉ nói ưu điểm', 'Không thấy được khả năng đánh giá', 'Chủ động nêu chỗ sẽ vỡ trước'],
+            ['Im lặng khi suy nghĩ', 'Người phỏng vấn không chấm được', 'Nói to hướng đang cân nhắc'],
+          ],
+        },
+        callout:
+          'Nếu chỉ nhớ được một điều từ buổi này: dành năm phút cuối để tự chỉ ra điểm yếu trong thiết kế của mình. Ứng viên tự tìm ra lỗ hổng luôn được đánh giá cao hơn ứng viên chờ bị hỏi.',
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Phân bổ 45 phút của buổi phỏng vấn System Design thế nào?',
+        answer:
+          'Làm rõ yêu cầu 5 phút, ước lượng quy mô 5 phút, thiết kế API và mô hình dữ liệu 8 phút, kiến trúc tổng thể 12 phút, đi sâu một thành phần 10 phút, điểm nghẽn và đánh đổi 5 phút. Điều quan trọng là giữ được 5 phút cuối, vì đó là phần ăn điểm nặng nhất mà nhiều người bỏ lỡ vì hết giờ.',
+        pitfall:
+          'Tiêu hai mươi phút đầu vẽ hộp và mũi tên rồi không còn thời gian nói về đánh đổi.',
+      },
+      {
+        question: 'Bốn câu hỏi phi chức năng dùng được cho mọi đề là gì?',
+        answer:
+          'Bao nhiêu người dùng hoạt động mỗi ngày; tỉ lệ đọc trên ghi; độ trễ chấp nhận được; mức nhất quán cần thiết. Bốn câu này quyết định kiến trúc nhiều hơn cả danh sách chức năng, và trả lời được chúng thì mọi lựa chọn về sau đều có căn cứ để bảo vệ.',
+        pitfall:
+          'Chỉ hỏi về chức năng rồi bắt tay vẽ. Yêu cầu phi chức năng mới là thứ định hình kiến trúc.',
+      },
+      {
+        question: 'Mục đích thật của bước ước lượng quy mô là gì?',
+        answer:
+          'Biết mình đang ở bậc độ lớn nào, không phải ra con số chính xác. Một triệu request mỗi ngày và một tỉ request mỗi ngày dẫn tới hai kiến trúc hoàn toàn khác nhau. Cách làm: số người dùng hoạt động nhân số thao tác mỗi người, chia số giây trong ngày, nhân hệ số đỉnh hai tới ba lần. Làm tròn mạnh tay và nói rõ mình đang làm tròn.',
+        pitfall:
+          'Sa vào tính toán chi li tới từng byte. Người phỏng vấn quan tâm cách suy luận hơn kết quả cuối.',
+      },
+      {
+        question: 'Vì sao nên phác API trước khi vẽ kiến trúc?',
+        answer:
+          'Vì nó ép bạn nghĩ theo hướng người dùng cần gì thay vì nghĩ theo công nghệ, và lộ ra ngay những chỗ mô hình dữ liệu chưa ổn. Ba tới năm endpoint quan trọng nhất là đủ. Sau đó tới mô hình dữ liệu, trong đó khóa truy cập là thứ quyết định chọn loại database và khóa chia dữ liệu về sau.',
+        pitfall:
+          'Vẽ ngay một kiến trúc mười thành phần từ đầu, rồi không giải thích được vì sao cần từng thứ.',
+      },
+      {
+        question: 'Nói gì trong 5 phút cuối để ăn điểm?',
+        answer:
+          'Chủ động chỉ ra chỗ nào trong chính thiết kế của mình sẽ vỡ trước khi tải tăng mười lần, và cách xử lý khi đó: điểm chết duy nhất, điểm nóng dữ liệu, điều gì xảy ra khi một thành phần chết. Kết thúc bằng câu tóm tắt bạn ưu tiên gì, hy sinh gì, và trong hoàn cảnh nào sẽ chọn khác đi.',
+        pitfall:
+          'Chỉ trình bày ưu điểm và chờ bị hỏi. Ứng viên tự tìm ra lỗ hổng của mình luôn được đánh giá cao hơn.',
+      },
+      {
+        question: 'Vì sao im lặng khi suy nghĩ là lỗi trừ điểm?',
+        answer:
+          'Vì người phỏng vấn chấm quá trình suy luận, không chấm kết quả cuối. Im lặng nghĩa là họ không thấy gì để chấm và cũng không kịp gợi ý khi bạn đi sai hướng. Hãy nói to hướng đang cân nhắc, kể cả khi chưa chắc chắn — "tôi đang phân vân giữa hai cách, cách một thì..." là câu hoàn toàn hợp lệ.',
+        pitfall:
+          'Cố nghĩ ra câu trả lời hoàn hảo rồi mới mở miệng. Buổi phỏng vấn là cuộc trao đổi, không phải bài thi viết.',
+      },
+    ],
     keyTakeaway:
       'Làm rõ yêu cầu và ước lượng quy mô trước khi vẽ — nhảy thẳng vào kiến trúc là lỗi trừ điểm phổ biến nhất.',
   },
