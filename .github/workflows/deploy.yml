@@ -54,7 +54,10 @@ jobs:
     runs-on: ubuntu-latest
     # main -> environment "production" (bật Required reviewers = cổng duyệt)
     # develop -> "staging" (không reviewer = tự động)
-    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    # url: để GitHub hiện link deployment (nipit.pro) ở trang Environments/Deployments
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+      url: ${{ github.ref_name == 'main' && 'https://nipit.pro' || 'http://149.28.18.204:3001' }}
     steps:
       - name: Chuẩn bị SSH
         run: |
