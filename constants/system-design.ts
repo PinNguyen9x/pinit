@@ -328,8 +328,131 @@ export const LESSONS: Lesson[] = [
     track: 'Kiến thức lõi',
     keywords: ['HTTPS', 'REST', 'WebSocket', 'gRPC', 'GraphQL', 'DNS', 'polling'],
     readingMinutes: 14,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Chặng đường của một request trước khi chạm tới code',
+        body: [
+          'Trước khi dòng code đầu tiên của bạn chạy, một request đã đi qua vài bước tốn thời gian mà ứng viên hay bỏ quên. Trình duyệt phải phân giải tên miền qua [[DNS]], bắt tay TCP, bắt tay TLS, rồi mới gửi được byte dữ liệu đầu tiên. Mỗi bước là một hoặc vài vòng đi về trên mạng, và mỗi vòng ở khoảng cách liên lục địa tốn cỡ 100–150 mili giây.',
+          '[[DNS]] hoạt động theo tầng: trình duyệt hỏi bộ phân giải của nhà mạng, bộ này hỏi máy chủ gốc, rồi máy chủ quản lý phần đuôi tên miền, rồi máy chủ quản lý tên miền của bạn. Kết quả được lưu đệm ở mọi tầng theo giá trị TTL. Chính TTL là thứ khiến chuyển đổi hạ tầng bằng DNS chậm — đặt TTL 24 giờ nghĩa là sau khi đổi bản ghi vẫn còn người truy cập vào máy chủ cũ suốt một ngày. Trước một đợt chuyển đổi có kế hoạch, hãy hạ TTL xuống trước vài ngày.',
+          'Bắt tay TLS tốn thêm vòng đi về nữa. Đây là lý do người ta kết thúc TLS ngay tại [[Load Balancer]] ở biên thay vì ở từng máy chủ ứng dụng, và bật giữ kết nối để nhiều request dùng chung một lần bắt tay. Với nội dung tĩnh, [[CDN]] giải quyết triệt để hơn: rút ngắn quãng đường vật lý nên giảm cả độ trễ lẫn số vòng.',
+        ],
+        diagram: `flowchart LR
+  B["Trình duyệt"] --> D["DNS — phân giải tên miền"]
+  D --> T["Bắt tay TCP + TLS"]
+  T --> LB["Load balancer — kết thúc TLS"]
+  LB --> S["Service"]
+  S --> DB[("Database")]`,
+        callout:
+          'Con số đáng thuộc: một vòng đi về trong cùng vùng khoảng 1–2 ms, xuyên lục địa khoảng 100–150 ms. Nhân số vòng với con số này trước khi nói hệ thống của bạn nhanh.',
+      },
+      {
+        heading: 'REST và GraphQL: hình dạng dữ liệu quyết định',
+        body: [
+          '[[REST]] tổ chức [[API]] quanh tài nguyên, mỗi tài nguyên một [[Endpoint]], dùng đúng ngữ nghĩa của phương thức HTTP. Ưu điểm lớn nhất ít khi được nhắc: vì GET là thao tác an toàn và không đổi trạng thái, mọi tầng đệm trên đường đi đều đệm được — trình duyệt, CDN, proxy. Đó là thứ GraphQL đánh mất.',
+          '[[GraphQL]] cho client mô tả chính xác trường nào mình cần trong một truy vấn duy nhất. Nó giải quyết hai bệnh của REST: lấy thừa dữ liệu (endpoint trả cả object trong khi màn hình chỉ cần hai trường) và lấy thiếu (phải gọi năm lần mới đủ dữ liệu cho một màn hình). Rất hợp khi có nhiều loại client với nhu cầu dữ liệu khác nhau.',
+          'Cái giá của GraphQL: mọi truy vấn thường đi qua một endpoint duy nhất bằng POST nên mất khả năng đệm theo HTTP, phải tự dựng tầng đệm ở phía sau. Truy vấn lồng nhiều tầng dễ sinh bài toán N+1 nếu không gom lô. Và vì client tự do đặt truy vấn, một truy vấn lồng sâu ác ý có thể làm sập máy chủ — phải giới hạn độ sâu và chi phí truy vấn.',
+          'gRPC là lựa chọn thứ ba, nhắm vào giao tiếp giữa các dịch vụ nội bộ. Nó dùng Protocol Buffers nên gói tin nhỏ hơn JSON đáng kể, chạy trên HTTP/2 nên ghép nhiều luồng trên một kết nối, và sinh sẵn mã client từ file định nghĩa. Đổi lại là khó gỡ lỗi bằng mắt vì dữ liệu ở dạng nhị phân, và trình duyệt không gọi trực tiếp được nếu không qua lớp trung gian.',
+        ],
+        table: {
+          headers: ['Tiêu chí', 'REST', 'GraphQL', 'gRPC'],
+          rows: [
+            ['Hợp nhất với', 'API công khai, tài nguyên rõ ràng', 'Nhiều client, nhu cầu dữ liệu khác nhau', 'Dịch vụ nội bộ gọi nhau'],
+            ['Đệm theo HTTP', 'Sẵn có, mạnh nhất', 'Mất, phải tự dựng', 'Không áp dụng'],
+            ['Kích thước gói tin', 'JSON, trung bình', 'JSON, chỉ trường cần', 'Nhị phân, nhỏ nhất'],
+            ['Gỡ lỗi bằng mắt', 'Dễ, đọc thẳng bằng curl', 'Vừa', 'Khó, cần công cụ riêng'],
+            ['Rủi ro riêng', 'Lấy thừa hoặc lấy thiếu dữ liệu', 'Truy vấn lồng sâu, N+1', 'Trình duyệt không gọi trực tiếp'],
+          ],
+        },
+      },
+      {
+        heading: 'Khi server cần chủ động đẩy dữ liệu',
+        body: [
+          'HTTP vốn là mô hình client hỏi, server trả lời. Khi nghiệp vụ cần server thông báo ngay cho client — tin nhắn mới, giá cổ phiếu, vị trí tài xế — có bốn cách, và chọn sai là mất điểm.',
+          'Polling ngắn nghĩa là client hỏi lại mỗi vài giây. Đơn giản đến mức không cần hạ tầng gì thêm, nhưng lãng phí: phần lớn lần hỏi trả về "chưa có gì mới", và độ trễ tệ nhất bằng đúng chu kỳ hỏi. Long polling giữ request treo cho tới khi có dữ liệu hoặc hết giờ, giảm được lãng phí nhưng mỗi kết nối treo vẫn chiếm một chỗ trên máy chủ.',
+          'SSE mở một kết nối HTTP một chiều để server đẩy liên tục, có sẵn cơ chế tự kết nối lại và đánh số sự kiện. Rất hợp cho bảng tin, thông báo, thanh tiến trình — những thứ chỉ cần đẩy một chiều. [[WebSocket]] nâng cấp kết nối lên song công, cả hai bên gửi bất cứ lúc nào, độ trễ thấp nhất. Đây là lựa chọn cho chat, cộng tác thời gian thực, game.',
+          'Điều quan trọng cần nói được: kết nối dài không miễn phí. Mỗi [[WebSocket]] chiếm một kết nối mở suốt phiên, nên phải tính số kết nối đồng thời chứ không phải số request mỗi giây. Nó cũng làm máy chủ có trạng thái — cần một tầng theo dõi người dùng đang bám vào máy nào, và [[Load Balancer]] phải hỗ trợ nâng cấp giao thức. Khi client tiêu thụ chậm hơn tốc độ server đẩy, phải có cơ chế [[Backpressure]] chứ không để bộ đệm phình vô hạn.',
+        ],
+        diagram: `flowchart TD
+  Q{"Ai khởi xướng dữ liệu?"} -->|"Client hỏi"| R["REST hoặc polling"]
+  Q -->|"Server đẩy"| D{"Cần gửi hai chiều?"}
+  D -->|Không| SSE["SSE — nhẹ, tự kết nối lại"]
+  D -->|Có| WS["WebSocket — song công, độ trễ thấp nhất"]`,
+        table: {
+          headers: ['Cách', 'Độ trễ', 'Chi phí máy chủ', 'Hợp với'],
+          rows: [
+            ['Polling ngắn', 'Bằng chu kỳ hỏi', 'Lãng phí nhiều request rỗng', 'Dữ liệu đổi chậm, cần đơn giản'],
+            ['Long polling', 'Gần tức thì', 'Mỗi kết nối treo chiếm một chỗ', 'Cần gần thời gian thực, hạ tầng cũ'],
+            ['SSE', 'Tức thì', 'Một kết nối một chiều', 'Thông báo, bảng tin, tiến trình'],
+            ['WebSocket', 'Thấp nhất', 'Kết nối mở suốt phiên, có trạng thái', 'Chat, cộng tác, vị trí thời gian thực'],
+          ],
+        },
+        callout:
+          'Nhiều ứng viên chọn WebSocket theo phản xạ. Nếu dữ liệu chỉ đi một chiều từ server xuống, SSE rẻ hơn và đơn giản hơn nhiều — nói được điều này là điểm cộng.',
+      },
+      {
+        heading: 'Lỗi và thử lại trên mạng',
+        body: [
+          'Mọi lời gọi qua mạng đều có thể thất bại, và thất bại nguy hiểm nhất không phải lỗi rõ ràng mà là hết giờ chờ. Khi request hết giờ, client không biết server đã xử lý xong hay chưa — có thể tiền đã bị trừ mà phản hồi bị mất trên đường về.',
+          'Vì vậy thử lại là bắt buộc, và [[Idempotency]] là điều kiện để thử lại an toàn. Cách làm phổ biến là client sinh một khóa idempotency cho mỗi thao tác; server lưu khóa đó cùng kết quả, nên lần gửi trùng sẽ trả về kết quả cũ thay vì tạo đơn hàng thứ hai.',
+          'Thử lại cũng phải có kỷ luật. Thử lại ngay lập tức và đồng loạt sẽ đánh sập chính dịch vụ đang hồi phục — hiện tượng bão thử lại. Cách đúng là giãn cách theo cấp số nhân kèm một lượng ngẫu nhiên để các client không cùng gõ cửa một lúc. Kèm theo đó là ngắt mạch: sau một số lần hỏng liên tiếp thì ngừng gọi hẳn trong một khoảng, trả lỗi ngay để không dồn thêm áp lực.',
+          'Cuối cùng, hãy nhớ đặt giới hạn thời gian chờ ở mọi lời gọi. Không đặt giới hạn nghĩa là một dịch vụ chậm sẽ kéo theo toàn bộ chuỗi gọi phía trên treo cùng, và một sự cố nhỏ lan thành sập dây chuyền.',
+        ],
+        callout:
+          'Bộ ba luôn đi cùng nhau khi nói về gọi qua mạng: giới hạn thời gian chờ, thử lại có giãn cách ngẫu nhiên, và ngắt mạch. Thiếu một trong ba là thiết kế chưa xong.',
+      },
+      {
+        heading: 'Chọn giao thức theo tình huống',
+        body: [
+          'Tổng hợp lại thành vài quy tắc dùng được ngay. API công khai cho bên thứ ba thì [[REST]] — dễ hiểu, dễ đệm, ai cũng gọi được. Nhiều loại client với nhu cầu dữ liệu rất khác nhau thì cân nhắc [[GraphQL]], nhưng phải kèm giới hạn độ sâu truy vấn và tầng đệm tự dựng. Giao tiếp giữa các dịch vụ nội bộ, cần [[Throughput]] cao và gói tin nhỏ thì gRPC.',
+          'Về hướng đẩy dữ liệu: server đẩy một chiều thì SSE, hai chiều độ trễ thấp thì [[WebSocket]], còn dữ liệu đổi chậm thì polling vẫn là câu trả lời hợp lý và đừng ngại nói ra. Nội dung tĩnh và tệp lớn thì đưa ra [[CDN]] thay vì cho đi qua tầng ứng dụng.',
+          'Một chi tiết nhỏ hay bị hỏi thêm: [[CORS]] chỉ là cơ chế của trình duyệt, không phải lớp bảo mật của server. Nó ngăn trang web khác gọi API bằng phiên đăng nhập của người dùng, chứ không ngăn được ai đó gọi thẳng API bằng công cụ dòng lệnh. Xác thực vẫn phải làm ở phía server.',
+        ],
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Vì sao TTL của DNS quan trọng khi chuyển đổi hạ tầng?',
+        answer:
+          'Kết quả phân giải được lưu đệm ở mọi tầng theo TTL. Đặt TTL 24 giờ nghĩa là sau khi đổi bản ghi vẫn còn người truy cập vào máy chủ cũ suốt một ngày. Trước đợt chuyển đổi có kế hoạch, hạ TTL xuống vài phút trước đó vài ngày, chuyển xong rồi mới nâng lại.',
+        pitfall:
+          'Coi DNS là công cụ chuyển đổi tức thì. Nó không tức thì, và bạn không kiểm soát được bộ đệm ở phía nhà mạng.',
+      },
+      {
+        question: 'REST mất gì khi đổi sang GraphQL?',
+        answer:
+          'Mất khả năng đệm theo HTTP. REST dùng GET nên trình duyệt, CDN và proxy đều đệm được; GraphQL thường gửi POST qua một endpoint duy nhất nên các tầng đó không đệm được, phải tự dựng tầng đệm phía sau. Ngoài ra phải xử lý bài toán N+1 khi truy vấn lồng nhau và giới hạn độ sâu để chống truy vấn ác ý.',
+        pitfall:
+          'Chọn GraphQL chỉ vì "linh hoạt hơn" mà không nhắc tới chuyện mất đệm — đây là cái giá lớn nhất.',
+      },
+      {
+        question: 'Khi nào dùng SSE thay vì WebSocket?',
+        answer:
+          'Khi dữ liệu chỉ đi một chiều từ server xuống client: thông báo, bảng tin, thanh tiến trình, cập nhật trạng thái. SSE chạy trên HTTP thường, có sẵn cơ chế tự kết nối lại và đánh số sự kiện, nhẹ hơn và ít phần phải tự lo hơn. WebSocket chỉ cần khi thật sự phải gửi hai chiều với độ trễ thấp như chat hay cộng tác thời gian thực.',
+        pitfall:
+          'Chọn WebSocket theo phản xạ cho mọi bài toán thời gian thực, rồi phải tự cài lại cơ chế kết nối lại mà SSE vốn có sẵn.',
+      },
+      {
+        question: 'WebSocket thay đổi cách ước lượng quy mô như thế nào?',
+        answer:
+          'Phải tính theo số kết nối đồng thời thay vì số request mỗi giây, vì mỗi kết nối mở suốt phiên. Nó cũng làm máy chủ có trạng thái nên cần tầng theo dõi người dùng đang bám vào máy nào, load balancer phải hỗ trợ nâng cấp giao thức, và cần cơ chế backpressure khi client tiêu thụ chậm hơn tốc độ server đẩy.',
+        pitfall:
+          'Ước lượng WebSocket bằng đơn vị request mỗi giây. Sai đơn vị dẫn tới sai toàn bộ phần tính tài nguyên.',
+      },
+      {
+        question: 'Vì sao hết giờ chờ nguy hiểm hơn lỗi rõ ràng, và xử lý thế nào?',
+        answer:
+          'Vì client không biết server đã xử lý xong hay chưa — có thể thao tác đã thực hiện mà phản hồi mất trên đường về. Nếu thử lại mà thao tác không idempotent thì tạo ra bản ghi trùng. Cách xử lý: client sinh khóa idempotency cho mỗi thao tác, server lưu khóa cùng kết quả và trả lại kết quả cũ khi gặp khóa trùng.',
+        pitfall:
+          'Thêm cơ chế thử lại mà không làm idempotency trước. Đó là cách tạo ra hai đơn hàng từ một lần bấm nút.',
+      },
+      {
+        question: 'Bộ ba cần có ở mọi lời gọi qua mạng là gì?',
+        answer:
+          'Giới hạn thời gian chờ, thử lại có giãn cách theo cấp số nhân kèm ngẫu nhiên, và ngắt mạch. Không đặt giới hạn thời gian chờ thì một dịch vụ chậm kéo cả chuỗi gọi treo theo. Thử lại đồng loạt không giãn cách sẽ đánh sập chính dịch vụ đang hồi phục. Ngắt mạch dừng hẳn việc gọi sau một số lần hỏng liên tiếp để không dồn thêm áp lực.',
+        pitfall:
+          'Thử lại ngay lập tức và đồng loạt, tạo ra bão thử lại đúng lúc dịch vụ đang cố hồi phục.',
+      },
+    ],
     keyTakeaway:
       'Chọn giao thức theo hướng đẩy dữ liệu: client hỏi thì REST/polling, server đẩy thì WebSocket/SSE.',
     relatedTerms: ['REST', 'GraphQL', 'WebSocket', 'DNS'],
