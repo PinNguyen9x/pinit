@@ -14,6 +14,7 @@ const SLUGS_DA_VIET = [
   'framework-tra-loi-phong-van',
   'case-study-tinyurl',
   'case-study-youtube',
+  'case-study-social-media',
 ]
 
 const MIN_WORDS = 800

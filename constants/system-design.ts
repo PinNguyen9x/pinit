@@ -1227,8 +1227,130 @@ export const LESSONS: Lesson[] = [
     track: 'Case study',
     keywords: ['newsfeed', 'fan-out', 'follow', 'GraphDB', 'timeline'],
     readingMinutes: 18,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Bước 1 và 2: yêu cầu và ước lượng',
+        body: [
+          'Chức năng trong phạm vi: đăng bài, theo dõi người khác, xem bảng tin, thích và bình luận. Để ngoài phạm vi và nói rõ: nhắn tin riêng, quảng cáo, hệ gợi ý kết bạn và kiểm duyệt nội dung.',
+          'Yêu cầu phi chức năng quyết định thiết kế. Bảng tin phải mở gần như tức thì, nhắm dưới 200 mili giây, vì đó là màn hình đầu tiên người dùng thấy mỗi lần mở ứng dụng. Đọc lệch ghi rất lớn. Và điểm quan trọng nhất: nghiệp vụ chấp nhận bài mới xuất hiện trên bảng tin của người theo dõi trễ vài giây. Sự cho phép này mở ra toàn bộ không gian thiết kế bất đồng bộ.',
+          'Ước lượng thô. Giả sử 500 triệu người dùng hoạt động mỗi ngày, mỗi người mở bảng tin 10 lần, được 5 tỉ lượt đọc bảng tin mỗi ngày, chia cho 86 nghìn giây ra khoảng 58 nghìn lượt mỗi giây, nhân hệ số đỉnh ba lần thành khoảng 175 nghìn. Về ghi, giả sử 50 triệu bài mỗi ngày là khoảng 580 bài mỗi giây.',
+          'Tỉ lệ đọc trên ghi khoảng 100:1 — quen thuộc rồi. Nhưng bài này có một điểm khác với TinyURL: mỗi lượt đọc bảng tin không phải tra một khóa, mà là trộn bài từ hàng trăm người đang theo dõi. Chi phí một lượt đọc cao hơn nhiều, và đó chính là bài toán cần giải.',
+        ],
+        callout:
+          'Câu chốt phạm vi đáng nói ngay: "nghiệp vụ chấp nhận bài mới xuất hiện trễ vài giây" — nó cho phép bạn làm mọi thứ bất đồng bộ và là chìa khóa của cả bài.',
+      },
+      {
+        heading: 'Bước 3: API và mô hình dữ liệu',
+        body: [
+          'Ba [[Endpoint]] cốt lõi: đăng bài, lấy bảng tin theo con trỏ, và theo dõi hoặc bỏ theo dõi một người. Bảng tin phải phân trang bằng con trỏ chứ không bằng số thứ tự bỏ qua — vì dữ liệu mới liên tục chèn vào đầu danh sách, dùng số thứ tự sẽ khiến người dùng thấy bài trùng hoặc bị sót khi cuộn.',
+          'Mô hình dữ liệu gồm ba nhóm. Người dùng. Bài viết với id, tác giả, nội dung, thời điểm và các bộ đếm. Và quan hệ theo dõi — đây là phần thú vị: quan hệ này có hướng và bất đối xứng, tôi theo dõi bạn không có nghĩa bạn theo dõi tôi. Cần tra được cả hai chiều: danh sách tôi đang theo dõi để dựng bảng tin, và danh sách người theo dõi tôi để phát tán bài mới.',
+          'Một cấu trúc nữa xuất hiện mà không phải bảng dữ liệu gốc: bảng tin đã dựng sẵn cho từng người. Đây là bản sao phục vụ đọc, dựng lại được từ bài viết và quan hệ theo dõi, nên mất cũng không sao — chỉ chậm.',
+        ],
+      },
+      {
+        heading: 'Bước 4: fan-out — phần cốt lõi của bài',
+        body: [
+          'Câu hỏi trung tâm: khi một người đăng bài, làm sao bài đó tới được bảng tin của những người theo dõi họ. Có hai hướng đối lập.',
+          'Phát tán khi ghi, còn gọi là đẩy: ngay khi có bài mới, hệ thống ghi id bài đó vào bảng tin dựng sẵn của từng người theo dõi. Đọc bảng tin sau đó chỉ là lấy một danh sách đã sắp sẵn — cực nhanh. Cái giá nằm ở phía ghi: một người có 100 triệu người theo dõi thì một bài viết sinh ra 100 triệu lệnh ghi. Với người nổi tiếng, cách này sụp đổ.',
+          'Phát tán khi đọc, còn gọi là kéo: không dựng sẵn gì cả. Khi người dùng mở bảng tin, hệ thống lấy danh sách những người họ theo dõi, đọc bài mới nhất của từng người rồi trộn và sắp xếp. Ghi rất rẻ, nhưng mỗi lượt đọc phải chạm hàng trăm nguồn — quá chậm cho 175 nghìn lượt đọc mỗi giây.',
+          'Câu trả lời đúng là kết hợp. Với người dùng bình thường thì đẩy, vì số người theo dõi nhỏ và việc dựng sẵn rất rẻ. Với tài khoản có lượng người theo dõi vượt một ngưỡng nào đó thì không đẩy nữa; bài của họ được kéo lúc đọc rồi trộn vào bảng tin đã dựng sẵn. Nhờ vậy tránh được cả cơn bão ghi lẫn việc đọc quá chậm.',
+          'Việc phát tán chạy bất đồng bộ qua hàng đợi như [[Kafka]], không nằm trong request đăng bài. Người đăng nhận phản hồi ngay khi bài được lưu; việc rải ra hàng trăm bảng tin diễn ra phía sau. [[Consumer Lag]] của hàng đợi này chính là chỉ số cho biết bảng tin đang trễ bao lâu.',
+        ],
+        diagram: `flowchart TD
+  P["Người dùng đăng bài"] --> S["Lưu bài, trả phản hồi ngay"]
+  S --> Q["Hàng đợi phát tán"]
+  Q --> CH{"Tác giả có bao nhiêu người theo dõi?"}
+  CH -->|"Dưới ngưỡng"| PUSH["Đẩy id bài vào bảng tin từng người"]
+  CH -->|"Vượt ngưỡng — người nổi tiếng"| SKIP["Không đẩy, để kéo lúc đọc"]
+  PUSH --> FC[("Bảng tin dựng sẵn")]
+  R["Người dùng mở bảng tin"] --> FC
+  R --> PULL["Kéo bài của người nổi tiếng đang theo dõi"]
+  PULL --> MIX["Trộn và sắp xếp"]
+  FC --> MIX`,
+        table: {
+          headers: ['Cách phát tán', 'Chi phí ghi', 'Chi phí đọc', 'Hợp với'],
+          rows: [
+            ['Đẩy khi ghi', 'Cao, tỉ lệ với số người theo dõi', 'Rất thấp, đọc một danh sách', 'Người dùng thường'],
+            ['Kéo khi đọc', 'Rất thấp', 'Cao, chạm hàng trăm nguồn', 'Người nổi tiếng, tài khoản ít hoạt động'],
+            ['Kết hợp', 'Vừa phải', 'Vừa phải', 'Hệ thống thật — gần như luôn là câu trả lời'],
+          ],
+        },
+        callout:
+          'Người phỏng vấn hầu như luôn hỏi ngược: "nếu người dùng có 100 triệu người theo dõi thì sao?". Chuẩn bị sẵn câu trả lời về ngưỡng và cách kết hợp.',
+      },
+      {
+        heading: 'Bước 5: lưu và phục vụ bảng tin',
+        body: [
+          'Bảng tin dựng sẵn chỉ lưu **id bài**, không lưu nội dung. Lý do: nội dung bài bị lặp lại ở hàng triệu bảng tin sẽ tốn bộ nhớ khủng khiếp, và khi tác giả sửa bài thì phải đi sửa ở mọi nơi. Lưu id thì lúc đọc chỉ cần lấy vài chục id rồi nạp nội dung từ [[Cache]] chung — mỗi bài chỉ tồn tại một bản.',
+          'Danh sách này phải bị giới hạn độ dài, thường vài trăm tới một nghìn mục gần nhất. Không ai cuộn xa hơn thế trong một phiên; ai cuộn sâu thì rơi về đường kéo chậm hơn, và đó là đánh đổi hợp lý.',
+          'Về xếp hạng, cách đơn giản nhất là theo thời gian đảo ngược. Nếu cần xếp theo mức độ liên quan, hãy tách làm hai giai đoạn: lấy một tập ứng viên vài trăm bài từ bảng tin dựng sẵn, rồi chấm điểm tập nhỏ đó lúc đọc. Chấm điểm toàn bộ kho bài viết mỗi lần đọc là không khả thi.',
+          'Một chi tiết dễ bỏ sót: khi người dùng cuộn, các trang phải nhất quán với nhau. Nếu vừa có bài mới chèn vào đầu giữa lúc họ đang cuộn, con trỏ dựa trên thời điểm và id sẽ giữ cho họ không thấy trùng — đây là lý do nữa để không dùng phân trang theo số thứ tự.',
+        ],
+      },
+      {
+        heading: 'Bước 6: GraphDB, điểm nghẽn và đánh đổi',
+        body: [
+          'Câu hỏi về cơ sở dữ liệu đồ thị hay xuất hiện ở bài này, và câu trả lời tốt bắt đầu bằng việc phân biệt hai loại truy vấn. Truy vấn một bậc — ai đang theo dõi tôi, tôi đang theo dõi ai — chỉ cần một bảng quan hệ hai cột với chỉ mục theo cả hai chiều. Không cần cơ sở dữ liệu đồ thị cho việc này, và ở quy mô lớn thì một bảng được chia nhỏ còn dễ vận hành hơn.',
+          'Cơ sở dữ liệu đồ thị đáng giá khi truy vấn đi nhiều bậc: bạn của bạn, đường nối ngắn nhất giữa hai người, gợi ý kết bạn dựa trên bạn chung. Với quan hệ nhiều bậc, cách làm bằng bảng quan hệ đòi hỏi tự nối bảng nhiều lần và chi phí bùng nổ, còn cơ sở dữ liệu đồ thị đi theo cạnh nên rẻ hơn nhiều.',
+          'Điểm nghẽn lớn nhất vẫn là tài khoản khổng lồ — vừa là [[Hot Partition]] khi lưu quan hệ theo dõi, vừa là cơn bão ghi khi phát tán, vừa là khóa nóng ở [[Cache]] khi hàng triệu người cùng đọc bài của họ. Ba vấn đề khác nhau, cùng một nguyên nhân, và cách kết hợp phát tán chỉ giải quyết được vấn đề thứ hai.',
+          'Hai tình huống vận hành hay bị hỏi thêm. Xóa bài sau khi đã phát tán: không đi xóa khỏi hàng triệu bảng tin, mà đánh dấu đã xóa ở nguồn rồi lọc lúc nạp nội dung. Bỏ theo dõi: cũng không dọn ngay bảng tin đã dựng, mà lọc lúc đọc và để danh sách tự trôi đi theo thời gian.',
+          'Đánh đổi tổng thể: hệ này chọn sẵn sàng và độ trễ thấp, chấp nhận bảng tin không nhất quán tuyệt đối. Hai người mở cùng lúc có thể thấy thứ tự hơi khác nhau, và bài mới có thể trễ vài giây. Không ai phàn nàn về điều đó, nhưng ai cũng phàn nàn nếu bảng tin mất ba giây mới mở.',
+        ],
+        table: {
+          headers: ['Điểm nghẽn', 'Nguyên nhân', 'Cách xử lý'],
+          rows: [
+            ['Bão ghi khi người nổi tiếng đăng bài', 'Đẩy tới hàng chục triệu bảng tin', 'Vượt ngưỡng thì không đẩy, để kéo lúc đọc'],
+            ['Khóa nóng khi đọc bài người nổi tiếng', 'Hàng triệu người cùng nạp một bài', 'Đệm cục bộ trong tiến trình, nhân bản khóa nóng'],
+            ['Bảng tin trễ', 'Hàng đợi phát tán bị tồn đọng', 'Cảnh báo theo consumer lag, tăng số worker'],
+            ['Xóa bài đã phát tán', 'Bài nằm ở hàng triệu bảng tin', 'Đánh dấu ở nguồn, lọc lúc nạp nội dung'],
+          ],
+        },
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Fan-out khi ghi và fan-out khi đọc khác nhau thế nào?',
+        answer:
+          'Fan-out khi ghi (đẩy): ngay khi có bài mới thì ghi id bài vào bảng tin dựng sẵn của từng người theo dõi — đọc cực nhanh nhưng một người có 100 triệu người theo dõi sinh ra 100 triệu lệnh ghi cho một bài. Fan-out khi đọc (kéo): không dựng sẵn gì, lúc mở bảng tin mới đi lấy bài của những người đang theo dõi rồi trộn — ghi rẻ nhưng mỗi lượt đọc chạm hàng trăm nguồn.',
+        pitfall:
+          'Chọn hẳn một trong hai. Hệ thống thật gần như luôn kết hợp: đẩy cho người thường, kéo cho người nổi tiếng.',
+      },
+      {
+        question: 'Vì sao bảng tin dựng sẵn chỉ lưu id bài chứ không lưu nội dung?',
+        answer:
+          'Vì nội dung bị lặp ở hàng triệu bảng tin sẽ tốn bộ nhớ khủng khiếp, và khi tác giả sửa bài thì phải đi sửa ở mọi nơi. Lưu id thì lúc đọc chỉ cần lấy vài chục id rồi nạp nội dung từ cache chung — mỗi bài chỉ tồn tại một bản, sửa một chỗ là xong.',
+        pitfall:
+          'Quên giới hạn độ dài danh sách. Bảng tin dựng sẵn nên chỉ giữ vài trăm tới một nghìn mục gần nhất; ai cuộn sâu hơn thì rơi về đường kéo chậm hơn.',
+      },
+      {
+        question: 'Khi nào thực sự cần cơ sở dữ liệu đồ thị?',
+        answer:
+          'Khi truy vấn đi nhiều bậc: bạn của bạn, đường nối ngắn nhất giữa hai người, gợi ý kết bạn dựa trên bạn chung. Truy vấn một bậc như ai theo dõi tôi hay tôi theo dõi ai thì chỉ cần một bảng quan hệ hai cột có chỉ mục theo cả hai chiều — ở quy mô lớn còn dễ vận hành hơn.',
+        pitfall:
+          'Đề xuất cơ sở dữ liệu đồ thị chỉ vì bài toán có chữ "mạng xã hội". Phần lớn truy vấn của bảng tin là một bậc.',
+      },
+      {
+        question: 'Xóa bài đã phát tán ra hàng triệu bảng tin thì làm sao?',
+        answer:
+          'Không đi xóa khỏi từng bảng tin. Đánh dấu đã xóa ở bản ghi gốc rồi lọc lúc nạp nội dung — vì bảng tin chỉ lưu id, nội dung luôn được nạp từ nguồn nên bài đã xóa sẽ tự biến mất. Bỏ theo dõi cũng xử lý tương tự: lọc lúc đọc và để danh sách tự trôi đi theo thời gian.',
+        pitfall:
+          'Thiết kế một tác vụ nền quét hàng triệu bảng tin để xóa. Nó tốn kém và hoàn toàn không cần thiết nếu bảng tin chỉ lưu id.',
+      },
+      {
+        question: 'Tài khoản khổng lồ gây ra mấy vấn đề khác nhau?',
+        answer:
+          'Ba, và chúng cần ba cách xử lý riêng. Điểm nóng khi lưu quan hệ theo dõi — xử lý bằng chia nhỏ dữ liệu. Bão ghi khi phát tán bài mới — xử lý bằng ngưỡng và chuyển sang kéo. Khóa nóng ở cache khi hàng triệu người cùng đọc bài của họ — xử lý bằng đệm cục bộ trong tiến trình và nhân bản khóa nóng.',
+        pitfall:
+          'Nghĩ rằng chuyển sang fan-out khi đọc là giải quyết xong người nổi tiếng. Nó chỉ giải quyết vấn đề ghi, còn hai vấn đề kia vẫn nguyên.',
+      },
+      {
+        question: 'Vì sao bảng tin phải phân trang bằng con trỏ?',
+        answer:
+          'Vì dữ liệu mới liên tục chèn vào đầu danh sách. Phân trang theo số thứ tự bỏ qua sẽ khiến người dùng thấy bài trùng hoặc bị sót khi cuộn, và càng lùi sâu càng chậm. Con trỏ dựa trên thời điểm và id giữ cho các trang nhất quán với nhau kể cả khi có bài mới xuất hiện giữa chừng.',
+        pitfall:
+          'Dùng phân trang theo số thứ tự cho mọi danh sách. Với danh sách tĩnh thì được, với dòng dữ liệu liên tục thì sai.',
+      },
+    ],
     keyTakeaway:
       'Fan-out khi ghi cho người thường, fan-out khi đọc cho người nổi tiếng — hệ thật dùng cả hai.',
     relatedTerms: ['Cache', 'Database'],
