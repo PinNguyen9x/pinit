@@ -87,8 +87,10 @@ describe('cross-link sang glossary', () => {
     expect(missing).toEqual([])
   })
 
-  it('mọi relatedTerms trỏ tới thuật ngữ có thật trong glossary', () => {
-    const missing = written.flatMap((lesson) =>
+  // Kiểm toàn bộ 13 buổi chứ không chỉ buổi đã viết nội dung: relatedTerms là
+  // metadata, khai báo sẵn từ M1 nên sai được ngay cả khi bài còn rỗng.
+  it('mọi relatedTerms của MỌI buổi trỏ tới thuật ngữ có thật trong glossary', () => {
+    const missing = LESSONS.flatMap((lesson) =>
       (lesson.relatedTerms ?? []).filter((term) => !glossaryTerms.has(term)),
     )
     expect(Array.from(new Set(missing))).toEqual([])

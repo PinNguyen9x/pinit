@@ -176,7 +176,7 @@ export const LESSONS: Lesson[] = [
     flashcards: [],
     keyTakeaway:
       'Sharding giải quyết giới hạn ghi, replication giải quyết giới hạn đọc — đừng nhầm hai bài toán.',
-    relatedTerms: ['Load Balancer', 'Sharding', 'Replication'],
+    relatedTerms: ['Load Balancer', 'Database', 'Leader / Follower'],
   },
   {
     order: 3,
@@ -206,7 +206,7 @@ export const LESSONS: Lesson[] = [
     flashcards: [],
     keyTakeaway:
       'Cache mua tốc độ bằng nguy cơ dữ liệu cũ — luôn nói rõ chiến lược invalidation.',
-    relatedTerms: ['Cache', 'Redis', 'Message Queue'],
+    relatedTerms: ['Cache', 'Kafka', 'Backpressure'],
   },
   {
     order: 5,
@@ -221,7 +221,7 @@ export const LESSONS: Lesson[] = [
     flashcards: [],
     keyTakeaway:
       'File lớn đi thẳng vào blobstore qua pre-signed URL, database chỉ giữ metadata.',
-    relatedTerms: ['CDN', 'Elasticsearch'],
+    relatedTerms: ['CDN', 'Latency'],
   },
   {
     order: 6,
@@ -249,7 +249,7 @@ export const LESSONS: Lesson[] = [
     flashcards: [],
     keyTakeaway:
       'Tỉ lệ đọc/ghi rất lệch nên cache và CDN quan trọng hơn tối ưu tầng ghi.',
-    relatedTerms: ['Cache', 'Hash'],
+    relatedTerms: ['Cache', 'CDN'],
   },
   {
     order: 8,
@@ -263,7 +263,7 @@ export const LESSONS: Lesson[] = [
     flashcards: [],
     keyTakeaway:
       'Upload và transcode phải bất đồng bộ qua queue — người dùng không chờ được quá trình mã hóa.',
-    relatedTerms: ['CDN', 'Message Queue'],
+    relatedTerms: ['CDN', 'Kafka'],
   },
   {
     order: 9,
@@ -277,7 +277,7 @@ export const LESSONS: Lesson[] = [
     flashcards: [],
     keyTakeaway:
       'Fan-out khi ghi cho người thường, fan-out khi đọc cho người nổi tiếng — hệ thật dùng cả hai.',
-    relatedTerms: ['Cache', 'Sharding'],
+    relatedTerms: ['Cache', 'Database'],
   },
   {
     order: 10,
@@ -291,7 +291,7 @@ export const LESSONS: Lesson[] = [
     flashcards: [],
     keyTakeaway:
       'Trie cắt sẵn top-k tại mỗi node, đổi bộ nhớ lấy độ trễ vài mili-giây.',
-    relatedTerms: ['Cache', 'Elasticsearch'],
+    relatedTerms: ['Cache', 'Latency'],
   },
   {
     order: 11,
@@ -321,7 +321,7 @@ export const LESSONS: Lesson[] = [
     flashcards: [],
     keyTakeaway:
       'Kết nối dài (WebSocket) cần tầng session riêng để biết người dùng đang bám vào máy chủ nào.',
-    relatedTerms: ['WebSocket', 'Message Queue'],
+    relatedTerms: ['WebSocket', 'Kafka'],
   },
   {
     order: 13,
