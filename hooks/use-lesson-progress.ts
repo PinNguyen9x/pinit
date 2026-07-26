@@ -1,4 +1,4 @@
-import { LESSONS, StorageKeys } from '@/constants'
+import { StorageKeys } from '@/constants/storage-key'
 import { computeProgressPercent, parseCompletedSlugs, toggleSlug } from '@/utils/system-design'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -13,22 +13,34 @@ const KEY = StorageKeys.SYSTEM_DESIGN_PROGRESS
  *
  * Lưu slug thay vì index để chèn thêm buổi vào giữa lộ trình không làm lệch
  * tiến độ đã tick.
+ *
+ * QUAN TRỌNG: hook này nhận danh sách slug qua tham số thay vì tự import
+ * LESSONS, và import StorageKeys từ module cụ thể chứ không qua barrel
+ * `@/constants`. Lý do: hook nằm trong chuỗi import của `_app` (qua
+ * `@/components/common` → header → `@/hooks`), nên mọi thứ nó chạm tới sẽ bị
+ * gộp vào bundle dùng chung của TOÀN BỘ site. Import LESSONS ở đây từng kéo
+ * nội dung 13 buổi vào mọi trang, kể cả trang chủ và blog.
+ *
+ * @param knownSlugs Bỏ trống khi chỉ cần đọc/ghi một slug cụ thể (trang chi
+ * tiết). Truyền vào khi cần lọc slug mồ côi và tính phần trăm (trang lộ trình).
  */
-export function useLessonProgress() {
+export function useLessonProgress(knownSlugs?: string[]) {
   const [completedSlugs, setCompletedSlugs] = useState<string[]>([])
   const [hydrated, setHydrated] = useState(false)
 
-  const knownSlugs = useMemo(() => LESSONS.map((lesson) => lesson.slug), [])
+  // Chuỗi hóa để dependency ổn định kể cả khi phía gọi tạo mảng mới mỗi render.
+  const slugKey = knownSlugs?.join('|') ?? ''
 
   useEffect(() => {
+    const slugs = slugKey ? slugKey.split('|') : undefined
     try {
-      setCompletedSlugs(parseCompletedSlugs(window.localStorage.getItem(KEY), knownSlugs))
+      setCompletedSlugs(parseCompletedSlugs(window.localStorage.getItem(KEY), slugs))
     } catch {
       // localStorage bị chặn (private mode, cấu hình trình duyệt) — coi như
       // chưa ôn buổi nào, phần đọc nội dung vẫn dùng được bình thường.
     }
     setHydrated(true)
-  }, [knownSlugs])
+  }, [slugKey])
 
   const persist = useCallback((next: string[]) => {
     setCompletedSlugs(next)
@@ -51,12 +63,13 @@ export function useLessonProgress() {
 
   const isCompleted = useCallback((slug: string) => completed.has(slug), [completed])
 
-  const percent = computeProgressPercent(completedSlugs.length, LESSONS.length)
+  const total = knownSlugs?.length ?? 0
+  const percent = computeProgressPercent(completedSlugs.length, total)
 
   return {
     completed,
     completedCount: completedSlugs.length,
-    total: LESSONS.length,
+    total,
     hydrated,
     isCompleted,
     toggle,

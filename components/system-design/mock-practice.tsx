@@ -1,4 +1,4 @@
-import { INTERVIEW_STEPS } from '@/constants'
+import { INTERVIEW_STEPS } from '@/constants/system-design'
 import { MockPrompt } from '@/models/system-design'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'

@@ -39,6 +39,16 @@ describe('parseCompletedSlugs', () => {
   it('loại bỏ slug trùng lặp', () => {
     expect(parseCompletedSlugs('["buoi-1","buoi-1"]', KNOWN)).toEqual(['buoi-1'])
   })
+
+  // Trang chi tiết chỉ quan tâm một slug nên không truyền danh sách vào, để
+  // tránh phải import toàn bộ nội dung 13 buổi vào bundle của trang đó.
+  it('bỏ qua bước lọc khi không truyền danh sách slug hợp lệ', () => {
+    expect(parseCompletedSlugs('["buoi-1","buoi-la"]')).toEqual(['buoi-1', 'buoi-la'])
+  })
+
+  it('vẫn lọc phần tử sai kiểu khi không truyền danh sách', () => {
+    expect(parseCompletedSlugs('["buoi-1",42,null]')).toEqual(['buoi-1'])
+  })
 })
 
 describe('toggleSlug', () => {

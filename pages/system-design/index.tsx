@@ -1,10 +1,11 @@
 import { BackgroundFx, Seo } from '@/components/common'
 import { MainLayout } from '@/components/layouts'
 import { LessonCard, RoadmapProgress, useSystemDesignTokens } from '@/components/system-design'
-import { LESSONS } from '@/constants'
+import { LESSONS } from '@/constants/system-design'
 import { useLessonProgress } from '@/hooks'
 import { NextPageWithLayout } from '@/models'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import BoltIcon from '@mui/icons-material/Bolt'
 import SearchIcon from '@mui/icons-material/Search'
 import { Box, Container, InputBase, Stack, Typography } from '@mui/material'
 import Link from 'next/link'
@@ -13,10 +14,11 @@ import { useMemo, useState } from 'react'
 const SystemDesignRoadmap: NextPageWithLayout = () => {
   const [query, setQuery] = useState('')
   const { accent, line, chipBg, cardBg } = useSystemDesignTokens()
-  const { completedCount, total, percent, hydrated, isCompleted, toggle, reset } =
-    useLessonProgress()
-
   const lessons = useMemo(() => [...LESSONS].sort((a, b) => a.order - b.order), [])
+  const slugs = useMemo(() => lessons.map((lesson) => lesson.slug), [lessons])
+
+  const { completedCount, total, percent, hydrated, isCompleted, toggle, reset } =
+    useLessonProgress(slugs)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -95,7 +97,33 @@ const SystemDesignRoadmap: NextPageWithLayout = () => {
           onReset={reset}
         />
 
-        {/* Link tới /system-design/cheat-sheet thêm ở T5.2, khi trang đó tồn tại. */}
+        <Box
+          component={Link}
+          href="/system-design/cheat-sheet"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            p: 2,
+            mb: 3,
+            border: '1px solid',
+            borderColor: line,
+            borderRadius: 2,
+            bgcolor: chipBg,
+            textDecoration: 'none',
+            color: 'inherit',
+            '&:hover': { borderColor: accent },
+          }}
+        >
+          <BoltIcon sx={{ color: accent }} />
+          <Box>
+            <Typography fontWeight={700}>Cheat sheet ôn gấp</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Con số cần thuộc, bảng chọn database và khung trả lời — cho hai mươi phút trước giờ
+              phỏng vấn.
+            </Typography>
+          </Box>
+        </Box>
 
         {query.trim() && (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

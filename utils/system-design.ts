@@ -5,8 +5,12 @@
  * Đọc danh sách slug đã hoàn thành từ giá trị thô trong localStorage.
  * Chịu được mọi loại rác: null, JSON hỏng, không phải mảng, phần tử sai kiểu,
  * slug của buổi đã bị xóa khỏi lộ trình.
+ *
+ * Bỏ trống knownSlugs khi phía gọi chỉ quan tâm một slug cụ thể — khi đó bước
+ * lọc slug mồ côi được bỏ qua, đổi lại phía gọi không phải import toàn bộ dữ
+ * liệu 13 buổi.
  */
-export function parseCompletedSlugs(raw: string | null, knownSlugs: string[]): string[] {
+export function parseCompletedSlugs(raw: string | null, knownSlugs?: string[]): string[] {
   if (!raw) return []
 
   let parsed: unknown
@@ -18,11 +22,12 @@ export function parseCompletedSlugs(raw: string | null, knownSlugs: string[]): s
 
   if (!Array.isArray(parsed)) return []
 
-  const known = new Set(knownSlugs)
+  const known = knownSlugs ? new Set(knownSlugs) : null
   const seen = new Set<string>()
 
   return parsed.filter((item): item is string => {
-    if (typeof item !== 'string' || !known.has(item) || seen.has(item)) return false
+    if (typeof item !== 'string' || seen.has(item)) return false
+    if (known && !known.has(item)) return false
     seen.add(item)
     return true
   })

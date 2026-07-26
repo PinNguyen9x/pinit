@@ -6,7 +6,7 @@ import {
   MockPractice,
   useSystemDesignTokens,
 } from '@/components/system-design'
-import { LESSONS } from '@/constants'
+import { LESSONS } from '@/constants/system-design'
 import { useLessonProgress, useMermaid } from '@/hooks'
 import { Lesson } from '@/models/system-design'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
