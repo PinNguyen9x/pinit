@@ -1363,8 +1363,134 @@ export const LESSONS: Lesson[] = [
     track: 'Case study',
     keywords: ['typeahead', 'autocomplete', 'trie', 'ranking', 'prefix'],
     readingMinutes: 15,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Bước 1 và 2: yêu cầu và ước lượng',
+        body: [
+          'Chức năng trong phạm vi: người dùng gõ một tiền tố, hệ thống trả về mười gợi ý phổ biến nhất bắt đầu bằng tiền tố đó, và danh sách này cập nhật theo mức độ phổ biến thực tế. Để ngoài phạm vi: sửa lỗi chính tả, cá nhân hóa theo lịch sử từng người, và hỗ trợ nhiều ngôn ngữ.',
+          'Yêu cầu phi chức năng của bài này khắt khe khác thường về [[Latency]]. Gợi ý phải xuất hiện trong lúc người dùng vẫn đang gõ, nghĩa là phải trả lời dưới khoảng 50 tới 100 mili giây. Chậm hơn thì gợi ý hiện ra sau khi người ta đã gõ xong, và tính năng trở nên vô dụng.',
+          'Đổi lại, yêu cầu về độ tươi rất lỏng. Gợi ý phản ánh dữ liệu của vài giờ trước hoàn toàn chấp nhận được. Chính sự bất đối xứng này — đọc phải cực nhanh, ghi được phép rất chậm — là chìa khóa của toàn bộ thiết kế.',
+          'Ước lượng. Giả sử 5 tỉ lượt tìm kiếm mỗi ngày, mỗi lượt người dùng gõ khoảng 20 ký tự. Nếu gửi một request cho mỗi ký tự thì thành 100 tỉ request mỗi ngày, tương đương hơn một triệu request mỗi giây — con số không thực tế. Vì vậy client phải gộp phím: chỉ gửi sau khi người dùng ngừng gõ khoảng 100 mili giây, giảm còn khoảng bốn tới năm request mỗi lượt tìm. Kết quả là khoảng 20 tỉ request mỗi ngày, xấp xỉ 230 nghìn mỗi giây, đỉnh khoảng 700 nghìn.',
+        ],
+        callout:
+          'Nhận ra ngay rằng client phải gộp phím trước khi gửi là điểm ăn điểm đầu tiên. Không có nó, mọi con số ước lượng sau đều sai một bậc.',
+      },
+      {
+        heading: 'Bước 3: API và mô hình dữ liệu',
+        body: [
+          'Chỉ cần một [[Endpoint]]: nhận tiền tố và số lượng gợi ý, trả về danh sách đã xếp hạng. Đơn giản đến mức đáng ngờ — và đó là dấu hiệu cho thấy toàn bộ độ khó nằm ở cấu trúc dữ liệu phía sau chứ không ở giao diện.',
+          'Dữ liệu gốc là nhật ký truy vấn: mỗi lượt tìm kiếm sinh ra một bản ghi gồm chuỗi truy vấn và thời điểm. Từ đó tổng hợp ra tần suất của từng chuỗi trong một cửa sổ thời gian, ví dụ bảy ngày gần nhất.',
+          'Cấu trúc phục vụ thì khác hẳn dữ liệu gốc. Nó là một cây tiền tố, trong đó mỗi nút ứng với một tiền tố và lưu sẵn danh sách mười gợi ý tốt nhất cho tiền tố đó. Đây là bản sao phục vụ đọc, dựng lại được hoàn toàn từ nhật ký truy vấn.',
+        ],
+      },
+      {
+        heading: 'Bước 4: cây tiền tố và top-k tính sẵn — phần cốt lõi',
+        body: [
+          'Cây tiền tố lưu các chuỗi theo từng ký tự: gốc phân nhánh theo ký tự đầu, mỗi nhánh lại phân nhánh theo ký tự tiếp theo. Tra một tiền tố chỉ là đi xuống theo từng ký tự — chi phí tỉ lệ với độ dài tiền tố, không phụ thuộc số lượng chuỗi trong kho. Đó là điểm mạnh.',
+          'Nhưng cây tiền tố thuần không đủ. Sau khi đi tới nút của tiền tố, bạn vẫn phải duyệt toàn bộ cây con bên dưới để tìm mười chuỗi phổ biến nhất. Với tiền tố dài thì cây con nhỏ, không sao. Với tiền tố một ký tự như chữ cái đầu tiên, cây con chứa hàng chục triệu chuỗi — không cách nào duyệt xong trong 50 mili giây.',
+          'Giải pháp là tính sẵn: mỗi nút lưu luôn mười gợi ý tốt nhất của cả cây con bên dưới nó. Khi đó tra cứu chỉ còn là đi xuống theo tiền tố rồi đọc danh sách có sẵn tại nút cuối. Độ trễ trở thành hằng số theo độ dài tiền tố, thường dưới một mili giây trong bộ nhớ.',
+          'Cái giá là bộ nhớ và thời gian dựng. Mỗi nút giờ mang thêm mười mục thay vì chỉ một ký tự, làm cây phình lên đáng kể. Đây chính là đánh đổi kinh điển đổi bộ nhớ lấy độ trễ, và nói thẳng ra điều đó là điều người phỏng vấn muốn nghe.',
+          'Với kho dữ liệu lớn, cây được nén lại bằng cách gộp các chuỗi ký tự chỉ có một nhánh thành một nút duy nhất, giảm đáng kể số nút mà không đổi ngữ nghĩa.',
+        ],
+        diagram: `flowchart TD
+  R["gốc"] --> C["c — top10: cà phê, cách nấu, công thức"]
+  C --> CA["ca — top10: cà phê, cách nấu, cách làm"]
+  CA --> CAP["càp — top10: cà phê sữa, cà phê muối"]
+  CA --> CAC["các — top10: cách nấu phở, cách làm bánh"]`,
+        table: {
+          headers: ['Cách lưu', 'Độ trễ tra tiền tố', 'Bộ nhớ', 'Nhận xét'],
+          rows: [
+            ['Truy vấn khớp tiền tố trên database', 'Chậm, phải quét và xếp hạng', 'Thấp', 'Không đạt mốc 50 mili giây'],
+            ['Cây tiền tố thuần', 'Nhanh với tiền tố dài, rất chậm với tiền tố ngắn', 'Vừa', 'Vẫn phải duyệt cây con'],
+            ['Cây tiền tố kèm top-k tính sẵn', 'Hằng số, dưới một mili giây', 'Cao', 'Lựa chọn đúng cho bài này'],
+          ],
+        },
+        callout:
+          'Câu hỏi bẫy hay gặp: "người dùng gõ đúng một chữ cái thì sao?". Nếu chưa tính sẵn top-k thì đó chính là trường hợp làm sập hệ thống.',
+      },
+      {
+        heading: 'Bước 5: đường ghi chạy ngoại tuyến',
+        body: [
+          'Vì độ tươi được phép trễ vài giờ, toàn bộ việc cập nhật chạy ngoại tuyến và tách hẳn khỏi đường phục vụ. Nhật ký truy vấn được đẩy vào luồng sự kiện như [[Kafka]], một tác vụ tổng hợp đếm tần suất theo cửa sổ thời gian, rồi một tác vụ khác dựng lại cây tiền tố từ bảng tần suất đó.',
+          'Điểm mấu chốt: không cập nhật cây tại chỗ. Lý do là top-k tính sẵn có tính lan truyền — thêm một chuỗi phổ biến làm thay đổi danh sách top-k của mọi nút tổ tiên trên đường từ gốc xuống. Cập nhật tại chỗ vừa phức tạp vừa tạo tranh chấp với hàng trăm nghìn lượt đọc mỗi giây.',
+          'Thay vào đó, dựng một cây hoàn toàn mới rồi hoán đổi nguyên khối: các máy phục vụ tải phiên bản mới, kiểm tra tính toàn vẹn, rồi chuyển con trỏ sang phiên bản đó trong một thao tác. Cách này còn cho phép quay lui tức thì nếu phiên bản mới có vấn đề — chỉ cần trỏ ngược lại phiên bản cũ.',
+          'Về phân mảnh, cây được chia theo tiền tố đầu: các máy khác nhau giữ các nhánh khác nhau. Cần lưu ý phân bố ký tự đầu rất lệch nên chia đều theo bảng chữ cái sẽ tạo [[Hot Partition]]; nên chia theo tải thực đo được thay vì chia đều theo ký tự.',
+        ],
+        diagram: `flowchart LR
+  L["Nhật ký truy vấn"] --> K["Luồng sự kiện"]
+  K --> AGG["Tổng hợp tần suất theo cửa sổ 7 ngày"]
+  AGG --> BUILD["Dựng cây tiền tố kèm top-k"]
+  BUILD --> V["Phiên bản mới"]
+  V --> SW{"Kiểm tra toàn vẹn"}
+  SW -->|Đạt| SERVE["Hoán đổi nguyên khối trên máy phục vụ"]
+  SW -->|Không đạt| KEEP["Giữ phiên bản cũ"]`,
+      },
+      {
+        heading: 'Bước 6: phục vụ, điểm nghẽn và đánh đổi',
+        body: [
+          'Với 700 nghìn request mỗi giây ở đỉnh, việc phục vụ phải dựa vào nhiều tầng đệm. Ngay tại client, ngoài việc gộp phím còn có thể đệm kết quả các tiền tố đã gõ và nạp trước gợi ý cho ký tự tiếp theo có khả năng cao. Tại biên, kết quả của các tiền tố ngắn được đệm với thời hạn vài phút — và vì tiền tố ngắn chiếm phần lớn lưu lượng, tầng này một mình đã chặn được đa số request.',
+          'Đó cũng chính là điểm nghẽn: tiền tố một hoặc hai ký tự cực nóng. Nhưng khác với các bài trước, ở đây điểm nóng lại là tin tốt — tập tiền tố nóng rất nhỏ và kết quả gần như không đổi trong nhiều giờ, nên tỉ lệ trúng đệm rất cao. Tiền tố dài thì hiếm và phân tán, đi thẳng xuống máy phục vụ cũng không sao.',
+          'Trong bộ nhớ của máy phục vụ, cây tiền tố phải nằm hoàn toàn trong RAM. Chạm đĩa một lần là mất mốc độ trễ, nên dung lượng RAM là ràng buộc thật khi quyết định giữ bao nhiêu chuỗi và top-k bằng bao nhiêu.',
+          'Vài chi tiết nghiệp vụ đáng nêu nếu còn thời gian. Cần lọc các truy vấn xấu và nhạy cảm ra khỏi gợi ý, vì hệ thống này phơi bày những gì người khác đang tìm kiếm. Cần chống thao túng: một nhóm cố tình gõ đi gõ lại một cụm từ để đẩy nó lên gợi ý, nên phải khử trùng lặp theo người dùng và theo địa chỉ khi đếm tần suất.',
+          'Đánh đổi tổng thể: hệ này hy sinh độ tươi để đổi lấy độ trễ, và đổi bộ nhớ lấy tốc độ. Gợi ý trễ vài giờ không ai để ý, nhưng gợi ý chậm nửa giây thì không ai dùng.',
+        ],
+        table: {
+          headers: ['Tầng', 'Xử lý gì', 'Hiệu quả'],
+          rows: [
+            ['Client gộp phím', 'Chỉ gửi sau khi ngừng gõ 100 mili giây', 'Giảm số request khoảng bốn lần'],
+            ['Đệm ở client', 'Nhớ kết quả tiền tố đã gõ, nạp trước ký tự kế', 'Xóa hẳn request khi người dùng xóa lùi'],
+            ['Đệm ở biên', 'Kết quả tiền tố ngắn, thời hạn vài phút', 'Chặn phần lớn lưu lượng'],
+            ['Cây trong RAM', 'Tra cứu top-k tính sẵn', 'Dưới một mili giây'],
+          ],
+        },
+        callout:
+          'Câu kết mạnh cho bài này: "tôi chấp nhận gợi ý trễ vài giờ để đổi lấy độ trễ vài mili giây, vì người dùng không nhận ra điều thứ nhất nhưng luôn nhận ra điều thứ hai".',
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Vì sao cây tiền tố thuần không đủ cho typeahead?',
+        answer:
+          'Vì sau khi đi tới nút của tiền tố, vẫn phải duyệt toàn bộ cây con bên dưới để tìm mười chuỗi phổ biến nhất. Với tiền tố một ký tự, cây con chứa hàng chục triệu chuỗi — không thể duyệt xong trong 50 mili giây. Giải pháp là mỗi nút lưu sẵn top-k của cả cây con bên dưới, biến tra cứu thành đi xuống theo tiền tố rồi đọc danh sách có sẵn.',
+        pitfall:
+          'Trả lời "dùng trie" rồi dừng lại. Người phỏng vấn sẽ hỏi ngay điều gì xảy ra khi người dùng mới gõ đúng một chữ cái.',
+      },
+      {
+        question: 'Vì sao không cập nhật cây tiền tố tại chỗ?',
+        answer:
+          'Vì top-k tính sẵn có tính lan truyền: thêm một chuỗi phổ biến làm thay đổi danh sách của mọi nút tổ tiên trên đường từ gốc xuống. Cập nhật tại chỗ vừa phức tạp vừa tranh chấp với hàng trăm nghìn lượt đọc mỗi giây. Thay vào đó dựng cây mới ngoại tuyến rồi hoán đổi nguyên khối, cách này còn cho phép quay lui tức thì.',
+        pitfall:
+          'Thiết kế cơ chế cập nhật thời gian thực cho gợi ý. Nghiệp vụ không cần, mà lại làm hỏng mốc độ trễ.',
+      },
+      {
+        question: 'Vì sao client phải gộp phím trước khi gửi request?',
+        answer:
+          'Vì gửi một request cho mỗi ký tự với 5 tỉ lượt tìm kiếm mỗi ngày và trung bình 20 ký tự sẽ thành 100 tỉ request mỗi ngày, hơn một triệu mỗi giây — không thực tế. Chỉ gửi sau khi người dùng ngừng gõ khoảng 100 mili giây giảm còn bốn tới năm request mỗi lượt tìm, tức khoảng 230 nghìn mỗi giây.',
+        pitfall:
+          'Bỏ qua bước này khi ước lượng. Toàn bộ con số sau đó sẽ sai một bậc độ lớn.',
+      },
+      {
+        question: 'Tiền tố ngắn là điểm nóng — vì sao ở bài này lại là tin tốt?',
+        answer:
+          'Vì tập tiền tố nóng rất nhỏ và kết quả gần như không đổi trong nhiều giờ, nên tỉ lệ trúng đệm cực cao. Đệm ở biên với thời hạn vài phút chặn được phần lớn lưu lượng. Tiền tố dài thì hiếm và phân tán nên đi thẳng xuống máy phục vụ cũng không gây áp lực.',
+        pitfall:
+          'Áp máy móc cách xử lý điểm nóng của các bài khác. Ở đây điểm nóng là thứ khai thác được, không phải thứ phải né.',
+      },
+      {
+        question: 'Phân mảnh cây tiền tố theo tiêu chí nào?',
+        answer:
+          'Theo tiền tố đầu, mỗi máy giữ một số nhánh. Nhưng phân bố ký tự đầu rất lệch nên chia đều theo bảng chữ cái sẽ tạo phân vùng nóng — phải chia theo tải thực đo được. Ngoài ra cây phải nằm hoàn toàn trong RAM; chạm đĩa một lần là mất mốc độ trễ.',
+        pitfall:
+          'Chia đều 26 chữ cái cho các máy. Số chuỗi bắt đầu bằng mỗi chữ cái chênh nhau hàng chục lần.',
+      },
+      {
+        question: 'Đánh đổi tổng thể của hệ typeahead là gì?',
+        answer:
+          'Hy sinh độ tươi để đổi lấy độ trễ, và đổi bộ nhớ lấy tốc độ. Gợi ý phản ánh dữ liệu vài giờ trước thì không ai để ý, nhưng gợi ý chậm nửa giây thì không ai dùng. Chính sự bất đối xứng đọc phải cực nhanh còn ghi được phép rất chậm là thứ cho phép đẩy toàn bộ việc dựng chỉ mục ra ngoại tuyến.',
+        pitfall:
+          'Không nêu rõ đánh đổi này. Nó là lý do biện minh cho mọi lựa chọn còn lại trong bài.',
+      },
+    ],
     keyTakeaway:
       'Trie cắt sẵn top-k tại mỗi node, đổi bộ nhớ lấy độ trễ vài mili-giây.',
     relatedTerms: ['Cache', 'Latency'],
