@@ -15,11 +15,13 @@ Lý do: rủi ro lớn nhất của feature này không phải code (UI khá th�
 
 **Commit**: mỗi task = 1 commit (theo `CLAUDE.md`: mỗi commit một thay đổi logic). Riêng M3/M4 mỗi buổi nội dung là 1 commit.
 
+> **Ngoại lệ đã xảy ra**: buổi 5 và 6 nằm chung commit `a2fc8c5` vì được yêu cầu viết liền một lượt và cùng nằm trong `constants/system-design.ts`. Lẽ ra nên commit buổi 5 trước rồi mới viết buổi 6. Rút kinh nghiệm cho M4: commit ngay sau mỗi buổi kể cả khi được yêu cầu viết nhiều buổi một lượt.
+
 ## Milestones
 **What are the major checkpoints?**
 
 - [x] **M1 — Hạ tầng & khung dữ liệu**: đi được từ header → lộ trình → trang chi tiết (nội dung rỗng), tiến độ lưu được ✅ **xong 2026-07-26**
-- [ ] **M2 — Vertical slice nội dung (buổi 1–2)**: chốt khuôn mẫu nội dung; mermaid, flashcard, cross-link đều chạy thật
+- [x] **M2 — Vertical slice nội dung (buổi 1–2)** ✅ **xong 2026-07-26 (còn nợ)** — data model đã chốt, mermaid/flashcard/cross-link chạy thật. Nợ chuyển sang M6: kiểm 360px thật và a11y bàn phím
 - [x] **M3 — Kiến thức lõi (buổi 3–6)** ✅ **xong 2026-07-26** — buổi 3 (`f0c38af`), buổi 4 (`b072be3`), buổi 5 + 6 (`a2fc8c5`)
 - [ ] **M4 — Case study (buổi 7–12)**
 - [ ] **M5 — Buổi 13 tự luyện + cheat sheet**
