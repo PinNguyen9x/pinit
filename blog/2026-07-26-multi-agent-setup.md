@@ -265,6 +265,22 @@ AGENT_MODEL="${AGENTS_MODEL:-claude-opus-5}"
 # đặt "$PROJECT-" nếu chạy nhiều project (mọi project dùng CHUNG một tmux socket).
 SESSION_PREFIX="${AGENTS_SESSION_PREFIX:-}"
 
+# Socket tmux riêng (tuỳ chọn). Rỗng = dùng socket mặc định của tmux.
+# Đặt tên -> mọi lệnh tmux trong script tự chèn `-L <tên>`: cách ly CỨNG, `kill-all`
+# của project này không thể chạm session của project khác. Xem mục 15.6.
+TMUX_SOCKET="${AGENTS_TMUX_SOCKET:-}"
+
+# Bọc tmux để khỏi rải cờ -L ở từng lệnh. `command tmux` gọi binary thật nên không
+# đệ quy. Hàm phải nằm TRONG script này: hàm khai báo ở shell của bạn không truyền
+# sang tiến trình con, đặt trong alias sẽ vô tác dụng (mục 15.6).
+tmux() {
+  if [ -n "$TMUX_SOCKET" ]; then
+    command tmux -L "$TMUX_SOCKET" "$@"
+  else
+    command tmux "$@"
+  fi
+}
+
 # Lệnh phóng trong mỗi session. Override để test: AGENTS_CMD='sleep 999'
 # --model ép model ngay lúc phóng (default toàn cục KHÔNG áp cho phiên --continue).
 CLAUDE_CONT="${AGENTS_CMD:-claude --continue --model $AGENT_MODEL || claude --model $AGENT_MODEL}"
@@ -458,6 +474,7 @@ bash -n ~/bin/agents.sh && echo OK
 | `AGENTS_MAIN` | Đường dẫn worktree main (nếu không theo quy ước) |
 | `AGENTS_MODEL` | Model dùng cho agent, vd `AGENTS_MODEL=claude-fable-5 agents up` |
 | `AGENTS_SESSION_PREFIX` | Tiền tố tên tmux session, tránh đụng khi chạy nhiều project |
+| `AGENTS_TMUX_SOCKET` | Tên socket tmux riêng — mọi lệnh tmux trong script tự thêm `-L <tên>` (mục 15.6) |
 | `AGENTS_CMD` | Lệnh phóng thay cho `claude` — hữu ích khi test: `AGENTS_CMD='sleep 999'` |
 
 Nhờ vậy bạn có thể dùng **một script cho nhiều project**:
@@ -1123,13 +1140,25 @@ tmux -L myproj new -s glossary      # dùng SOCKET RIÊNG tên 'myproj' — các
 pkill -f "ai-devkit.*agent console" # thoát console kẹt (không đụng agent)
 ```
 
-`tmux -L <tên>` là cách ly triệt để hơn cả `SESSION_PREFIX`: hai project trên hai socket khác nhau thì `kill-all` không thể chạm nhau. Đổi lại, mọi lệnh tmux đều phải kèm `-L` — nếu muốn, thêm vào alias:
+`tmux -L <tên>` là cách ly triệt để hơn cả `SESSION_PREFIX`: hai project trên hai socket khác nhau thì `kill-all` không thể chạm nhau. Đổi lại, **mọi** lệnh tmux đều phải kèm `-L` — kể cả những lệnh nằm bên trong `agents.sh`.
+
+Vì vậy socket phải được tham số hoá **ngay trong script**. Bản `agents.sh` ở [mục 5](#5-script-agentssh--bản-tổng-quát) đã có sẵn biến `AGENTS_TMUX_SOCKET` và một hàm bọc `tmux()` tự chèn `-L` khi biến này được đặt:
 
 ```bash
-alias agents="AGENTS_SESSION_PREFIX= tmux() { command tmux -L myproj \"\$@\"; }; $HOME/bin/agents.sh"
+AGENTS_TMUX_SOCKET=myproj agents up    # mọi lệnh tmux trong script chạy trên socket 'myproj'
+AGENTS_TMUX_SOCKET=myproj agents ls
+tmux -L myproj ls                      # gõ tmux tay thì tự thêm -L
 ```
 
-(Thực tế thì `SESSION_PREFIX` đủ dùng cho hầu hết trường hợp; chỉ cần `-L` khi bạn thật sự cần cách ly cứng, ví dụ trên máy chung.)
+Muốn cố định cho một project thì đặt **biến môi trường** trong alias — chỉ biến, không kèm gì khác:
+
+```bash
+alias agents='AGENTS_TMUX_SOCKET=myproj $HOME/bin/agents.sh'
+```
+
+> ⚠️ Đừng nhét một hàm `tmux()` vào alias để hòng tự chèn `-L`. Hai lý do nó không chạy: đặt biến môi trường ngay trước một định nghĩa hàm là **sai cú pháp**; và hàm khai báo trong shell **không** truyền sang tiến trình con — `agents.sh` chạy ở process riêng, chỉ kế thừa biến đã export chứ không kế thừa hàm (trừ khi `export -f`, vốn chỉ có ở bash và cũng không giúp gì nếu script gọi `command tmux`). Kết quả: cờ `-L` không bao giờ có tác dụng, script vẫn thao tác trên socket mặc định.
+
+(Thực tế thì `AGENTS_SESSION_PREFIX` đủ dùng cho hầu hết trường hợp; chỉ cần socket riêng khi bạn thật sự cần cách ly cứng, ví dụ trên máy chung.)
 
 ### 15.7 Chạy trên server không có màn hình
 
