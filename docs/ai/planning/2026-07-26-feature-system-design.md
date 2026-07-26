@@ -20,7 +20,7 @@ Lý do: rủi ro lớn nhất của feature này không phải code (UI khá th�
 
 - [x] **M1 — Hạ tầng & khung dữ liệu**: đi được từ header → lộ trình → trang chi tiết (nội dung rỗng), tiến độ lưu được ✅ **xong 2026-07-26**
 - [ ] **M2 — Vertical slice nội dung (buổi 1–2)**: chốt khuôn mẫu nội dung; mermaid, flashcard, cross-link đều chạy thật
-- [ ] **M3 — Kiến thức lõi (buổi 3–6)**
+- [ ] **M3 — Kiến thức lõi (buổi 3–6)** — 🔄 T3.1 xong (buổi 3, commit `f0c38af`)
 - [ ] **M4 — Case study (buổi 7–12)**
 - [ ] **M5 — Buổi 13 tự luyện + cheat sheet**
 - [ ] **M6 — Kiểm thử, a11y, regression, sign-off**
@@ -120,7 +120,7 @@ Ký hiệu: **[ACn]** = acceptance criteria số n trong `requirements`. Tên m�
 
 Mỗi task cùng definition-of-done như T2.1 (≥800 từ, ≥1 diagram, ≥4 flashcard, có `[[Term]]`), mỗi task 1 commit.
 
-- [ ] **T3.1** — Buổi 3: Networking (HTTPS, REST, polling, WebSocket, gRPC, GraphQL, DNS)
+- [x] **T3.1** — Buổi 3: Networking (HTTPS, REST, polling, WebSocket, gRPC, GraphQL, DNS) — ✅ `f0c38af`
 - [ ] **T3.2** — Buổi 4: Caching + message queue/pub-sub + monitoring
 - [ ] **T3.3** — Buổi 5: CDN, blobstore, distributed search, distributed logging
 - [ ] **T3.4** — Buổi 6: Framework trả lời SDI — **task này sinh ra `InterviewStep[]` dùng lại ở cheat sheet (T5.2)**, làm trước M5
@@ -334,9 +334,16 @@ Không có.
 **Vì sao chưa kiểm được 360px**: công cụ điều khiển Chrome render trang ở viewport cố định 1440 bất kể kích thước cửa sổ (`window.outerWidth` đổi theo lệnh resize nhưng `window.innerWidth` luôn 1440). Đã mô phỏng bằng cách ép `body` xuống 360px và đo — kết quả cho thấy bảng cuộn nội bộ và mermaid co lại đúng như thiết kế, nhưng **đây là mô phỏng layout, không phải viewport thật**, nên media query của MUI không phản ứng. Ca "màn hình ≥ 360px không vỡ layout" **vẫn còn nợ**, chuyển sang M6 và cần kiểm bằng DevTools device mode hoặc điện thoại thật.
 
 ### 3 việc tiếp theo
-1. **T2.3 phần còn lại** — a11y bàn phím trên flashcard và checkbox tiến độ
-2. **T3.1** — nội dung buổi 3 (Networking: HTTPS, REST, polling, WebSocket, gRPC, GraphQL, DNS)
-3. **T3.2** — nội dung buổi 4 (Caching, message queue, monitoring)
+1. **T3.2** — nội dung buổi 4 (Caching, message queue, monitoring)
+2. **T3.3** — nội dung buổi 5 (CDN, blobstore, distributed search, logging)
+3. **T3.4** — nội dung buổi 6 (Framework trả lời phỏng vấn) — sinh ra `InterviewStep[]` dùng lại ở M5
+
+Còn nợ từ M2, làm cùng M6: a11y bàn phím, kiểm viewport 360px thật.
+
+### Nhịp thực tế sau 3 buổi
+Mỗi buổi khoảng 5 khối nội dung, 2 sơ đồ, 2–3 bảng, 6 flashcard — ổn định và không phải sửa data model lần nào. Bộ test nội dung chặn được cả lỗi số lượng lẫn lỗi thuật ngữ ma, nên các buổi sau chạy theo đúng khuôn này.
+
+**Lưu ý khi kiểm mermaid**: đừng dò lỗi cú pháp bằng cách tìm chuỗi `error` trong `textContent` của node `.mermaid` — mermaid tự chèn CSS chứa các lớp `.error-icon`, `.error-text` nên luôn khớp. Kiểm bằng sự tồn tại của `svg` và số phần tử `.node` mới đúng.
 
 ### Vùng cần chú ý
 - Data model đã qua được ca thử khó nhất (buổi 2 nhiều bảng) → rủi ro **R1 coi như đã đóng**, M3/M4 có thể chạy nhanh hơn.
