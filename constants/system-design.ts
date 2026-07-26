@@ -1391,12 +1391,14 @@ export const LESSONS: Lesson[] = [
           'Giải pháp là tính sẵn: mỗi nút lưu luôn mười gợi ý tốt nhất của cả cây con bên dưới nó. Khi đó tra cứu chỉ còn là đi xuống theo tiền tố rồi đọc danh sách có sẵn tại nút cuối. Độ trễ trở thành hằng số theo độ dài tiền tố, thường dưới một mili giây trong bộ nhớ.',
           'Cái giá là bộ nhớ và thời gian dựng. Mỗi nút giờ mang thêm mười mục thay vì chỉ một ký tự, làm cây phình lên đáng kể. Đây chính là đánh đổi kinh điển đổi bộ nhớ lấy độ trễ, và nói thẳng ra điều đó là điều người phỏng vấn muốn nghe.',
           'Với kho dữ liệu lớn, cây được nén lại bằng cách gộp các chuỗi ký tự chỉ có một nhánh thành một nút duy nhất, giảm đáng kể số nút mà không đổi ngữ nghĩa.',
+          'Một chi tiết rất thực tế với tiếng Việt: dấu thanh làm hỏng phép so khớp tiền tố theo ký tự, vì chữ a có dấu là một ký tự khác hẳn chữ a không dấu. Người dùng gõ ca mong thấy cà phê nhưng cây tiền tố thì không. Cách xử lý là chuẩn hóa: bỏ dấu và đưa về chữ thường khi dựng cây và khi tra cứu, còn chuỗi hiển thị thì giữ nguyên bản gốc có dấu.',
         ],
         diagram: `flowchart TD
-  R["gốc"] --> C["c — top10: cà phê, cách nấu, công thức"]
-  C --> CA["ca — top10: cà phê, cách nấu, cách làm"]
-  CA --> CAP["càp — top10: cà phê sữa, cà phê muối"]
-  CA --> CAC["các — top10: cách nấu phở, cách làm bánh"]`,
+  R["gốc"] --> S["s — top: system design, sql, spring"]
+  S --> SY["sy — top: system design, syntax"]
+  SY --> SYS["sys — top: system design, systemd"]
+  SYS --> SYST["syst — top: system design, systemic"]
+  SYS --> SYSC["sysc — top: syscall, sysctl"]`,
         table: {
           headers: ['Cách lưu', 'Độ trễ tra tiền tố', 'Bộ nhớ', 'Nhận xét'],
           rows: [
