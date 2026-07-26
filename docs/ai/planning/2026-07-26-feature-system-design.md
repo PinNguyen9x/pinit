@@ -305,10 +305,26 @@ Không có mục test nào không được phủ.
 ### Blocker
 Không có.
 
+### Cập nhật M2 (đang làm)
+
+| Task | Trạng thái | Commit |
+|---|---|---|
+| T2.1 nội dung buổi 1 | ✅ done — đã kiểm trên trình duyệt | `244110b` |
+| T2.2 nội dung buổi 2 | ⬜ tiếp theo | |
+| T2.3 cổng chặn: chốt data model | ⬜ | |
+
+**Thay đổi phạm vi**: `constants/system-design-content.test.ts` viết ngay ở T2.1 thay vì đợi T2.3, dùng danh sách `SLUGS_DA_VIET` mở rộng dần nên không bị vướng chuyện "ca fail đến hết M4". T2.3 giờ chỉ còn việc rà soát model + a11y + màn hình hẹp.
+
+**Kết quả T2.1**: mermaid render thật và **vẽ lại đúng khi đổi theme** (cơ chế `data-mermaid-src` hoạt động — đây là lỗi hai trang cũ đang mắc). Cross-link, bảng, callout, flashcard đều đúng.
+
 ### 3 việc tiếp theo
-1. **T2.1** — nội dung buổi 1 (SDI + CAP + Microservices): ≥800 từ, ≥1 diagram, ≥4 flashcard
-2. **T2.2** — nội dung buổi 2 (Load balancer + Database)
-3. **T2.3** — **cổng chặn**: rà soát khuôn mẫu, chốt data model, viết `constants/system-design-content.test.ts`, kiểm a11y + mermaid ở theme tối
+1. **T2.2** — nội dung buổi 2 (Load balancer + Database, replication, sharding)
+2. **T2.3** — cổng chặn: rà soát `LessonSection` có đủ field cho bài nhiều bảng, kiểm 360px, kiểm a11y bàn phím
+3. **T3.1** — nội dung buổi 3 (Networking) sau khi cổng M2 mở
+
+### Vùng cần chú ý sau T2.1
+- Sơ đồ CAP cao 720px, mermaid tự đặt `max-width` inline đè lên rule của container. Khung cha có `overflowX: auto` nên không vỡ layout, nhưng **phải kiểm ở 360px** ở T2.3.
+- Buổi 2 có nhiều bảng hơn buổi 1 — đây đúng là ca kiểm tra `LessonSection` mà cổng T2.3 cần.
 
 ### Vùng rủi ro cần chú ý ở M2
 - **R1 vẫn là rủi ro lớn nhất**: nếu `LessonSection` thiếu field thì phải sửa ở T2.3, không được để lọt sang M3.

@@ -92,14 +92,24 @@ Ký hiệu: **[auto]** = chạy bằng `npm test`; **[thủ công]** = kiểm b�
 - [x] Mọi lesson có ≥ 1 keyword để search
 - [x] `readingMinutes` là số dương
 
-### Toàn vẹn nội dung — thêm ở M2, chạy ở M6 **[auto, chưa viết]** ⏳
-> Chưa viết được ở M1 vì `sections`/`flashcards` còn rỗng theo thiết kế — các ca này sẽ fail đến hết M4. Viết thành file riêng `constants/system-design-content.test.ts` sau khi chốt khuôn mẫu ở T2.3.
+### Toàn vẹn nội dung — `constants/system-design-content.test.ts` **[auto]** ✅ 9/9 pass cho buổi đã viết
 
-- [ ] Lesson 1–12: `sections.length >= 3`, tổng số từ trong `body` ≥ 800 **[AC3]**
-- [ ] Lesson 1–12: có ≥ 1 `section.diagram` **[AC3]**
-- [ ] Lesson 1–12: `flashcards.length >= 4` **[AC3]**
-- [ ] Mọi `relatedTerms` khớp một `term` có thật trong `constants/glossary.ts`
-- [ ] Tổng số marker `[[Term]]` trên toàn bộ nội dung ≥ 15 **[AC8]**
+> Viết sớm ở T2.1 thay vì đợi T2.3. Cách giải quyết vấn đề "ca sẽ fail đến hết M4": test chạy trên danh sách `SLUGS_DA_VIET` và **mở rộng dần theo từng buổi** thay vì cứng nhắc buổi 1–12. Mỗi task nội dung thêm slug của mình vào danh sách; tới M6 danh sách phải chứa đủ buổi 1–12.
+
+Đã phủ (hiện áp cho `nguyen-ly-cap-microservices`):
+- [x] `sections.length >= 3` **[AC3]**
+- [x] Tổng số từ (heading + body + callout + ô bảng) ≥ 800 **[AC3]**
+- [x] Có ≥ 1 `section.diagram` **[AC3]**
+- [x] `flashcards.length >= 4` **[AC3]**
+- [x] Mọi flashcard có cả câu hỏi lẫn đáp án
+- [x] Có marker `[[Term]]` trong nội dung
+- [x] **Mọi marker trỏ tới thuật ngữ có thật trong `constants/glossary.ts`** — bắt được lỗi viết sai tên thuật ngữ **[AC8]**
+- [x] Mọi `relatedTerms` trỏ tới thuật ngữ có thật
+- [x] Mọi slug trong `SLUGS_DA_VIET` đều tồn tại trong `LESSONS` (chống gõ sai slug trong chính test)
+
+Còn thiếu, thêm ở M6:
+- [ ] `SLUGS_DA_VIET` chứa đủ buổi 1–12
+- [ ] Tổng số marker `[[Term]]` trên toàn feature ≥ 15 **[AC8]** — hiện mới có buổi 1
 
 ### `components/system-design/Flashcard.tsx`
 - [ ] Mặc định hiện mặt câu hỏi, ẩn đáp án

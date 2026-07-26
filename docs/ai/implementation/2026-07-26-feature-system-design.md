@@ -12,7 +12,7 @@ description: Nhật ký triển khai — M1 hạ tầng đã xong, ghi lại quy
 | Milestone | Trạng thái | Ghi chú |
 |---|---|---|
 | M1 — Hạ tầng & khung dữ liệu | ✅ **Xong** (8/8 task), **đã kiểm trên trình duyệt** | Cổng M1 pass — xem mục Kiểm chứng |
-| M2 — Vertical slice buổi 1–2 | ⬜ Chưa bắt đầu | Cổng chặn: chốt data model |
+| M2 — Vertical slice buổi 1–2 | 🔄 **Đang làm** — T2.1 xong | Buổi 1 đã viết và kiểm trên trình duyệt; còn T2.2, T2.3 |
 | M3–M6 | ⬜ Chưa bắt đầu | |
 
 ## Development Setup
@@ -161,6 +161,24 @@ Chạy trên **production server** (`npm run build && npm start`), không phải
 | Regression `/`, `/glossary`, `/glossary/muc-luc`, `/blog` | ✅ đều 200 |
 
 **Chưa kiểm** (để M6): mermaid render thật (M1 chưa có diagram nào), flashcard lật (chưa có thẻ nào), màn hình 360px, Safari private mode, VoiceOver.
+
+## Kiểm chứng T2.1 — buổi 1 (2026-07-26, trình duyệt thật)
+
+Lần đầu có nội dung thật nên đây cũng là lần đầu mermaid, bảng, callout, cross-link và flashcard chạy thật.
+
+| Hạng mục | Kết quả |
+|---|---|
+| Mermaid render | ✅ cả 2 sơ đồ ra SVG (711×720 và 697×329) |
+| **Mermaid vẽ lại khi đổi theme** | ✅ chuyển từ bảng màu tối sang sáng đúng — cơ chế `data-mermaid-src` hoạt động |
+| Cross-link `[[Term]]` | ✅ `Latency`, `Microservices`, `Idempotency`, `Cache`, `CDN` render thành link gạch chân |
+| Bảng đánh đổi | ✅ 2 bảng, header nền chìm, không đẩy trang scroll ngang |
+| Callout | ✅ viền trái accent + icon bóng đèn |
+| Flashcard | ✅ 6 thẻ, "Lật tất cả" ↔ "Ẩn tất cả đáp án", khối "Bẫy thường gặp" có icon cảnh báo |
+| Theme sáng lẫn tối | ✅ đọc được cả hai |
+
+**Cảnh báo giả đã loại trừ**: khối "Bẫy thường gặp" ban đầu trông như bị cắt chữ — thực ra chỉ là animation `Collapse` chưa xong. Đo bằng JS cho `clipped: false`, `overflow: visible`.
+
+**Điểm cần theo dõi**: sơ đồ quyết định CAP cao 720px, chiếm nhiều màn hình. Mermaid tự đặt `style="max-width: 711px"` inline nên đè lên rule `maxWidth: 100%` của container; may là khung cha có `overflowX: auto` nên màn hình hẹp sẽ cuộn ngang trong khung thay vì vỡ layout. **Chưa kiểm ở 360px** — để T2.3.
 
 ## Follow-up
 
