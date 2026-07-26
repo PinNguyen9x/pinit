@@ -15,8 +15,6 @@
 
 import { Lesson } from '@/models/system-design'
 
-export const SYSTEM_DESIGN_STORAGE_KEY = 'pinit:system-design:progress'
-
 export const LESSONS: Lesson[] = [
   {
     order: 1,
