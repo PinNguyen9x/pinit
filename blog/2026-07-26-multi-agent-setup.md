@@ -1,8 +1,20 @@
-# Chạy nhiều agent Claude Code song song với git worktree + tmux + ai-devkit
+---
+slug: multi-agent-claude-code-worktree-tmux
+title: "Chạy nhiều agent Claude Code song song với git worktree + tmux + ai-devkit"
+description: "Setup thực tế cho nhiều agent AI làm việc đồng thời trên cùng một repo: mỗi agent một worktree, một branch, một tmux session — kèm script agents.sh tổng quát hoá, cách né lag console, và phần áp dụng trên Ubuntu."
+author: Pin Nguyen
+author_title: Software Developer
+author_image_url: https://avatars.githubusercontent.com/Pinnguyen
+tags: [Claude, AI, Agents, tmux, Git, DevTools]
+date: '2026-07-26T09:00:00Z'
+image: https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=1200&auto=format&fit=crop&q=80
+---
 
 Bài này mô tả một setup đã chạy thực tế: **nhiều agent AI làm việc đồng thời trên cùng một repo**, mỗi agent một nhánh, một thư mục, một phiên terminal riêng — không giẫm chân nhau, và **không mất context** khi bạn tắt máy đi ngủ.
 
 Setup gốc dựng trên macOS. Toàn bộ script trong bài đã được **tổng quát hoá** (bạn chỉ sửa 4 dòng biến ở đầu file) và có **mục riêng cho Ubuntu** ở cuối.
+
+<!-- truncate -->
 
 ---
 
