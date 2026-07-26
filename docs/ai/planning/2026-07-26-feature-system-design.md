@@ -23,7 +23,7 @@ Lý do: rủi ro lớn nhất của feature này không phải code (UI khá th�
 - [x] **M1 — Hạ tầng & khung dữ liệu**: đi được từ header → lộ trình → trang chi tiết (nội dung rỗng), tiến độ lưu được ✅ **xong 2026-07-26**
 - [x] **M2 — Vertical slice nội dung (buổi 1–2)** ✅ **xong 2026-07-26 (còn nợ)** — data model đã chốt, mermaid/flashcard/cross-link chạy thật. Nợ chuyển sang M6: kiểm 360px thật và a11y bàn phím
 - [x] **M3 — Kiến thức lõi (buổi 3–6)** ✅ **xong 2026-07-26** — buổi 3 (`f0c38af`), buổi 4 (`b072be3`), buổi 5 + 6 (`a2fc8c5`)
-- [ ] **M4 — Case study (buổi 7–12)** — 🔄 5/6 xong: buổi 7, 8, 9, 10, 11
+- [x] **M4 — Case study (buổi 7–12)** ✅ **xong 2026-07-26** — buổi 7 `d60130e`, 8 `c7ca4e6`, 9 `bc8ef3b`, 10 `66e0971`, 11 `44520eb`, 12 `d2dfd81`
 - [ ] **M5 — Buổi 13 tự luyện + cheat sheet**
 - [ ] **M6 — Kiểm thử, a11y, regression, sign-off**
 
@@ -142,7 +142,7 @@ Cùng definition-of-done. Mỗi case study nên có: yêu cầu chức năng/phi
 - [x] **T4.3** — Buổi 9: Social media (newsfeed, follow, post, GraphDB) — ✅ `bc8ef3b`
 - [x] **T4.4** — Buổi 10: Typeahead (trie, ranking) — ✅ `66e0971`
 - [x] **T4.5** — Buổi 11: Taxi booking (geo-index, matching, realtime) — ✅ `44520eb`. ⚠️ **đầu mục vẫn là giả định**, ảnh gốc chỉ ghi "Toggle Content"; chủ site cần đối chiếu với bài học thật
-- [ ] **T4.6** — Buổi 12: Messaging app
+- [x] **T4.6** — Buổi 12: Messaging app — ✅ `d2dfd81`
 
 - **Depends**: M3 (buổi 7 nên viết sau buổi 6 để tái dùng khung trả lời)
 - **Test scenarios**: *Toàn vẹn dữ liệu*; *Manual — nội dung* (đối chiếu buổi 11)
@@ -336,9 +336,17 @@ Không có.
 **Vì sao chưa kiểm được 360px**: công cụ điều khiển Chrome render trang ở viewport cố định 1440 bất kể kích thước cửa sổ (`window.outerWidth` đổi theo lệnh resize nhưng `window.innerWidth` luôn 1440). Đã mô phỏng bằng cách ép `body` xuống 360px và đo — kết quả cho thấy bảng cuộn nội bộ và mermaid co lại đúng như thiết kế, nhưng **đây là mô phỏng layout, không phải viewport thật**, nên media query của MUI không phản ứng. Ca "màn hình ≥ 360px không vỡ layout" **vẫn còn nợ**, chuyển sang M6 và cần kiểm bằng DevTools device mode hoặc điện thoại thật.
 
 ### 3 việc tiếp theo
-1. **T4.6** — buổi 12: case study nhắn tin, khép lại M4
-2. **T5.1** — buổi 13 tự luyện, dùng lại `INTERVIEW_STEPS`
-3. **T5.2** — trang cheat sheet, và thêm lại CTA trên trang lộ trình
+1. **T5.1** — buổi 13 tự luyện mock interview, dùng lại `INTERVIEW_STEPS` và model `MockPrompt`
+2. **T5.2** — trang `/system-design/cheat-sheet`, và **thêm lại CTA** trên trang lộ trình (đã gỡ ở M1 để không ship link 404)
+3. **M6** — kiểm thử, a11y, regression, và trả hai khoản nợ: viewport 360px, a11y bàn phím
+
+### Nội dung 12 buổi đã xong
+Mỗi buổi 5 khối, 1–2 sơ đồ, 1–3 bảng, 6 flashcard. Data model không phải sửa lần nào kể từ khi chốt ở T2.3.
+
+**Ba loại lỗi chỉ lộ khi mở trình duyệt**, không loại nào bị build hay type-check bắt:
+1. Sửa vào code chết (`ROUTE_LIST`) — tab không hiện
+2. Cú pháp markdown lẫn vào nội dung — hiển thị nguyên dấu sao (đã có ca kiểm thử chặn, bắt lỗi 2 lần)
+3. Ví dụ kỹ thuật sai trong sơ đồ (cây tiền tố với chữ có dấu) — chỉ người đọc hiểu bài mới nhận ra
 
 ### Ca kiểm thử markdown đã bắt lỗi hai lần
 Thêm ở buổi 9, và bắt tiếp ở buổi 11 (hai chỗ viết dấu sao đôi). Đây là loại lỗi mà build và type-check không thể thấy, nên ca kiểm thử này đang trả công rất tốt.
