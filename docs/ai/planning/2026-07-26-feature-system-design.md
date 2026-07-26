@@ -23,7 +23,7 @@ Lý do: rủi ro lớn nhất của feature này không phải code (UI khá th�
 - [x] **M1 — Hạ tầng & khung dữ liệu**: đi được từ header → lộ trình → trang chi tiết (nội dung rỗng), tiến độ lưu được ✅ **xong 2026-07-26**
 - [x] **M2 — Vertical slice nội dung (buổi 1–2)** ✅ **xong 2026-07-26 (còn nợ)** — data model đã chốt, mermaid/flashcard/cross-link chạy thật. Nợ chuyển sang M6: kiểm 360px thật và a11y bàn phím
 - [x] **M3 — Kiến thức lõi (buổi 3–6)** ✅ **xong 2026-07-26** — buổi 3 (`f0c38af`), buổi 4 (`b072be3`), buổi 5 + 6 (`a2fc8c5`)
-- [ ] **M4 — Case study (buổi 7–12)**
+- [ ] **M4 — Case study (buổi 7–12)** — 🔄 1/6 xong: buổi 7 (`d60130e`)
 - [ ] **M5 — Buổi 13 tự luyện + cheat sheet**
 - [ ] **M6 — Kiểm thử, a11y, regression, sign-off**
 
@@ -137,7 +137,7 @@ Mỗi task cùng definition-of-done như T2.1 (≥800 từ, ≥1 diagram, ≥4 f
 
 Cùng definition-of-done. Mỗi case study nên có: yêu cầu chức năng/phi chức năng → ước lượng quy mô → API → data model → sơ đồ kiến trúc → điểm nghẽn & đánh đổi.
 
-- [ ] **T4.1** — Buổi 7: TinyURL
+- [x] **T4.1** — Buổi 7: TinyURL — ✅ `d60130e`
 - [ ] **T4.2** — Buổi 8: YouTube (storage video, search, like/comment)
 - [ ] **T4.3** — Buổi 9: Social media (newsfeed, follow, post, GraphDB)
 - [ ] **T4.4** — Buổi 10: Typeahead (trie, ranking)
@@ -336,9 +336,11 @@ Không có.
 **Vì sao chưa kiểm được 360px**: công cụ điều khiển Chrome render trang ở viewport cố định 1440 bất kể kích thước cửa sổ (`window.outerWidth` đổi theo lệnh resize nhưng `window.innerWidth` luôn 1440). Đã mô phỏng bằng cách ép `body` xuống 360px và đo — kết quả cho thấy bảng cuộn nội bộ và mermaid co lại đúng như thiết kế, nhưng **đây là mô phỏng layout, không phải viewport thật**, nên media query của MUI không phản ứng. Ca "màn hình ≥ 360px không vỡ layout" **vẫn còn nợ**, chuyển sang M6 và cần kiểm bằng DevTools device mode hoặc điện thoại thật.
 
 ### 3 việc tiếp theo
-1. **T4.1** — buổi 7: case study TinyURL, mở màn M4
-2. **T4.2** — buổi 8: case study YouTube
-3. **T4.3** — buổi 9: case study mạng xã hội
+1. **T4.2** — buổi 8: case study YouTube
+2. **T4.3** — buổi 9: case study mạng xã hội
+3. **T4.4** — buổi 10: case study typeahead
+
+**Khuôn mẫu case study đã chốt ở buổi 7**, các buổi sau bám theo: yêu cầu và ước lượng → API và mô hình dữ liệu → phần cốt lõi của bài → đường đọc hoặc ghi chính → điểm nghẽn và đánh đổi. Mỗi buổi 2 sơ đồ, 2 bảng, 6 flashcard.
 
 M4 gồm 6 case study (buổi 7–12) là chặng dài nhất còn lại. Buổi 6 đã xong nên khung trả lời dùng chung đã sẵn: mỗi case study nên bám đúng thứ tự yêu cầu → ước lượng → API và dữ liệu → kiến trúc → đi sâu → đánh đổi.
 
