@@ -96,18 +96,35 @@ describe('INTERVIEW_STEPS', () => {
   })
 })
 
+/** Mọi chuỗi văn bản người đọc nhìn thấy, trong các buổi đã viết. */
+const allText = written.flatMap((lesson) => [
+  ...lesson.sections.flatMap((section) => [
+    section.heading,
+    ...section.body,
+    section.callout ?? '',
+    ...(section.table?.headers ?? []),
+    ...(section.table?.rows.flat() ?? []),
+  ]),
+  ...lesson.flashcards.flatMap((card) => [card.question, card.answer, card.pitfall ?? '']),
+])
+
+// RichText chỉ parse marker [[Term]], KHÔNG parse markdown. Viết **đậm** hay
+// _nghiêng_ sẽ hiển thị nguyên ký tự cho người đọc.
+describe('không lẫn cú pháp markdown vào nội dung', () => {
+  it.each([
+    ['in đậm kiểu **', /\*\*/],
+    ['in nghiêng hoặc đậm kiểu __', /__/],
+    ['code inline kiểu `', /`/],
+  ])('không có %s', (_label, pattern) => {
+    const offenders = allText
+      .filter((text) => pattern.test(text))
+      .map((text) => text.slice(0, 60))
+    expect(offenders).toEqual([])
+  })
+})
+
 describe('cross-link sang glossary', () => {
   const glossaryTerms = new Set(GLOSSARY.map((entry) => entry.term))
-
-  /** Mọi chuỗi văn bản có thể chứa marker [[Term]] trong các buổi đã viết. */
-  const allText = written.flatMap((lesson) =>
-    lesson.sections.flatMap((section) => [
-      ...section.body,
-      section.callout ?? '',
-      ...(section.table?.rows.flat() ?? []),
-      ...lesson.flashcards.flatMap((card) => [card.answer, card.pitfall ?? '']),
-    ]),
-  )
 
   const markers = allText.flatMap((text) =>
     parseTermMarkers(text)

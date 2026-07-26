@@ -1281,7 +1281,7 @@ export const LESSONS: Lesson[] = [
       {
         heading: 'Bước 5: lưu và phục vụ bảng tin',
         body: [
-          'Bảng tin dựng sẵn chỉ lưu **id bài**, không lưu nội dung. Lý do: nội dung bài bị lặp lại ở hàng triệu bảng tin sẽ tốn bộ nhớ khủng khiếp, và khi tác giả sửa bài thì phải đi sửa ở mọi nơi. Lưu id thì lúc đọc chỉ cần lấy vài chục id rồi nạp nội dung từ [[Cache]] chung — mỗi bài chỉ tồn tại một bản.',
+          'Bảng tin dựng sẵn chỉ lưu id bài, không lưu nội dung. Lý do: nội dung bài bị lặp lại ở hàng triệu bảng tin sẽ tốn bộ nhớ khủng khiếp, và khi tác giả sửa bài thì phải đi sửa ở mọi nơi. Lưu id thì lúc đọc chỉ cần lấy vài chục id rồi nạp nội dung từ [[Cache]] chung — mỗi bài chỉ tồn tại một bản.',
           'Danh sách này phải bị giới hạn độ dài, thường vài trăm tới một nghìn mục gần nhất. Không ai cuộn xa hơn thế trong một phiên; ai cuộn sâu thì rơi về đường kéo chậm hơn, và đó là đánh đổi hợp lý.',
           'Về xếp hạng, cách đơn giản nhất là theo thời gian đảo ngược. Nếu cần xếp theo mức độ liên quan, hãy tách làm hai giai đoạn: lấy một tập ứng viên vài trăm bài từ bảng tin dựng sẵn, rồi chấm điểm tập nhỏ đó lúc đọc. Chấm điểm toàn bộ kho bài viết mỗi lần đọc là không khả thi.',
           'Một chi tiết dễ bỏ sót: khi người dùng cuộn, các trang phải nhất quán với nhau. Nếu vừa có bài mới chèn vào đầu giữa lúc họ đang cuộn, con trỏ dựa trên thời điểm và id sẽ giữ cho họ không thấy trùng — đây là lý do nữa để không dùng phân trang theo số thứ tự.',
