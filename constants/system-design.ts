@@ -940,8 +940,135 @@ export const LESSONS: Lesson[] = [
     track: 'Case study',
     keywords: ['TinyURL', 'URL shortener', 'base62', 'hash', 'redirect'],
     readingMinutes: 15,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Bước 1 và 2: yêu cầu và ước lượng',
+        body: [
+          'Chức năng trong phạm vi: tạo mã ngắn từ một URL dài, chuyển hướng khi truy cập mã đó, cho phép đặt mã tùy chọn, và đặt thời hạn hết hiệu lực. Để ngoài phạm vi và nói rõ ra: tài khoản người dùng, bảng phân tích chi tiết, và kiểm duyệt nội dung.',
+          'Yêu cầu phi chức năng mới là thứ định hình thiết kế. Hệ này đọc nhiều hơn ghi rất nhiều — tỉ lệ khoảng 100:1 là giả định hợp lý. Chuyển hướng phải nhanh vì nó nằm trên đường tới đích của người dùng, nhắm dưới 100 mili giây. Mã đã cấp không bao giờ được trỏ sang URL khác, vì liên kết đã phát tán ra ngoài. Và hệ phải sẵn sàng cao: một liên kết chết làm hỏng trải nghiệm ở mọi nơi nó đã được chia sẻ.',
+          'Ước lượng thô. Giả sử 10 triệu URL mới mỗi ngày và 1 tỉ lượt truy cập mỗi ngày. Chia cho khoảng 86 nghìn giây được xấp xỉ 116 lệnh ghi mỗi giây và 11 nghìn lệnh đọc mỗi giây; nhân hệ số đỉnh ba lần thành khoảng 350 ghi và 35 nghìn đọc mỗi giây. Mỗi bản ghi cỡ 500 byte thì mỗi ngày tốn 5 GB, một năm khoảng 1,8 TB, giữ 5 năm khoảng 9 TB.',
+          'Hai con số này quyết định luôn hướng đi: 9 TB là dung lượng một cụm bình thường xử lý được nên chưa cần chia nhỏ dữ liệu ngay; còn 35 nghìn lệnh đọc mỗi giây thì [[Cache]] và [[CDN]] mới là trọng tâm, không phải tối ưu tầng ghi.',
+        ],
+        callout:
+          'Nhận ra tỉ lệ đọc trên ghi lệch 100:1 ngay từ đầu là bước ăn điểm lớn nhất của bài này. Nó loại bỏ luôn hướng đi sai là lao vào sharding.',
+      },
+      {
+        heading: 'Bước 3: API và mô hình dữ liệu',
+        body: [
+          'Ba [[Endpoint]] là đủ. Một để tạo: nhận URL dài, mã tùy chọn nếu có, thời hạn nếu có, trả về mã ngắn. Một để chuyển hướng: nhận mã, trả về phản hồi chuyển hướng. Một để xóa.',
+          'Mô hình dữ liệu rất gọn: mã ngắn làm khóa chính, kèm URL gốc, thời điểm tạo, thời hạn hết hiệu lực, và id người tạo. Điểm quan trọng là khóa truy cập — mọi truy vấn đều đi qua mã ngắn, không bao giờ truy vấn ngược từ URL dài trong luồng nóng. Đây là dấu hiệu rõ ràng cho thấy kho khóa-giá trị phù hợp hơn [[SQL]] quan hệ, dù cả hai đều chạy được ở quy mô này.',
+          'Chi tiết đáng nói: nếu muốn cùng một URL dài luôn cho ra cùng một mã để tiết kiệm dung lượng, bạn cần thêm một chỉ mục theo URL dài. Nhưng như vậy hai người rút gọn cùng liên kết sẽ dùng chung mã, và thống kê lượt bấm của họ trộn lẫn. Phần lớn hệ thống thật chọn cấp mã riêng cho mỗi lần yêu cầu.',
+        ],
+      },
+      {
+        heading: 'Bước 4: sinh mã ngắn — phần cốt lõi của bài',
+        body: [
+          'Dùng bảng chữ 62 ký tự gồm chữ hoa, chữ thường và chữ số. Bảy ký tự cho khoảng 3,5 nghìn tỉ tổ hợp — thừa sức cho 10 triệu mã mỗi ngày trong nhiều năm. Sáu ký tự chỉ được 57 tỉ, vẫn dùng được nhưng hết nhanh hơn.',
+          'Cách thứ nhất là băm URL dài rồi lấy 7 ký tự đầu. Vấn đề là đụng độ: hai URL khác nhau có thể ra cùng mã. Phải kiểm tra tồn tại trước khi ghi và thêm hậu tố khi trùng, nghĩa là mỗi lần tạo tốn thêm một lần đọc, và tỉ lệ trùng tăng dần theo lượng dữ liệu.',
+          'Cách thứ hai là dùng bộ đếm tăng dần rồi đổi sang cơ số 62. Ưu điểm là không bao giờ trùng và không cần kiểm tra trước khi ghi. Nhược điểm nếu làm ngây thơ: bộ đếm dùng chung thành điểm nghẽn và điểm chết duy nhất. Cách khắc phục chuẩn là cấp phát theo lô — mỗi máy chủ xin trước một dải một triệu số rồi tự phát trong bộ nhớ, chỉ hỏi lại khi hết dải. Coi như mỗi triệu lần tạo mới cần một lần phối hợp.',
+          'Bộ đếm tuần tự có một nhược điểm thật: mã đoán được, người ngoài duyệt tuần tự sẽ đọc được liên kết của người khác. Nếu cần chống đoán, hãy trộn giá trị bộ đếm bằng một phép hoán vị có thể đảo ngược trước khi đổi cơ số — vẫn không trùng nhưng không còn liên tiếp.',
+          'Cách thứ ba là sinh ngẫu nhiên rồi kiểm tra tồn tại. Đơn giản và không đoán được, nhưng khi không gian mã bắt đầu đầy thì số lần thử lại tăng dần.',
+        ],
+        table: {
+          headers: ['Cách sinh mã', 'Đụng độ', 'Cần phối hợp', 'Đoán được?'],
+          rows: [
+            ['Băm URL, lấy 7 ký tự', 'Có, phải kiểm tra và thêm hậu tố', 'Một lần đọc mỗi lần tạo', 'Không'],
+            ['Bộ đếm + cơ số 62', 'Không bao giờ', 'Một lần mỗi triệu mã nếu cấp theo lô', 'Có, trừ khi trộn giá trị'],
+            ['Ngẫu nhiên + kiểm tra', 'Có, thử lại', 'Một lần đọc mỗi lần tạo', 'Không'],
+          ],
+        },
+        diagram: `flowchart LR
+  R["Yêu cầu tạo mã"] --> S["App server"]
+  S -->|"còn số trong dải?"| L["Dải cấp sẵn trong bộ nhớ"]
+  L -->|hết dải| TS["Ticket server — cấp dải 1 triệu số"]
+  L --> B62["Đổi sang cơ số 62"]
+  B62 --> DB[("Lưu mã và URL gốc")]`,
+        callout:
+          'Câu trả lời gọn nhất khi bị hỏi về bộ đếm dùng chung: cấp phát theo dải. Nó biến một lần phối hợp mỗi request thành một lần mỗi triệu request.',
+      },
+      {
+        heading: 'Bước 5: đường đọc và chuyện 301 hay 302',
+        body: [
+          'Đường chuyển hướng chiếm 99% lưu lượng nên phải tối ưu riêng. Thứ tự tra cứu: [[Cache]] phân tán trước, trượt thì xuống kho dữ liệu rồi ghi ngược vào cache. Với tỉ lệ 100:1, chỉ cần đệm phần liên kết nóng là đã chặn được phần lớn lưu lượng — quy luật quen thuộc là 20% liên kết tạo ra 80% lượt truy cập.',
+          'Chi tiết ăn điểm nhất của bài này là chọn mã chuyển hướng. Mã 301 nghĩa là chuyển vĩnh viễn: trình duyệt ghi nhớ và những lần sau đi thẳng tới đích mà không hỏi lại máy chủ. Rất nhẹ cho hệ thống, nhưng bạn mất khả năng đếm lượt bấm và mất luôn khả năng vô hiệu hóa liên kết về sau. Mã 302 nghĩa là chuyển tạm: mọi lần bấm đều đi qua máy chủ, nên đếm được và tắt được liên kết xấu, đổi lại gánh toàn bộ lưu lượng.',
+          'Câu trả lời trưởng thành là chọn theo nghiệp vụ: nếu sản phẩm bán giá trị bằng thống kê lượt bấm và khả năng chặn liên kết lạm dụng thì dùng 302 và chấp nhận trả tiền cho lưu lượng. Nếu chỉ cần chuyển hướng thuần túy với chi phí thấp nhất thì 301.',
+          'Về thống kê, đừng ghi đồng bộ trong đường chuyển hướng. Đẩy sự kiện bấm vào hàng đợi như [[Kafka]] rồi xử lý bất đồng bộ; đường nóng chỉ tốn thêm một thao tác ghi vào bộ nhớ đệm.',
+        ],
+        diagram: `flowchart LR
+  U["Người dùng bấm liên kết"] --> LB["Load balancer"]
+  LB --> APP["Redirect service"]
+  APP --> C{"Có trong cache?"}
+  C -->|Trúng| RD["Trả 301 hoặc 302"]
+  C -->|Trượt| DB[("Kho dữ liệu")]
+  DB --> WC["Ghi ngược vào cache"]
+  WC --> RD
+  APP -.->|"sự kiện bấm"| Q["Hàng đợi — thống kê bất đồng bộ"]`,
+      },
+      {
+        heading: 'Bước 6: điểm nghẽn, hết hạn và lạm dụng',
+        body: [
+          'Điểm nghẽn rõ nhất là liên kết lan truyền. Một mã duy nhất nhận hàng chục nghìn lượt mỗi giây sẽ làm nóng đúng node cache chứa nó — chính là [[Hot Partition]] ở tầng đệm. Cách xử lý gồm thêm một tầng đệm cục bộ ngay trong tiến trình ứng dụng với thời hạn vài giây, hoặc nhân bản khóa nóng ra nhiều node. Kèm theo phải phòng giẫm đạp: rải ngẫu nhiên thời hạn sống và cho một request duy nhất đi nạp lại khi trượt.',
+          'Về hết hạn, xóa nền định kỳ trên hàng tỉ bản ghi rất tốn. Cách rẻ hơn là xóa lười: khi tra cứu thấy bản ghi đã quá hạn thì trả về lỗi và xóa ngay lúc đó, kết hợp một tiến trình nền chạy chậm dọn phần còn lại. Mã đã hết hạn nên được thu hồi cẩn thận — cấp lại ngay cho URL khác sẽ khiến liên kết cũ đã phát tán bỗng dẫn tới nơi khác.',
+          'Phần an ninh thường bị bỏ quên nhưng luôn được hỏi. Hệ rút gọn URL là công cụ lý tưởng cho lừa đảo vì nó che đích đến. Cần đối chiếu URL đích với danh sách đen, giới hạn tần suất tạo theo địa chỉ và theo tài khoản, chặn tạo mã trỏ tới chính miền của mình để tránh vòng lặp, và cung cấp trang xem trước cho phép người dùng biết đích đến trước khi bấm.',
+          'Cuối cùng là đánh đổi tổng thể: hệ này ưu tiên sẵn sàng và độ trễ thấp hơn nhất quán tuyệt đối. Một mã vừa tạo chưa kịp lan tới mọi bản sao trong vài trăm mili giây là chấp nhận được. Nhưng ánh xạ mã sang URL thì không bao giờ được đổi sau khi đã cấp — đó là ràng buộc cứng, không phải đánh đổi.',
+        ],
+        table: {
+          headers: ['Rủi ro', 'Biểu hiện', 'Cách xử lý'],
+          rows: [
+            ['Liên kết lan truyền', 'Một node cache quá tải', 'Đệm cục bộ trong tiến trình, nhân bản khóa nóng'],
+            ['Giẫm đạp khi hết hạn', 'Hàng loạt trượt cùng lúc xuống kho', 'Rải ngẫu nhiên TTL, cho một request nạp lại'],
+            ['Dọn bản ghi hết hạn', 'Quét nền trên hàng tỉ bản ghi rất tốn', 'Xóa lười khi tra cứu, tiến trình nền chạy chậm'],
+            ['Lạm dụng để lừa đảo', 'Mã ngắn che giấu đích đến', 'Danh sách đen, giới hạn tần suất, trang xem trước'],
+          ],
+        },
+        callout:
+          'Nếu còn thời gian, hãy tự nêu phần an ninh trước khi bị hỏi. Rất ít ứng viên chủ động nhắc tới lạm dụng liên kết, nên nói ra là điểm cộng rõ rệt.',
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Vì sao TinyURL không nên bắt đầu bằng sharding?',
+        answer:
+          'Vì ước lượng cho thấy dung lượng chỉ khoảng 9 TB trong 5 năm — một cụm bình thường xử lý được — trong khi tải đọc lên tới khoảng 35 nghìn lệnh mỗi giây ở đỉnh. Bài toán ở đây là đọc, không phải ghi hay dung lượng. Trọng tâm phải là cache và CDN; sharding chỉ đặt ra khi tầng ghi hoặc dung lượng thực sự chạm trần.',
+        pitfall:
+          'Đề xuất sharding ngay khi vừa nghe "quy mô lớn" mà chưa làm phép ước lượng nào.',
+      },
+      {
+        question: 'So sánh ba cách sinh mã ngắn.',
+        answer:
+          'Băm URL rồi lấy 7 ký tự: có đụng độ, phải kiểm tra tồn tại và thêm hậu tố, tốn một lần đọc mỗi lần tạo. Bộ đếm tăng dần đổi sang cơ số 62: không bao giờ trùng, không cần kiểm tra, nhưng mã đoán được và bộ đếm dùng chung dễ thành điểm nghẽn. Sinh ngẫu nhiên rồi kiểm tra: không đoán được nhưng số lần thử lại tăng khi không gian mã đầy dần.',
+        pitfall:
+          'Chọn bộ đếm mà không nhắc chuyện mã đoán được. Người ngoài duyệt tuần tự sẽ đọc được liên kết của người khác.',
+      },
+      {
+        question: 'Bộ đếm dùng chung là điểm nghẽn — xử lý thế nào?',
+        answer:
+          'Cấp phát theo dải: mỗi máy chủ xin trước một dải, ví dụ một triệu số, rồi tự phát trong bộ nhớ và chỉ hỏi lại khi hết dải. Như vậy một lần phối hợp mỗi request trở thành một lần mỗi triệu request. Chấp nhận đánh đổi là mất một dải số khi máy chủ chết giữa chừng, nhưng không gian mã đủ lớn để không thành vấn đề.',
+        pitfall:
+          'Đề xuất khóa phân tán cho từng lần cấp mã. Nó đúng về mặt logic nhưng biến mỗi lần tạo thành một vòng phối hợp qua mạng.',
+      },
+      {
+        question: 'Chọn 301 hay 302 cho chuyển hướng, và vì sao?',
+        answer:
+          '301 là chuyển vĩnh viễn: trình duyệt ghi nhớ nên các lần sau không đi qua máy chủ — rất nhẹ nhưng mất khả năng đếm lượt bấm và mất khả năng vô hiệu hóa liên kết. 302 là chuyển tạm: mọi lượt đều qua máy chủ nên đếm được và tắt được liên kết xấu, đổi lại gánh toàn bộ lưu lượng. Chọn theo nghiệp vụ: cần thống kê và khả năng chặn thì 302, cần rẻ nhất thì 301.',
+        pitfall:
+          'Chọn 301 rồi vẫn nói hệ thống có bảng thống kê lượt bấm. Hai điều đó mâu thuẫn nhau.',
+      },
+      {
+        question: 'Liên kết lan truyền gây ra vấn đề gì và xử lý ra sao?',
+        answer:
+          'Một mã duy nhất nhận hàng chục nghìn lượt mỗi giây làm nóng đúng node cache chứa nó, trong khi các node khác rảnh. Xử lý bằng tầng đệm cục bộ ngay trong tiến trình ứng dụng với thời hạn vài giây, hoặc nhân bản khóa nóng ra nhiều node. Kèm theo phải rải ngẫu nhiên thời hạn sống và cho một request duy nhất đi nạp lại khi trượt để tránh giẫm đạp.',
+        pitfall:
+          'Chỉ nói "thêm cache" mà không nhận ra bản thân cache cũng có điểm nóng.',
+      },
+      {
+        question: 'Phần an ninh của hệ rút gọn URL gồm những gì?',
+        answer:
+          'Vì mã ngắn che giấu đích đến nên nó là công cụ lý tưởng cho lừa đảo. Cần đối chiếu URL đích với danh sách đen, giới hạn tần suất tạo theo địa chỉ và tài khoản, chặn tạo mã trỏ về chính miền của mình để tránh vòng lặp, và có trang xem trước cho người dùng biết đích đến trước khi bấm.',
+        pitfall:
+          'Bỏ qua hoàn toàn phần lạm dụng. Rất ít ứng viên chủ động nhắc tới, nên đây là chỗ dễ tạo khác biệt.',
+      },
+    ],
     keyTakeaway:
       'Tỉ lệ đọc/ghi rất lệch nên cache và CDN quan trọng hơn tối ưu tầng ghi.',
     relatedTerms: ['Cache', 'CDN'],

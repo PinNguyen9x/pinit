@@ -12,6 +12,7 @@ const SLUGS_DA_VIET = [
   'caching-message-queue-monitoring',
   'cdn-blobstore-search-logging',
   'framework-tra-loi-phong-van',
+  'case-study-tinyurl',
 ]
 
 const MIN_WORDS = 800
