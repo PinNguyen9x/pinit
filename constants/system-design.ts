@@ -172,8 +172,149 @@ export const LESSONS: Lesson[] = [
     track: 'Kiến thức lõi',
     keywords: ['load balancer', 'database', 'replication', 'sharding', 'SQL', 'NoSQL'],
     readingMinutes: 15,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Load balancer làm gì và đặt ở đâu',
+        body: [
+          '[[Load Balancer]] nhận request từ client rồi phân phối xuống nhiều máy chủ phía sau. Ba việc nó làm: chia tải để không máy nào quá tải, loại máy chết ra khỏi vòng quay nhờ health check, và che giấu số lượng máy thật khỏi client. Một hệ thống nghiêm túc thường có nhiều tầng cân bằng tải chứ không chỉ một: DNS phân giải về nhiều địa chỉ, một tầng cân bằng tải ở biên, rồi các tầng nội bộ giữa các dịch vụ.',
+          'Phân biệt quan trọng nhất là tầng 4 so với tầng 7. Cân bằng tải tầng 4 chỉ nhìn địa chỉ IP và cổng, chuyển tiếp gói tin mà không đọc nội dung — rất nhanh, rất ít tốn tài nguyên, nhưng không định tuyến theo đường dẫn được. Tầng 7 đọc được HTTP nên định tuyến theo URL, theo header, kết thúc TLS tại đó, nén, và ghi log chi tiết; đổi lại tốn CPU hơn và thêm chút [[Latency]]. Trong phỏng vấn, nói được "tôi dùng tầng 4 cho lưu lượng thô và tầng 7 cho định tuyến theo đường dẫn" là đủ.',
+          'Về thuật toán phân phối: round robin đơn giản nhưng giả định mọi request tốn như nhau. Least connections tốt hơn khi thời gian xử lý chênh lệch. Consistent hashing dùng khi máy chủ giữ trạng thái hoặc cache cục bộ — thêm bớt một máy chỉ xáo trộn một phần nhỏ khóa thay vì toàn bộ.',
+        ],
+        diagram: `flowchart TD
+  C["Client"] --> DNS["DNS"]
+  DNS --> LB4["LB tầng 4 — chia lưu lượng thô"]
+  LB4 --> LB7["LB tầng 7 — định tuyến theo URL"]
+  LB7 --> A["App server 1"]
+  LB7 --> B["App server 2"]
+  LB7 --> D["App server 3"]
+  A --> P[("Primary DB")]
+  B --> P
+  D --> P
+  P --> R1[("Replica đọc 1")]
+  P --> R2[("Replica đọc 2")]`,
+        table: {
+          headers: ['Thuật toán', 'Cách chia', 'Hợp khi', 'Điểm yếu'],
+          rows: [
+            ['Round robin', 'Lần lượt từng máy', 'Request đồng đều, máy chủ không trạng thái', 'Máy yếu nhận bằng máy khỏe'],
+            ['Least connections', 'Máy đang ít kết nối nhất', 'Thời gian xử lý chênh lệch nhiều', 'Cần theo dõi trạng thái kết nối'],
+            ['Consistent hashing', 'Băm khóa về vòng tròn máy chủ', 'Máy chủ giữ cache hoặc phiên cục bộ', 'Phức tạp hơn, cần virtual node để chia đều'],
+          ],
+        },
+        callout:
+          'Sticky session nghe tiện nhưng là bẫy: nó biến máy chủ thành có trạng thái, làm hỏng khả năng scale ngang. Tốt hơn là đẩy phiên ra [[Cache]] dùng chung.',
+      },
+      {
+        heading: 'Replication: nhân bản để đọc nhiều và để không mất dữ liệu',
+        body: [
+          'Replication tạo bản sao dữ liệu trên nhiều máy. Mô hình phổ biến nhất là [[Leader / Follower]]: mọi lệnh ghi đi vào leader, các follower sao chép lại và phục vụ lệnh đọc. Nó giải quyết hai bài toán khác nhau — tăng khả năng đọc, và giữ dữ liệu sống sót khi một máy chết.',
+          'Điểm mấu chốt là chọn sao chép đồng bộ hay bất đồng bộ. Đồng bộ nghĩa là leader chờ follower xác nhận rồi mới báo ghi thành công: không mất dữ liệu khi leader chết, nhưng mỗi lệnh ghi gánh thêm một vòng đi về trên mạng, và nếu follower chậm thì ghi bị chặn. Bất đồng bộ thì leader trả lời ngay: nhanh hơn nhiều, nhưng nếu leader chết trước khi kịp sao chép thì phần dữ liệu đó mất vĩnh viễn. Nhiều hệ thống chọn đường giữa — đồng bộ với một follower, bất đồng bộ với phần còn lại.',
+          'Hệ quả trực tiếp: replication lag. Người dùng vừa đăng một bình luận rồi tải lại trang và không thấy bình luận của mình, vì lệnh đọc rơi vào một replica chưa kịp cập nhật. Cách xử lý là đọc-sau-ghi cho chính người vừa ghi: trong vài giây đầu, định tuyến lệnh đọc của họ về leader.',
+          'Cũng nên biết rằng replication không giúp gì cho giới hạn ghi. Mọi lệnh ghi vẫn dồn về một leader duy nhất. Khi tầng ghi hết chỗ, câu trả lời là sharding chứ không phải thêm replica.',
+        ],
+        callout:
+          'Nói rõ trong phỏng vấn: replica giải quyết áp lực đọc, shard giải quyết áp lực ghi. Nhầm hai thứ này là lỗi thường gặp.',
+      },
+      {
+        heading: 'Sharding: chia dữ liệu khi một máy không chứa nổi',
+        body: [
+          'Sharding cắt dữ liệu thành nhiều phần, mỗi phần nằm trên một cụm máy riêng. Khác replication ở chỗ mỗi shard giữ một tập dữ liệu khác nhau, không phải bản sao của cùng một tập.',
+          'Chọn khóa chia (shard key) là quyết định khó đảo ngược nhất trong cả bài toán. Chia theo dải giá trị cho phép truy vấn theo khoảng hiệu quả, nhưng dễ tạo điểm nóng — chia theo thời gian thì toàn bộ lệnh ghi hôm nay dồn vào một shard. Chia theo băm phân bố đều hơn nhưng mất khả năng quét theo khoảng. Chia theo thư mục tra cứu thì linh hoạt nhất nhưng bảng tra cứu tự nó thành điểm chết duy nhất.',
+          'Ba hệ quả đau đớn cần nói được. Thứ nhất, truy vấn không kèm shard key phải hỏi tất cả các shard rồi gộp kết quả — chậm và tốn. Thứ hai, join giữa hai shard khác nhau gần như không làm được, nên thường phải chấp nhận lặp dữ liệu. Thứ ba, tái cân bằng khi thêm shard là chiến dịch vận hành thực sự; dùng consistent hashing hoặc shard ảo ngay từ đầu sẽ đỡ hơn nhiều so với chia dư theo modulo số máy.',
+          'Điểm nóng ([[Hot Partition]]) là rủi ro dễ bị hỏi nhất: một người nổi tiếng có mười triệu người theo dõi sẽ làm shard chứa họ quá tải trong khi các shard khác rảnh rỗi. Cách xử lý gồm thêm hậu tố ngẫu nhiên vào khóa để rải, hoặc tách riêng nhóm dữ liệu nóng.',
+        ],
+        diagram: `flowchart LR
+  Q["Truy vấn"] --> RT{"Có shard key?"}
+  RT -->|Có| ONE["Hỏi đúng 1 shard — nhanh"]
+  RT -->|Không| ALL["Hỏi mọi shard rồi gộp — chậm"]
+  ONE --> S1[("Shard 1")]
+  ALL --> S1
+  ALL --> S2[("Shard 2")]
+  ALL --> S3[("Shard 3")]`,
+        table: {
+          headers: ['Cách chia', 'Ưu điểm', 'Rủi ro'],
+          rows: [
+            ['Theo dải giá trị', 'Truy vấn theo khoảng hiệu quả', 'Điểm nóng khi dữ liệu lệch theo thời gian'],
+            ['Theo băm', 'Phân bố đều', 'Mất truy vấn theo khoảng'],
+            ['Theo thư mục tra cứu', 'Linh hoạt, đổi ánh xạ dễ', 'Bảng tra cứu thành điểm chết duy nhất'],
+          ],
+        },
+      },
+      {
+        heading: 'Chọn loại database theo tình huống',
+        body: [
+          'Câu hỏi "SQL hay NoSQL" gần như luôn được hỏi, và câu trả lời tệ nhất là chọn phe. Câu trả lời tốt bắt đầu từ hình dạng truy vấn và yêu cầu nhất quán.',
+          'Cơ sở dữ liệu quan hệ ([[SQL]]) mạnh khi dữ liệu có quan hệ rõ ràng, cần transaction ACID và truy vấn linh hoạt chưa biết trước. Chúng đi xa hơn nhiều người tưởng — một máy chủ được cấu hình tốt phục vụ hàng chục nghìn giao dịch mỗi giây là bình thường. Đừng vội bỏ nó chỉ vì nghe từ "quy mô lớn".',
+          'Kho khóa-giá trị hợp với tra cứu theo một khóa duy nhất, độ trễ cực thấp: phiên đăng nhập, giới hạn tần suất, bộ đệm. Kho theo cột rộng hợp với ghi rất nặng và truy vấn theo khóa đã biết trước, ví dụ chuỗi thời gian hay bảng tin. Cơ sở dữ liệu tài liệu hợp khi mỗi bản ghi tự chứa và lược đồ hay thay đổi. Cơ sở dữ liệu đồ thị hợp khi bản thân quan hệ mới là thứ cần truy vấn nhiều bậc, như gợi ý bạn bè.',
+          'Một điểm cộng khi phỏng vấn là chỉ ra rằng một hệ thống thật thường dùng nhiều loại cùng lúc: quan hệ cho đơn hàng, khóa-giá trị cho phiên, cột rộng cho nhật ký sự kiện, và tìm kiếm toàn văn cho ô tra cứu. Đó là lưu trữ đa dạng theo mục đích, không phải thiếu nhất quán.',
+        ],
+        table: {
+          headers: ['Loại', 'Hợp với', 'Ví dụ tình huống'],
+          rows: [
+            ['Quan hệ', 'Quan hệ rõ, cần ACID, truy vấn linh hoạt', 'Đơn hàng, thanh toán, tồn kho'],
+            ['Khóa-giá trị', 'Tra cứu một khóa, độ trễ cực thấp', 'Phiên đăng nhập, giới hạn tần suất, [[Cache]]'],
+            ['Cột rộng', 'Ghi rất nặng, truy vấn theo khóa biết trước', 'Chuỗi thời gian, bảng tin, nhật ký'],
+            ['Tài liệu', 'Bản ghi tự chứa, lược đồ hay đổi', 'Hồ sơ sản phẩm, nội dung do người dùng tạo'],
+            ['Đồ thị', 'Truy vấn quan hệ nhiều bậc', 'Gợi ý bạn bè, phát hiện gian lận'],
+          ],
+        },
+        callout:
+          'Đừng nói "NoSQL scale tốt hơn". Hãy nói "truy vấn của bài toán này luôn đi qua một khóa duy nhất nên tôi chọn kho khóa-giá trị; nếu sau này cần truy vấn liên bảng thì lựa chọn này sẽ đắt".',
+      },
+      {
+        heading: 'Thứ tự áp dụng khi hệ thống bắt đầu nghẽn',
+        body: [
+          'Có một trình tự gần như chuẩn khi mở rộng tầng dữ liệu, và trình bày đúng thứ tự này cho thấy bạn hiểu chi phí của từng bước. Trước hết là tối ưu thứ đang có: thêm chỉ mục, sửa truy vấn tệ, dùng connection pool. Bước này rẻ nhất và thường đủ lâu hơn người ta nghĩ.',
+          'Tiếp theo là thêm [[Cache]] cho các truy vấn đọc lặp lại, kèm chiến lược làm mới rõ ràng. Sau đó là thêm replica đọc nếu áp lực đọc vẫn còn. Chỉ khi tầng ghi thực sự chạm trần mới đến sharding — vì nó kéo theo mất join, mất truy vấn không có shard key, và một chiến dịch tái cân bằng mỗi lần mở rộng.',
+          'Cuối cùng, hãy nhớ nêu [[Throughput]] và độ trễ mục tiêu trước khi chọn bước nào. Không có con số thì mọi lập luận về mở rộng chỉ là cảm tính.',
+        ],
+        callout:
+          'Sharding là bước cuối, không phải bước đầu. Ứng viên đề xuất sharding ngay khi vừa nghe đề thường bị hỏi ngược lại "vì sao chưa thử cache và replica?".',
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Khác nhau giữa load balancer tầng 4 và tầng 7?',
+        answer:
+          'Tầng 4 chỉ nhìn IP và cổng, chuyển tiếp gói tin mà không đọc nội dung — nhanh, nhẹ, nhưng không định tuyến theo đường dẫn được. Tầng 7 đọc HTTP nên định tuyến theo URL hoặc header, kết thúc TLS, nén, ghi log chi tiết; đổi lại tốn CPU và thêm chút độ trễ. Hệ thống lớn thường dùng cả hai: tầng 4 ở biên cho lưu lượng thô, tầng 7 phía trong để định tuyến.',
+        pitfall:
+          'Nói tầng 7 luôn tốt hơn. Với lưu lượng rất lớn không cần định tuyến theo nội dung, tầng 4 rẻ hơn nhiều.',
+      },
+      {
+        question: 'Replication và sharding giải quyết hai bài toán gì khác nhau?',
+        answer:
+          'Replication nhân bản cùng một tập dữ liệu ra nhiều máy — giải quyết áp lực đọc và khả năng sống sót khi máy chết. Sharding cắt dữ liệu thành các tập khác nhau trên các cụm khác nhau — giải quyết giới hạn dung lượng và áp lực ghi. Thêm replica không hề tăng khả năng ghi vì mọi lệnh ghi vẫn dồn về một leader.',
+        pitfall:
+          'Đề xuất thêm replica khi vấn đề là ghi quá tải. Đó là lúc cần shard, không phải thêm bản sao.',
+      },
+      {
+        question: 'Sao chép đồng bộ và bất đồng bộ đánh đổi thế nào?',
+        answer:
+          'Đồng bộ: leader chờ follower xác nhận rồi mới báo thành công — không mất dữ liệu khi leader chết, nhưng mỗi lệnh ghi tốn thêm một vòng mạng và bị chặn nếu follower chậm. Bất đồng bộ: leader trả lời ngay — nhanh, nhưng leader chết trước khi sao chép kịp thì mất phần dữ liệu đó. Thực tế thường dùng nửa đồng bộ: đồng bộ với một follower, bất đồng bộ với phần còn lại.',
+        pitfall:
+          'Quên nhắc replication lag và hệ quả của nó: người dùng vừa ghi xong tải lại trang không thấy thay đổi của chính mình.',
+      },
+      {
+        question: 'Chọn shard key sai dẫn tới hậu quả gì?',
+        answer:
+          'Ba hậu quả. Điểm nóng: chia theo thời gian làm mọi lệnh ghi hôm nay dồn vào một shard. Truy vấn tán xạ: truy vấn không kèm shard key phải hỏi mọi shard rồi gộp. Tái cân bằng đau đớn: chia theo modulo số máy thì thêm một máy làm xáo trộn gần như toàn bộ dữ liệu — nên dùng consistent hashing hoặc shard ảo ngay từ đầu. Shard key rất khó đổi sau khi đã có dữ liệu thật.',
+        pitfall:
+          'Chọn khóa tăng dần theo thời gian làm shard key. Nghe hợp lý nhưng tạo điểm nóng ghi ngay lập tức.',
+      },
+      {
+        question: 'Trả lời thế nào cho câu "dùng SQL hay NoSQL"?',
+        answer:
+          'Bắt đầu từ hình dạng truy vấn và yêu cầu nhất quán, không chọn phe. Cần transaction và truy vấn linh hoạt chưa biết trước thì quan hệ. Tra cứu một khóa với độ trễ cực thấp thì khóa-giá trị. Ghi rất nặng theo khóa biết trước thì cột rộng. Quan hệ nhiều bậc thì đồ thị. Hệ thống thật thường dùng nhiều loại cùng lúc theo từng mục đích.',
+        pitfall:
+          'Nói "NoSQL scale tốt hơn nên tôi chọn NoSQL". Một máy chủ quan hệ được cấu hình tốt phục vụ hàng chục nghìn giao dịch mỗi giây.',
+      },
+      {
+        question: 'Thứ tự đúng khi tầng dữ liệu bắt đầu nghẽn là gì?',
+        answer:
+          'Tối ưu thứ đang có trước (chỉ mục, sửa truy vấn tệ, connection pool), rồi thêm cache cho truy vấn đọc lặp lại, rồi thêm replica đọc, và chỉ sharding khi tầng ghi thực sự chạm trần. Mỗi bước sau đắt hơn bước trước cả về vận hành lẫn ràng buộc thiết kế.',
+        pitfall:
+          'Nhảy thẳng vào sharding. Nó kéo theo mất join, mất truy vấn không có shard key và một chiến dịch tái cân bằng mỗi lần mở rộng.',
+      },
+    ],
     keyTakeaway:
       'Sharding giải quyết giới hạn ghi, replication giải quyết giới hạn đọc — đừng nhầm hai bài toán.',
     relatedTerms: ['Load Balancer', 'Database', 'Leader / Follower'],

@@ -5,7 +5,7 @@ import { parseTermMarkers } from '@/utils/system-design'
 
 // Chuẩn nội dung cho một buổi đã biên soạn xong. Danh sách SLUGS_DA_VIET mở
 // rộng dần theo milestone; tới M6 phải chứa đủ buổi 1-12.
-const SLUGS_DA_VIET = ['nguyen-ly-cap-microservices']
+const SLUGS_DA_VIET = ['nguyen-ly-cap-microservices', 'load-balancer-va-database']
 
 const MIN_WORDS = 800
 const MIN_SECTIONS = 3
