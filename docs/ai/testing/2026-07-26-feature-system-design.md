@@ -11,50 +11,67 @@ description: Chiến lược kiểm thử feature system-design — lint + build
 **What level of testing do we aim for?**
 
 ### Thực trạng ràng buộc
-Project **chưa có test framework**: `package.json` chỉ có `dev`, `build`, `start`, `lint` — không jest, không vitest, không playwright. Vì vậy mục tiêu "100% unit coverage" theo template là **không đạt được** trong feature này, và việc dựng hạ tầng test là một quyết định kiến trúc riêng, không nên nhét vào feature nội dung học.
+
+**Cập nhật 2026-07-26 (M1):** repo ban đầu không có test framework nào. Đã thêm **`vitest` ở mức tối thiểu** (commit `93f30ec`): môi trường `node`, **không** jsdom, **không** testing-library. Lý do giới hạn phạm vi: chỉ cần test hàm thuần là đã phủ được hai rủi ro nặng nhất trong planning (R2 slug đụng `cheat-sheet`, R4 thiếu `encodeURIComponent`), mà không phải dựng cả hạ tầng test React.
+
+Hệ quả: **hành vi của hook và component vẫn không có automated coverage** — đó là lựa chọn có chủ đích, không phải thiếu sót. Mục tiêu "100% unit coverage" theo template vẫn không áp dụng cho feature này.
 
 ### Mục tiêu thực tế cho v1
 
-| Tầng | Công cụ | Mục tiêu |
-|---|---|---|
-| Type safety | `tsc` qua `npm run build` | 100% — mọi lesson phải đủ field, build fail nếu thiếu |
-| Lint | `npm run lint` | 0 error |
-| Logic thuần (hook tiến độ, parser `[[Term]]`) | *chưa có runner* | Ghi sẵn ca kiểm thử ở mục Unit Tests, chạy tay; tự động hóa khi có runner |
-| Toàn vẹn dữ liệu (13 buổi, slug trùng, slug cấm) | Kiểm tra thủ công theo checklist | 100% các ca liệt kê |
-| Luồng người dùng | Thủ công trên trình duyệt | 100% các luồng ở mục End-to-End |
+| Tầng | Công cụ | Mục tiêu | Trạng thái |
+|---|---|---|---|
+| Type safety | `tsc` qua `npm run build` | 100% — build fail nếu lesson thiếu field | ✅ pass |
+| Lint | `npm run lint` | không thêm warning so với baseline (baseline: 1 warning có sẵn ở `works`, 0 error) | ✅ pass |
+| Logic thuần (parser `[[Term]]`, tiến độ, href) | `npm test` (vitest) | 100% nhánh của các hàm trong `utils/system-design.ts` | ✅ 25 ca pass |
+| Toàn vẹn dữ liệu (13 buổi, slug trùng, slug cấm) | `npm test` (vitest) | 100% ca cấu trúc tự động; ca nội dung thêm ở M2 | ✅ 10 ca pass |
+| Hành vi hook/component | Thủ công trên trình duyệt | 100% các ca liệt kê | ⏳ chờ M6 |
+| Luồng người dùng | Thủ công trên trình duyệt | 100% các luồng ở mục End-to-End | ⏳ chờ M6 |
 
 ### Bám theo acceptance criteria
 Mỗi ca kiểm thử dưới đây gắn với tiêu chí trong `requirements` — ký hiệu **[ACn]** tương ứng "Acceptance criteria" số n.
 
 ### Khuyến nghị (ngoài scope v1)
-Thêm `vitest` + `@testing-library/react` thành một feature hạ tầng riêng; khi có, ưu tiên tự động hóa trước hết `use-lesson-progress` và parser `[[Term]]` vì đó là hai chỗ logic thuần dễ hồi quy nhất.
+Thêm `jsdom` + `@testing-library/react` để tự động hóa nốt phần hành vi hook/component (`useLessonProgress` wiring, `Flashcard` lật bằng bàn phím, `LessonCard` chặn nổi bọt sự kiện). Hiện các phần này chỉ có checklist thủ công.
+
+### Bài học rút ra ở M1
+`vitest` dùng esbuild nên **không type-check**. Lỗi `matchAll` cần `downlevelIteration` (tsconfig target `es5`) lọt qua toàn bộ 35 ca test xanh và chỉ lộ ra ở `next build` (fix ở commit `364a1ba`). **`npm test` xanh không thay thế được `npm run build`** — phải chạy cả hai trước khi coi một task là xong.
 
 ## Unit Tests
 **What individual components need testing?**
 
-> Chưa có runner → đây là **đặc tả ca kiểm thử**, kiểm tra thủ công ở v1, và là danh sách viết test đầu tiên khi có runner.
+Ký hiệu: **[auto]** = chạy bằng `npm test`; **[thủ công]** = kiểm bằng tay trên trình duyệt.
 
-### `hooks/use-lesson-progress.ts`
-- [ ] Lần render đầu (SSR/trước hydrate) trả `completed` rỗng và `hydrated === false` — không đọc `localStorage` trong thân render **[AC6]**
-- [ ] Sau mount, đọc đúng mảng slug đã lưu từ `localStorage`, `hydrated === true`
-- [ ] `toggle(slug)` với slug chưa có → thêm vào set và ghi `localStorage`
-- [ ] `toggle(slug)` với slug đã có → gỡ khỏi set và ghi `localStorage`
-- [ ] `percent` làm tròn đúng: 0/13 → 0, 3/13 → 23, 13/13 → 100
-- [ ] `reset()` xóa sạch set và key trong `localStorage`
-- [ ] **Edge**: `localStorage` ném lỗi khi đọc (private mode) → hook trả set rỗng, không throw ra ngoài **[Edge: localStorage bị chặn]**
-- [ ] **Edge**: `localStorage` ném lỗi khi ghi (quota) → state trong phiên vẫn cập nhật, không crash UI
-- [ ] **Edge**: giá trị lưu bị hỏng (không phải JSON, hoặc JSON nhưng không phải mảng string) → bỏ qua, coi như rỗng, không throw
-- [ ] **Edge**: slug lưu trong `localStorage` không còn tồn tại trong `LESSONS` (buổi bị xóa) → bị lọc ra, `percent` không vượt quá 100
+### Logic tiến độ — `utils/system-design.ts` **[auto]** ✅ 15/15 pass
+- [x] `parseCompletedSlugs(null)` → mảng rỗng
+- [x] Đọc đúng mảng slug đã lưu
+- [x] **Edge**: JSON hỏng → mảng rỗng, không throw
+- [x] **Edge**: JSON hợp lệ nhưng không phải mảng → mảng rỗng
+- [x] **Edge**: phần tử sai kiểu (số, null) → bị lọc bỏ
+- [x] **Edge**: slug của buổi đã xóa khỏi `LESSONS` → bị lọc, `percent` không vượt 100
+- [x] **Edge**: slug trùng lặp → khử trùng
+- [x] `toggleSlug` thêm slug chưa có / gỡ slug đã có / không sửa mảng gốc
+- [x] `computeProgressPercent`: 0/13 → 0, 3/13 → 23, 13/13 → 100
+- [x] **Edge**: tổng bằng 0 → trả 0, không chia cho 0
+- [x] **Edge**: đếm vượt tổng → chặn trên ở 100
 
-### Parser `[[Term]]` (trong `LessonSectionView` / `TermLink`)
-- [ ] Chuỗi không có marker → trả nguyên văn, không tạo link
-- [ ] Một marker giữa câu → tách đúng 3 phần: trước, link, sau
-- [ ] Nhiều marker trong một đoạn → tạo đủ số link, thứ tự đúng
-- [ ] Marker ở đầu và ở cuối chuỗi → không sinh đoạn text rỗng thừa
-- [ ] **Edge**: term chứa ký tự đặc biệt `Token / JWT` → href là `/glossary#Token%20%2F%20JWT`, không phải `/glossary#Token / JWT` **[Edge: ký tự đặc biệt]**
-- [ ] **Edge**: term chứa `C/C++` → encode đúng, không vỡ route
-- [ ] **Edge**: marker không đóng `[[Term` → render nguyên văn, không throw
-- [ ] **Edge**: marker rỗng `[[]]` → không sinh link rỗng
+### Wiring hook `hooks/use-lesson-progress.ts` **[thủ công]** ⏳
+- [ ] Lần render đầu trả `completed` rỗng và `hydrated === false` — không đọc `localStorage` trong thân render **[AC6]**
+- [ ] Sau mount, `hydrated === true` và hiện đúng tiến độ đã lưu
+- [ ] `toggle` ghi được xuống `localStorage`; `reset()` xóa sạch
+- [ ] **Edge**: `localStorage` ném lỗi khi đọc (Safari private mode) → coi như 0%, không crash
+- [ ] **Edge**: `localStorage` ném lỗi khi ghi (quota) → state trong phiên vẫn cập nhật
+
+### Parser `[[Term]]` — `utils/system-design.ts` **[auto]** ✅ 10/10 pass
+- [x] Chuỗi không có marker → trả nguyên văn, không tạo link
+- [x] Một marker giữa câu → tách đúng 3 phần
+- [x] Nhiều marker trong một đoạn → đủ số link, đúng thứ tự
+- [x] Marker chiếm trọn chuỗi → không sinh đoạn text rỗng thừa
+- [x] Cắt khoảng trắng thừa quanh tên thuật ngữ
+- [x] **Edge**: marker không đóng `[[Term` → render nguyên văn, không throw
+- [x] **Edge**: marker rỗng `[[]]` → không sinh link rỗng
+- [x] **Edge**: `Token / JWT` → `/glossary#Token%20%2F%20JWT` **[Edge: ký tự đặc biệt]**
+- [x] **Edge**: `C/C++` → `/glossary#C%2FC%2B%2B`
+- [x] `glossaryHref` cơ bản
 
 ### `hooks/use-mermaid.ts`
 - [ ] Container không có node `.mermaid` → không import `mermaid`, không lỗi
@@ -63,19 +80,26 @@ Thêm `vitest` + `@testing-library/react` thành một feature hạ tầng riên
 - [ ] Import dùng `import('mermaid')` trong `useEffect` — xác nhận `mermaid` **không** có trong bundle của `/system-design` (kiểm qua output `next build`)
 - [ ] `securityLevel: 'strict'` được set (không phải `'loose'`)
 
-### Toàn vẹn dữ liệu `constants/system-design.ts`
-- [ ] Đúng **13** lesson **[AC2]**
-- [ ] `order` là 1..13, không thiếu số, không trùng
-- [ ] `slug` không trùng nhau
-- [ ] **Không lesson nào có slug `cheat-sheet`** — nếu vi phạm, trang đó vĩnh viễn không truy cập được do file tĩnh thắng `[slug]` **[Design decision 6]**
-- [ ] Mọi slug là kebab-case, chỉ `[a-z0-9-]`
+### Toàn vẹn cấu trúc `constants/system-design.ts` **[auto]** ✅ 10/10 pass
+- [x] Đúng **13** lesson **[AC2]**
+- [x] `order` là 1..13, không thiếu số, không trùng
+- [x] `slug` không trùng nhau
+- [x] **Không lesson nào có slug trùng tên file tĩnh cùng thư mục** (`cheat-sheet`, `index`) — nếu vi phạm, trang đó vĩnh viễn không truy cập được **[Design decision 6]**
+- [x] Mọi slug là kebab-case
+- [x] Mọi lesson có `title` và `summary` không rỗng
+- [x] Mọi lesson có `keyTakeaway` không rỗng (cheat sheet phụ thuộc trường này) **[AC5]**
+- [x] `track` chỉ nhận giá trị thuộc `LESSON_TRACKS`
+- [x] Mọi lesson có ≥ 1 keyword để search
+- [x] `readingMinutes` là số dương
+
+### Toàn vẹn nội dung — thêm ở M2, chạy ở M6 **[auto, chưa viết]** ⏳
+> Chưa viết được ở M1 vì `sections`/`flashcards` còn rỗng theo thiết kế — các ca này sẽ fail đến hết M4. Viết thành file riêng `constants/system-design-content.test.ts` sau khi chốt khuôn mẫu ở T2.3.
+
 - [ ] Lesson 1–12: `sections.length >= 3`, tổng số từ trong `body` ≥ 800 **[AC3]**
 - [ ] Lesson 1–12: có ≥ 1 `section.diagram` **[AC3]**
 - [ ] Lesson 1–12: `flashcards.length >= 4` **[AC3]**
-- [ ] Mọi lesson có `keyTakeaway` không rỗng (cheat sheet phụ thuộc trường này) **[AC5]**
-- [ ] Mọi `relatedTerms` khớp một `term` có thật trong `constants/glossary.ts` — hoặc chấp nhận không khớp nhưng phải có chủ đích
+- [ ] Mọi `relatedTerms` khớp một `term` có thật trong `constants/glossary.ts`
 - [ ] Tổng số marker `[[Term]]` trên toàn bộ nội dung ≥ 15 **[AC8]**
-- [ ] `track` chỉ nhận giá trị thuộc `LessonTrack`
 
 ### `components/system-design/Flashcard.tsx`
 - [ ] Mặc định hiện mặt câu hỏi, ẩn đáp án
@@ -138,13 +162,15 @@ Thêm `vitest` + `@testing-library/react` thành một feature hạ tầng riên
 ## Test Reporting & Coverage
 **How do we verify and communicate test results?**
 
-- **Lệnh chạy được ở v1**:
-  - `npm run lint` → phải 0 error
+- **Lệnh chạy được**:
+  - `npm test` → vitest, **35 ca pass** tính đến hết M1
+  - `npm run lint` → 0 error, không thêm warning so với baseline
   - `npm run build` → phải thành công, không lỗi TypeScript **[AC10]**
-- **`npm run test -- --coverage`: chưa dùng được** — project không có test runner. Không tạo ảo giác về con số coverage.
+- **`npm test -- --coverage` chưa cấu hình** — chưa cài provider coverage. Không báo con số coverage khi chưa đo được.
 - **Coverage gaps (có chủ đích, đã chấp nhận)**:
-  - `use-lesson-progress`, parser `[[Term]]`, `use-mermaid`, các component → **0% automated coverage**. Bù bằng ca kiểm thử thủ công liệt kê ở trên.
-  - Lý do: dựng hạ tầng test là việc riêng, không gộp vào feature nội dung (theo `CLAUDE.md`: mỗi commit một thay đổi logic).
+  - `useLessonProgress` wiring, `useMermaid`, toàn bộ component React → **0% automated coverage**. Bù bằng checklist thủ công.
+  - Lý do: cần jsdom + testing-library, là hạ tầng riêng ngoài scope feature này.
+- **Bundle**: `next build` xác nhận `/system-design` 4.05 kB / 298 kB first-load và `/system-design/[slug]` 3.77 kB / 294 kB, trên nền shared 290 kB → mermaid (~500 kB) **không** nằm trong first-load. ✅
 - **Kiểm tra bundle**: đọc output `next build` xác nhận `mermaid` không nằm trong first-load JS của `/system-design`.
 - **Sign-off thủ công**: người thực hiện tick toàn bộ checkbox trong tài liệu này và ghi kết quả vào `docs/ai/implementation/2026-07-26-feature-system-design.md` trước khi merge về `main`.
 

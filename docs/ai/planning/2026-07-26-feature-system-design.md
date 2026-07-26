@@ -18,7 +18,7 @@ Lý do: rủi ro lớn nhất của feature này không phải code (UI khá th�
 ## Milestones
 **What are the major checkpoints?**
 
-- [ ] **M1 — Hạ tầng & khung dữ liệu**: đi được từ header → lộ trình → trang chi tiết (nội dung rỗng), tiến độ lưu được
+- [x] **M1 — Hạ tầng & khung dữ liệu**: đi được từ header → lộ trình → trang chi tiết (nội dung rỗng), tiến độ lưu được ✅ **xong 2026-07-26**
 - [ ] **M2 — Vertical slice nội dung (buổi 1–2)**: chốt khuôn mẫu nội dung; mermaid, flashcard, cross-link đều chạy thật
 - [ ] **M3 — Kiến thức lõi (buổi 3–6)**
 - [ ] **M4 — Case study (buổi 7–12)**
@@ -281,14 +281,36 @@ Không có mục test nào không được phủ.
 
 ## Trạng thái hiện tại
 
-**Chưa bắt đầu implementation.** Đã hoàn tất: requirements, design, testing, planning (commit `0803c05` + commit planning này).
+**Cập nhật 2026-07-26 — M1 hoàn tất (8/8 task).**
+
+| Task | Trạng thái | Commit |
+|---|---|---|
+| T1.1 cài `node_modules` | ✅ done | — (không commit) |
+| **T1.1b thiết lập vitest** | ✅ done — **task phát sinh** | `93f30ec` |
+| T1.2 type + skeleton 13 lesson | ✅ done | `8a4ce7a` |
+| T1.3 `use-lesson-progress` | ✅ done | `ccb4994` |
+| T1.4 `use-mermaid` | ✅ done | `ae5044c` |
+| T1.5 component library | ✅ done | `9578ac7`, `364a1ba` (fix es5) |
+| T1.6 trang lộ trình | ✅ done | `74ed6d7` |
+| T1.7 trang chi tiết | ✅ done | `347b57b` |
+| T1.8 tab header | ✅ done | `ad8769b` |
+
+**Bằng chứng**: `npm test` 35/35 pass · `npm run lint` 0 error, không thêm warning so với baseline · `npm run build` pass, sinh đủ 13 static path · `/system-design` 4.05 kB / 298 kB first-load, mermaid không trong bundle.
+
+### Thay đổi phạm vi so với kế hoạch ban đầu
+- **[Thêm]** T1.1b — thiết lập `vitest` (chỉ logic thuần, không jsdom). Kế hoạch gốc giả định không có test runner; skill `dev-implementation` yêu cầu TDD nên user đã duyệt bổ sung. Không làm đổi ước lượng milestone.
+- **[Bỏ khỏi M1]** CTA sang cheat sheet trên trang lộ trình — dời sang T5.2 vì trang đích chưa tồn tại, không ship link 404.
+- **[Chia nhỏ]** Ca kiểm thử toàn vẹn dữ liệu tách làm hai: **cấu trúc** (tự động ngay ở T1.2, 10 ca pass) và **nội dung** (viết ở M2, chạy ở M6) — vì `sections`/`flashcards` còn rỗng theo thiết kế nên ca nội dung sẽ fail đến hết M4.
+
+### Blocker
+Không có.
 
 ### 3 việc tiếp theo
-1. **T1.1** — `npm install` trong worktree
-2. **T1.2** — type + skeleton 13 lesson (chốt slug sớm, kiểm ràng buộc `cheat-sheet`)
-3. **T1.3** — `use-lesson-progress` với cờ `hydrated`
+1. **T2.1** — nội dung buổi 1 (SDI + CAP + Microservices): ≥800 từ, ≥1 diagram, ≥4 flashcard
+2. **T2.2** — nội dung buổi 2 (Load balancer + Database)
+3. **T2.3** — **cổng chặn**: rà soát khuôn mẫu, chốt data model, viết `constants/system-design-content.test.ts`, kiểm a11y + mermaid ở theme tối
 
-### Vùng rủi ro cần chú ý sớm
-- Chốt slug ở T1.2 — đổi sau sẽ hỏng tiến độ đã lưu của người dùng
-- Cờ `hydrated` ở T1.3 — bỏ sót là mismatch ngay
-- `encodeURIComponent` ở T1.5 — lỗi tái phát từ feature trước
+### Vùng rủi ro cần chú ý ở M2
+- **R1 vẫn là rủi ro lớn nhất**: nếu `LessonSection` thiếu field thì phải sửa ở T2.3, không được để lọt sang M3.
+- **Mermaid ở theme tối** chưa từng được kiểm — M1 chưa có diagram thật nào để nhìn. T2.1 là lần đầu chạy thật.
+- **Bài học M1**: `npm test` xanh **không** thay thế `npm run build`. Lỗi `matchAll`/es5 lọt qua 35 ca test và chỉ lộ ở build. Mỗi task phải chạy cả hai.
