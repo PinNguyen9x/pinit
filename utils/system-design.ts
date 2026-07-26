@@ -45,27 +45,32 @@ export interface TermToken {
 }
 
 /** Marker [[Term]] — tên thuật ngữ không được rỗng và không chứa dấu ]. */
-const TERM_MARKER = /\[\[([^\]]+?)\]\]/g
+const TERM_MARKER_SOURCE = /\[\[([^\]]+?)\]\]/
 
 /**
  * Tách một đoạn văn thành các mảnh text và thuật ngữ.
  * Thuật ngữ viết dưới dạng [[Term]] trong nội dung bài.
  * Marker không đóng hoặc rỗng được giữ nguyên văn, không sinh link.
+ *
+ * Dùng exec trong vòng lặp thay vì matchAll: tsconfig target là es5 nên
+ * duyệt iterator cần downlevelIteration. Regex tạo mới mỗi lần gọi để
+ * lastIndex không dính giữa các lần gọi.
  */
 export function parseTermMarkers(text: string): TermToken[] {
+  const pattern = new RegExp(TERM_MARKER_SOURCE.source, 'g')
   const tokens: TermToken[] = []
   let lastIndex = 0
+  let match: RegExpExecArray | null
 
-  for (const match of text.matchAll(TERM_MARKER)) {
+  while ((match = pattern.exec(text)) !== null) {
     const term = match[1].trim()
     if (!term) continue
 
-    const start = match.index ?? 0
-    if (start > lastIndex) {
-      tokens.push({ type: 'text', value: text.slice(lastIndex, start) })
+    if (match.index > lastIndex) {
+      tokens.push({ type: 'text', value: text.slice(lastIndex, match.index) })
     }
     tokens.push({ type: 'term', value: term })
-    lastIndex = start + match[0].length
+    lastIndex = match.index + match[0].length
   }
 
   if (lastIndex < text.length) {
