@@ -3,6 +3,7 @@ import { MainLayout } from '@/components/layouts'
 import {
   FlashcardDeck,
   LessonSectionView,
+  MockPractice,
   useSystemDesignTokens,
 } from '@/components/system-design'
 import { LESSONS } from '@/constants'
@@ -127,6 +128,9 @@ export default function LessonPage({ lesson, prev, next }: LessonPageProps) {
             <strong>Chốt lại:</strong> {lesson.keyTakeaway}
           </Typography>
         </Stack>
+
+        {/* Buổi tự luyện: khung thời gian và bộ đề, thay cho một bài giảng. */}
+        {lesson.mockPrompts && <MockPractice prompts={lesson.mockPrompts} />}
 
         <FlashcardDeck cards={lesson.flashcards} />
 

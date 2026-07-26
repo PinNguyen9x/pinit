@@ -63,6 +63,11 @@ export interface Lesson {
   keyTakeaway: string
   /** Thuật ngữ liên quan, link sang /glossary#term. */
   relatedTerms?: string[]
+  /**
+   * Có mục này thì trang chi tiết render thêm khối tự luyện mock interview:
+   * khung thời gian từ INTERVIEW_STEPS và danh sách đề bài kèm tiêu chí chấm.
+   */
+  mockPrompts?: MockPrompt[]
 }
 
 /** Một bước trong khung trả lời phỏng vấn 45 phút. */
@@ -80,4 +85,13 @@ export interface MockPrompt {
   requirements: string[]
   /** Tiêu chí tự chấm sau khi trình bày. */
   rubric: string[]
+}
+
+/** Bảng tra nhanh trên trang cheat sheet. */
+export interface CheatSheetTable {
+  title: string
+  /** Một câu giải thích khi nào dùng bảng này. */
+  hint?: string
+  headers: string[]
+  rows: string[][]
 }

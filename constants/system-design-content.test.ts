@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GLOSSARY } from './glossary'
-import { INTERVIEW_STEPS, LESSONS } from './system-design'
+import { CHEAT_SHEET_TABLES, INTERVIEW_STEPS, LESSONS } from './system-design'
 import { parseTermMarkers } from '@/utils/system-design'
 
 // Chuẩn nội dung cho một buổi đã biên soạn xong. Danh sách SLUGS_DA_VIET mở
@@ -18,6 +18,7 @@ const SLUGS_DA_VIET = [
   'case-study-typeahead',
   'case-study-taxi-booking',
   'case-study-messaging',
+  'tu-luyen-mock-interview',
 ]
 
 const MIN_WORDS = 800
@@ -123,6 +124,52 @@ describe('không lẫn cú pháp markdown vào nội dung', () => {
       .filter((text) => pattern.test(text))
       .map((text) => text.slice(0, 60))
     expect(offenders).toEqual([])
+  })
+})
+
+// Buổi 13 không phải bài giảng mà là công cụ tự luyện — xem requirements AC4.
+describe('buổi 13 tự luyện mock interview', () => {
+  const lesson = LESSONS.find((l) => l.slug === 'tu-luyen-mock-interview')!
+
+  it('có ít nhất 5 đề bài tự luyện', () => {
+    expect(lesson.mockPrompts?.length ?? 0).toBeGreaterThanOrEqual(5)
+  })
+
+  it('mỗi đề có yêu cầu và tiêu chí tự chấm', () => {
+    const invalid = (lesson.mockPrompts ?? []).filter(
+      (p) => !p.title.trim() || p.requirements.length === 0 || p.rubric.length === 0,
+    )
+    expect(invalid.map((p) => p.title)).toEqual([])
+  })
+
+  it('chỉ buổi 13 có mockPrompts', () => {
+    const others = LESSONS.filter((l) => l.mockPrompts && l.slug !== 'tu-luyen-mock-interview')
+    expect(others.map((l) => l.slug)).toEqual([])
+  })
+})
+
+describe('dữ liệu trang cheat sheet', () => {
+  it('có bảng latency numbers và bảng chọn database', () => {
+    expect(CHEAT_SHEET_TABLES.map((t) => t.title).length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('mọi bảng có tiêu đề, header và ít nhất 2 dòng', () => {
+    const invalid = CHEAT_SHEET_TABLES.filter(
+      (t) => !t.title.trim() || t.headers.length === 0 || t.rows.length < 2,
+    )
+    expect(invalid.map((t) => t.title)).toEqual([])
+  })
+
+  it('mọi dòng có đúng số ô bằng số header', () => {
+    const invalid = CHEAT_SHEET_TABLES.flatMap((t) =>
+      t.rows.filter((row) => row.length !== t.headers.length).map(() => t.title),
+    )
+    expect(Array.from(new Set(invalid))).toEqual([])
+  })
+
+  // Cheat sheet in một dòng chốt cho mỗi buổi — thiếu dòng nào là thiếu buổi đó.
+  it('mọi buổi đều có keyTakeaway để cheat sheet dùng', () => {
+    expect(LESSONS.filter((l) => !l.keyTakeaway.trim()).map((l) => l.slug)).toEqual([])
   })
 })
 

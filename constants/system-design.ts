@@ -13,7 +13,54 @@
 //
 // sections/flashcards được điền dần theo milestone M2-M5 của kế hoạch.
 
-import { InterviewStep, Lesson } from '@/models/system-design'
+import { CheatSheetTable, InterviewStep, Lesson } from '@/models/system-design'
+
+/**
+ * Bảng tra nhanh cho trang cheat-sheet — kịch bản ôn 20 phút trước phỏng vấn.
+ * Con số về độ trễ lấy theo bậc độ lớn, dùng để ước lượng chứ không phải để
+ * trích dẫn chính xác.
+ */
+export const CHEAT_SHEET_TABLES: CheatSheetTable[] = [
+  {
+    title: 'Con số cần thuộc',
+    hint: 'Dùng để ước lượng nhanh. Nhớ đúng bậc độ lớn là đủ.',
+    headers: ['Thao tác', 'Thời gian', 'Ghi nhớ'],
+    rows: [
+      ['Đọc 1 MB tuần tự từ bộ nhớ', '~0,25 ms', 'Nhanh nhất trong các mức lưu trữ'],
+      ['Đọc 1 MB tuần tự từ ổ SSD', '~1 ms', 'Chậm hơn bộ nhớ khoảng 4 lần'],
+      ['Một vòng đi về trong cùng trung tâm dữ liệu', '~0,5 ms', 'Gọi dịch vụ nội bộ gần như miễn phí'],
+      ['Một vòng đi về xuyên lục địa', '~150 ms', 'Lý do phải có CDN'],
+      ['Tìm kiếm trên ổ đĩa quay', '~10 ms', 'Chậm hơn SSD khoảng 10 lần'],
+      ['Số giây trong một ngày', '~86 400', 'Làm tròn 100 nghìn cho dễ nhẩm'],
+    ],
+  },
+  {
+    title: 'Chọn loại database',
+    hint: 'Bắt đầu từ hình dạng truy vấn, không bắt đầu từ tên công nghệ.',
+    headers: ['Truy vấn của bạn', 'Chọn', 'Vì sao'],
+    rows: [
+      ['Quan hệ rõ, cần giao dịch, truy vấn linh hoạt', 'Quan hệ', 'ACID và truy vấn chưa biết trước'],
+      ['Luôn tra theo một khóa, cần độ trễ cực thấp', 'Khóa-giá trị', 'Không cần truy vấn liên bảng'],
+      ['Ghi rất nặng, đọc theo khóa biết trước', 'Cột rộng', 'Chịu ghi tốt, phân vùng tự nhiên'],
+      ['Bản ghi tự chứa, lược đồ hay đổi', 'Tài liệu', 'Không cần đổi lược đồ khi thêm trường'],
+      ['Tìm toàn văn, xếp hạng liên quan', 'Hệ tìm kiếm', 'Chỉ mục đảo ngược, chấm điểm'],
+      ['Quan hệ nhiều bậc', 'Đồ thị', 'Đi theo cạnh rẻ hơn tự nối bảng'],
+    ],
+  },
+  {
+    title: 'Thấy triệu chứng này thì nghĩ tới',
+    hint: 'Dùng khi bị hỏi hệ thống đang chậm thì làm gì.',
+    headers: ['Triệu chứng', 'Nghi ngờ', 'Hướng xử lý'],
+    rows: [
+      ['Đọc chậm, cùng truy vấn lặp lại nhiều', 'Thiếu cache', 'Thêm cache kèm chiến lược làm mới'],
+      ['Ghi chạm trần, một node quá tải', 'Cần chia dữ liệu', 'Sharding, chọn khóa chia cẩn thận'],
+      ['Một khóa hoặc một phân vùng quá nóng', 'Điểm nóng dữ liệu', 'Chia mảnh khóa, đệm cục bộ trong tiến trình'],
+      ['Đỉnh tải làm sập dịch vụ phía sau', 'Thiếu lớp đệm', 'Hàng đợi, giới hạn tốc độ, backpressure'],
+      ['Người dùng ở xa thấy chậm', 'Khoảng cách vật lý', 'CDN, bản sao theo khu vực'],
+      ['Một dịch vụ chậm kéo cả chuỗi treo', 'Thiếu giới hạn thời gian chờ', 'Timeout, thử lại giãn cách, ngắt mạch'],
+    ],
+  },
+]
 
 /**
  * Khung 45 phút của một buổi System Design Interview.
@@ -1789,8 +1836,194 @@ export const LESSONS: Lesson[] = [
     track: 'Luyện tập',
     keywords: ['mock interview', 'tự luyện', 'rubric', '45 phút'],
     readingMinutes: 10,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Vì sao phải luyện nói thành tiếng',
+        body: [
+          'Đọc lại mười hai buổi trước cho cảm giác đã nắm chắc. Cảm giác đó gần như luôn sai. Khi phải trình bày liên tục bốn mươi lăm phút trước một người lạ, vừa vẽ vừa nói vừa trả lời câu hỏi cắt ngang, phần lớn người ta phát hiện mình biết ý nhưng không diễn đạt được thành chuỗi lập luận mạch lạc.',
+          'Khoảng cách giữa nhận ra và nhớ lại là chỗ hầu hết ứng viên trượt. Nhìn vào đáp án thì thấy quen thuộc, nhưng tự bật ra được trong lúc bị hỏi là kỹ năng khác hẳn, và nó chỉ hình thành qua việc nói thành tiếng nhiều lần.',
+          'Vì vậy buổi này không có kiến thức mới. Nó là công cụ: một khung thời gian để bấm giờ, một bộ đề để tự luyện, và một bảng tiêu chí để tự chấm sau mỗi lần. Phần giá trị nhất nằm ở việc chấm nghiêm khắc chính mình.',
+        ],
+        callout:
+          'Quy tắc quan trọng nhất khi tự luyện: nói thành tiếng và bấm giờ thật. Nghĩ trong đầu luôn thấy trôi chảy hơn nhiều so với lúc phải nói ra.',
+      },
+      {
+        heading: 'Cách chạy một buổi tự luyện',
+        body: [
+          'Chuẩn bị: một tờ giấy hoặc bảng trắng, một đồng hồ bấm giờ, và thiết bị ghi âm. Ghi âm là phần nhiều người bỏ qua nhưng lại hiệu quả nhất — nghe lại chính mình phát hiện ra những chỗ ấp úng, lặp từ, hoặc nói vòng vo mà lúc đang nói không hề nhận ra.',
+          'Chọn một đề từ danh sách bên dưới mà bạn chưa làm gần đây. Đừng đọc trước phần gợi ý của bài tương ứng — nếu đề trùng với một case study đã học, hãy để cách xa ít nhất vài ngày rồi mới luyện lại.',
+          'Bấm giờ bốn mươi lăm phút và chạy đúng khung sáu bước. Không dừng lại giữa chừng để tra cứu, kể cả khi bí. Bí chính là dữ liệu quan trọng nhất của buổi luyện: nó chỉ ra chỗ kiến thức còn hổng.',
+          'Sau khi hết giờ, chấm theo bảng tiêu chí. Với mỗi mục chưa đạt, ghi lại một dòng cụ thể về việc cần làm — không ghi chung chung kiểu cần học thêm về database, mà ghi kiểu chưa nói được khi nào chọn kho khóa-giá trị thay vì quan hệ. Dòng ghi cụ thể đó là bài tập cho lần sau.',
+          'Nhịp hợp lý là hai tới ba buổi mỗi tuần, mỗi lần một đề khác nhau, và quay lại đề cũ sau khoảng hai tuần để kiểm tra xem đã cải thiện thật chưa.',
+        ],
+        diagram: `flowchart LR
+  A["Chọn đề chưa làm gần đây"] --> B["Bấm giờ 45 phút, ghi âm"]
+  B --> C["Chạy đúng khung 6 bước, không tra cứu"]
+  C --> D["Tự chấm theo bảng tiêu chí"]
+  D --> E["Ghi 1 dòng cụ thể cho mỗi mục chưa đạt"]
+  E --> F["Ôn đúng phần còn hổng"]
+  F --> A`,
+      },
+      {
+        heading: 'Tự chấm thế nào cho có ích',
+        body: [
+          'Tiêu chí chấm không phải là kiến trúc có đúng không, vì không có kiến trúc đúng tuyệt đối. Tiêu chí là bạn có làm đủ những việc mà một buổi phỏng vấn tốt đòi hỏi hay không.',
+          'Bốn nhóm tiêu chí chung cho mọi đề. Nhóm một là làm rõ yêu cầu: có hỏi trước khi vẽ không, có chốt phạm vi và nói ra phần bỏ qua không. Nhóm hai là ước lượng: có đưa ra con số không, con số có đúng bậc độ lớn không, có rút ra kết luận từ con số đó không. Nhóm ba là đánh đổi: mỗi thành phần thêm vào có kèm lý do và cái giá không. Nhóm bốn là tự phê: có chủ động chỉ ra chỗ thiết kế sẽ vỡ không.',
+          'Ngoài ra là hai tiêu chí về cách trình bày, thường bị bỏ qua nhưng ảnh hưởng lớn tới ấn tượng. Thứ nhất là có nói liên tục không hay im lặng suy nghĩ dài. Thứ hai là có giữ được nhịp thời gian không, hay tiêu quá nhiều vào phần đầu rồi hụt phần cuối.',
+          'Chấm nghiêm. Nếu tự cho điểm đạt ở một mục mà bạn biết mình chỉ nói qua loa, buổi luyện mất hết giá trị. Danh sách tiêu chí đầy đủ cho từng đề nằm ở phần bên dưới.',
+        ],
+        table: {
+          headers: ['Nhóm tiêu chí', 'Câu hỏi tự chấm', 'Dấu hiệu chưa đạt'],
+          rows: [
+            ['Làm rõ yêu cầu', 'Có hỏi trước khi vẽ và chốt phạm vi không', 'Vẽ hộp trong ba phút đầu'],
+            ['Ước lượng', 'Có con số đúng bậc và rút ra kết luận từ nó không', 'Chỉ nói quy mô lớn mà không có số'],
+            ['Đánh đổi', 'Mỗi thành phần có kèm lý do và cái giá không', 'Kể tên công nghệ mà không nói vì sao'],
+            ['Tự phê', 'Có chủ động chỉ ra chỗ sẽ vỡ không', 'Chỉ trình bày ưu điểm rồi chờ bị hỏi'],
+            ['Cách nói', 'Có nói liên tục thay vì im lặng suy nghĩ không', 'Im hơn mười giây nhiều lần'],
+            ['Nhịp thời gian', 'Có giữ được 5 phút cuối cho đánh đổi không', 'Hết giờ khi chưa vẽ xong kiến trúc'],
+          ],
+        },
+        callout:
+          'Nếu ghi âm, hãy nghe lại ít nhất phần mở đầu và phần kết. Đó là hai đoạn để lại ấn tượng mạnh nhất và cũng là hai đoạn dễ sửa nhất.',
+      },
+    ],
+    mockPrompts: [
+      {
+        title: 'Thiết kế hệ thống rút gọn URL cho một sàn thương mại điện tử',
+        requirements: [
+          'Sinh mã ngắn cho hàng triệu liên kết mỗi ngày, cho phép đặt mã tùy chọn',
+          'Chuyển hướng dưới 100 mili giây ở mọi khu vực',
+          'Thống kê lượt bấm theo ngày cho từng liên kết',
+          'Liên kết có thể đặt thời hạn hết hiệu lực',
+        ],
+        rubric: [
+          'Có hỏi tỉ lệ đọc trên ghi trước khi thiết kế',
+          'Ước lượng ra dung lượng và số lệnh đọc mỗi giây, rồi kết luận trọng tâm là cache',
+          'Giải thích được cách sinh mã và cách tránh điểm nghẽn ở bộ đếm',
+          'Nhận ra mâu thuẫn giữa chuyển hướng vĩnh viễn và việc muốn đếm lượt bấm',
+          'Chủ động nhắc tới liên kết lan truyền và chống lạm dụng',
+        ],
+      },
+      {
+        title: 'Thiết kế bảng tin cho ứng dụng mạng xã hội 100 triệu người dùng',
+        requirements: [
+          'Người dùng theo dõi nhau, xem bảng tin gồm bài của người mình theo dõi',
+          'Bảng tin mở trong dưới 200 mili giây',
+          'Hỗ trợ tài khoản có hàng chục triệu người theo dõi',
+          'Bài mới xuất hiện trong vòng vài giây là chấp nhận được',
+        ],
+        rubric: [
+          'Trình bày được cả hai hướng phát tán và lý do phải kết hợp',
+          'Nói được ngưỡng nào chuyển từ đẩy sang kéo',
+          'Giải thích vì sao bảng tin dựng sẵn chỉ lưu id chứ không lưu nội dung',
+          'Phân biệt được ba vấn đề khác nhau do tài khoản khổng lồ gây ra',
+          'Nhắc tới phân trang bằng con trỏ và lý do',
+        ],
+      },
+      {
+        title: 'Thiết kế hệ thống nhắn tin cho 50 triệu người dùng hoạt động',
+        requirements: [
+          'Nhắn tin một-một và nhóm tới 500 thành viên',
+          'Không được mất tin nhắn, thứ tự trong một cuộc trò chuyện phải đúng',
+          'Hiển thị trạng thái đã gửi, đã nhận, đã đọc',
+          'Nhận được tin khi mở lại ứng dụng sau lúc ngoại tuyến',
+        ],
+        rubric: [
+          'Nói rõ ràng buộc không được mất tin và suy ra thứ tự lưu trước rồi mới báo',
+          'Giải thích cách bảo đảm thứ tự và vì sao không dùng đồng hồ máy chủ',
+          'Có cơ chế khử trùng khi client gửi lại',
+          'Thiết kế trạng thái đã đọc không bùng nổ theo số thành viên',
+          'Ước lượng theo số kết nối đồng thời chứ không chỉ theo request mỗi giây',
+        ],
+      },
+      {
+        title: 'Thiết kế hệ thống đặt xe cho một thành phố lớn',
+        requirements: [
+          'Tài xế cập nhật vị trí liên tục, khách đặt xe và được ghép trong vài giây',
+          'Cả hai bên theo dõi vị trí theo thời gian thực',
+          'Hỗ trợ 500 nghìn tài xế hoạt động đồng thời',
+        ],
+        rubric: [
+          'Ước lượng ra được luồng ghi vị trí và nhận ra đây là bài toán ghi nặng',
+          'Trình bày một cách lập chỉ mục không gian và xử lý được vấn đề biên ô',
+          'Nêu cách tránh ghép trùng một tài xế cho hai khách',
+          'Có cách giảm tải luồng cập nhật vị trí',
+          'Nhận ra dữ liệu tự phân vùng theo địa lý',
+        ],
+      },
+      {
+        title: 'Thiết kế hệ thống gợi ý từ khóa cho ô tìm kiếm',
+        requirements: [
+          'Gợi ý mười từ khóa phổ biến nhất theo tiền tố người dùng đang gõ',
+          'Trả lời dưới 100 mili giây',
+          'Cập nhật theo mức độ phổ biến thực tế, trễ vài giờ là chấp nhận được',
+        ],
+        rubric: [
+          'Nhận ra client phải gộp phím trước khi ước lượng tải',
+          'Giải thích vì sao cây tiền tố thuần không đủ và top-k tính sẵn giải quyết ra sao',
+          'Nói được vì sao dựng chỉ mục ngoại tuyến rồi hoán đổi thay vì cập nhật tại chỗ',
+          'Nêu rõ đánh đổi giữa độ tươi và độ trễ',
+        ],
+      },
+      {
+        title: 'Thiết kế hệ thống lưu và phát video cho nền tảng học trực tuyến',
+        requirements: [
+          'Giảng viên tải video lên, học viên xem với chất lượng thích ứng theo mạng',
+          'Hỗ trợ tệp lên tới vài GB',
+          'Thống kê học viên xem tới phút thứ mấy',
+        ],
+        rubric: [
+          'Tệp tải thẳng lên kho đối tượng, không đi qua tầng ứng dụng',
+          'Có pipeline chuyển mã bất đồng bộ và trạng thái xử lý cho video',
+          'Tính ra được băng thông và kết luận phải dùng CDN',
+          'Thiết kế thống kê tiến độ xem mà không ghi trực tiếp mỗi sự kiện xuống database',
+        ],
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Vì sao phải luyện nói thành tiếng thay vì chỉ đọc lại?',
+        answer:
+          'Vì khoảng cách giữa nhận ra và nhớ lại rất lớn. Nhìn vào đáp án thì thấy quen thuộc, nhưng tự bật ra được thành chuỗi lập luận mạch lạc trong lúc bị hỏi là kỹ năng khác hẳn, và nó chỉ hình thành qua việc nói thành tiếng nhiều lần. Đọc lại cho cảm giác đã nắm chắc, và cảm giác đó gần như luôn sai.',
+        pitfall:
+          'Luyện bằng cách đọc thầm rồi tự thấy ổn. Bấm giờ và nói thành tiếng mới lộ ra chỗ hổng.',
+      },
+      {
+        question: 'Khi tự luyện mà bị bí giữa chừng thì nên làm gì?',
+        answer:
+          'Không dừng lại để tra cứu. Bí chính là dữ liệu quan trọng nhất của buổi luyện vì nó chỉ ra chỗ kiến thức còn hổng. Cứ tiếp tục với những gì mình có cho hết bốn mươi lăm phút, rồi ghi lại điểm bí đó thành một dòng cụ thể để ôn sau.',
+        pitfall:
+          'Dừng lại tra tài liệu rồi chạy tiếp. Buổi luyện khi đó không còn phản ánh đúng năng lực thật.',
+      },
+      {
+        question: 'Ghi lại điểm yếu sau buổi luyện thế nào cho có ích?',
+        answer:
+          'Ghi thật cụ thể theo hành vi, không ghi chung chung. Thay vì viết cần học thêm về database, hãy viết chưa nói được khi nào chọn kho khóa-giá trị thay vì quan hệ. Dòng ghi cụ thể đó trở thành bài tập cho lần sau; ghi chung chung thì không biết bắt đầu từ đâu.',
+        pitfall:
+          'Chấm cho mình đạt ở một mục mà bản thân biết là chỉ nói qua loa. Buổi luyện mất hết giá trị.',
+      },
+      {
+        question: 'Bốn nhóm tiêu chí tự chấm chung cho mọi đề là gì?',
+        answer:
+          'Làm rõ yêu cầu: có hỏi trước khi vẽ và chốt phạm vi không. Ước lượng: có con số đúng bậc và rút ra kết luận từ nó không. Đánh đổi: mỗi thành phần thêm vào có kèm lý do và cái giá không. Tự phê: có chủ động chỉ ra chỗ thiết kế sẽ vỡ không. Ngoài ra còn hai tiêu chí về cách trình bày là nói liên tục và giữ nhịp thời gian.',
+        pitfall:
+          'Chấm theo tiêu chí kiến trúc có đúng không. Không có kiến trúc đúng tuyệt đối, nên tiêu chí phải là bạn có làm đủ các việc cần làm hay không.',
+      },
+      {
+        question: 'Nhịp luyện hợp lý là thế nào?',
+        answer:
+          'Hai tới ba buổi mỗi tuần, mỗi lần một đề khác nhau, và quay lại đề cũ sau khoảng hai tuần để kiểm tra xem đã cải thiện thật chưa. Nếu đề trùng với một case study đã học thì để cách xa vài ngày rồi mới luyện, và tuyệt đối không đọc lại bài trước khi luyện.',
+        pitfall:
+          'Luyện lại ngay đề vừa đọc xong bài tương ứng. Bạn đang kiểm tra trí nhớ ngắn hạn chứ không phải khả năng thật.',
+      },
+      {
+        question: 'Vì sao nên ghi âm buổi tự luyện?',
+        answer:
+          'Vì nghe lại phát hiện ra những chỗ ấp úng, lặp từ hoặc nói vòng vo mà lúc đang nói hoàn toàn không nhận ra. Nếu không có thời gian nghe hết, hãy nghe phần mở đầu và phần kết — đó là hai đoạn để lại ấn tượng mạnh nhất và cũng là hai đoạn dễ sửa nhất.',
+        pitfall:
+          'Bỏ qua ghi âm vì thấy ngại. Đây là công cụ hiệu quả nhất mà lại tốn ít công nhất.',
+      },
+    ],
     keyTakeaway:
       'Bấm giờ thật và nói thành tiếng — nghĩ trong đầu luôn thấy trôi chảy hơn lúc phải trình bày.',
   },
