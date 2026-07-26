@@ -13,6 +13,7 @@ const SLUGS_DA_VIET = [
   'cdn-blobstore-search-logging',
   'framework-tra-loi-phong-van',
   'case-study-tinyurl',
+  'case-study-youtube',
 ]
 
 const MIN_WORDS = 800

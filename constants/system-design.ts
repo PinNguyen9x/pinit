@@ -1081,8 +1081,140 @@ export const LESSONS: Lesson[] = [
     track: 'Case study',
     keywords: ['YouTube', 'video', 'transcode', 'streaming', 'CDN', 'blobstore'],
     readingMinutes: 18,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Bước 1 và 2: yêu cầu và ước lượng',
+        body: [
+          'Chức năng trong phạm vi: tải video lên, xem video, tìm kiếm, thích và bình luận. Nói rõ phần để ngoài: hệ gợi ý video, kiếm tiền, phát trực tiếp và kiểm duyệt nội dung — mỗi thứ đó tự nó là một buổi phỏng vấn riêng.',
+          'Yêu cầu phi chức năng: đọc lệch ghi cực lớn, một video được tải lên một lần nhưng xem hàng triệu lần. Phát mượt quan trọng hơn nhất quán — người xem chấp nhận số lượt xem hiển thị trễ vài phút, nhưng không chấp nhận video giật. Video mới tải lên không cần xem được ngay lập tức; vài phút xử lý là bình thường và điều này mở ra rất nhiều tự do trong thiết kế.',
+          'Ước lượng thô. Giả sử 1 triệu video mới mỗi ngày, trung bình 10 phút. Mỗi video sau khi chuyển mã ra năm độ phân giải tốn khoảng 500 MB, nên mỗi ngày thêm khoảng 500 TB và mỗi năm khoảng 180 PB. Con số này nói ngay rằng lưu trữ phải là kho đối tượng phân tầng, không thể là đĩa gắn máy chủ.',
+          'Phía xem: 1 tỉ lượt mỗi ngày chia cho 86 nghìn giây được khoảng 11 nghìn lượt bắt đầu xem mỗi giây. Nếu mỗi luồng trung bình 2 Mbps thì băng thông tổng lên tới hàng chục Tbps. Không tầng ứng dụng nào chịu nổi con số đó — nghĩa là gần như toàn bộ byte video phải đi qua [[CDN]], còn hệ thống của bạn chỉ phục vụ metadata.',
+        ],
+        callout:
+          'Kết luận quan trọng nhất rút ra từ ước lượng: hệ thống của bạn phục vụ metadata, còn CDN phục vụ byte. Nhận ra ranh giới này sớm định hình toàn bộ phần còn lại.',
+      },
+      {
+        heading: 'Bước 3: API và mô hình dữ liệu',
+        body: [
+          'Luồng tải lên cần ba [[Endpoint]]: một để khởi tạo phiên tải lên và nhận về đường dẫn có chữ ký, một để báo đã tải xong, và một để hỏi trạng thái xử lý. Luồng xem cần một endpoint trả metadata kèm đường dẫn tới tệp kê khai của trình phát. Ngoài ra là các endpoint cho thích, bình luận và tìm kiếm.',
+          'Mô hình dữ liệu tách làm ba nhóm. Metadata video gồm id, tiêu đề, mô tả, chủ sở hữu, thời lượng, trạng thái xử lý và thời điểm đăng. Các bản chuyển mã gồm độ phân giải, tốc độ bit và đường dẫn tệp kê khai. Nhóm tương tác gồm bình luận và các bộ đếm.',
+          'Trạng thái xử lý là trường quan trọng nhất mà nhiều người quên: video đi qua chuỗi đang tải lên, đang xử lý, sẵn sàng, hoặc thất bại. Không có trường này thì giao diện không biết hiển thị gì trong vài phút chờ, và người dùng nghĩ hệ thống hỏng.',
+          'Byte video không nằm trong [[Database]]. Database chỉ giữ đường dẫn; tệp thật nằm ở kho đối tượng. Đây là cùng nguyên tắc đã nói ở buổi 5, và ở quy mô này nó không còn là lựa chọn mà là bắt buộc.',
+        ],
+      },
+      {
+        heading: 'Bước 4: đường tải lên và chuyển mã — phần cốt lõi',
+        body: [
+          'Video không bao giờ đi xuyên qua tầng ứng dụng. Client xin đường dẫn có chữ ký rồi tải thẳng lên kho đối tượng, chia thành nhiều phần để tải lại được đúng phần hỏng và tải song song. Tầng ứng dụng chỉ cấp phép và ghi metadata.',
+          'Khi tải xong, một sự kiện được đẩy vào hàng đợi như [[Kafka]] và các máy chuyển mã lấy việc từ đó. Đây là chỗ hàng đợi phát huy đúng vai trò: chuyển mã tốn hàng phút CPU nên tuyệt đối không thể làm đồng bộ trong request, và lượng video tải lên có đỉnh theo giờ trong ngày nên cần đệm.',
+          'Bản thân việc chuyển mã cũng chia nhỏ được: cắt video thành các đoạn vài giây, chuyển mã song song trên nhiều máy, rồi ghép lại. Nhờ vậy một video dài không phải chờ một máy xử lý tuần tự. Đầu ra gồm nhiều độ phân giải, các đoạn nhỏ theo định dạng phát trực tuyến thích ứng, ảnh đại diện, và tệp kê khai liệt kê tất cả.',
+          'Vì công việc chạy bất đồng bộ và có thử lại, mỗi việc phải [[Idempotency]] — chuyển mã lại cùng một đoạn phải cho kết quả ghi đè an toàn chứ không tạo bản trùng. Việc hỏng sau nhiều lần thử đi vào [[Dead Letter Queue]] để điều tra, không được chặn hàng đợi chính. Và [[Consumer Lag]] của hàng đợi chuyển mã chính là chỉ số cảnh báo sớm nhất: lag tăng đều nghĩa là số máy chuyển mã không đủ.',
+        ],
+        diagram: `flowchart LR
+  C["Client"] -->|"1. Xin đường dẫn có chữ ký"| API["Upload API"]
+  C -->|"2. Tải thẳng, chia phần"| B[("Kho đối tượng — bản gốc")]
+  API -->|"3. Sự kiện tải xong"| Q["Hàng đợi chuyển mã"]
+  Q --> W1["Worker — 360p"]
+  Q --> W2["Worker — 720p"]
+  Q --> W3["Worker — 1080p"]
+  W1 --> O[("Kho đối tượng — các đoạn")]
+  W2 --> O
+  W3 --> O
+  O --> CDN["CDN"]
+  W3 -->|"cập nhật trạng thái"| DB[("Metadata")]`,
+        callout:
+          'Câu hỏi kiểm tra kinh nghiệm: "điều gì xảy ra giữa lúc tải xong và lúc video xem được?". Trả lời được bằng trạng thái xử lý và hàng đợi chuyển mã là qua.',
+      },
+      {
+        heading: 'Bước 5: đường xem — phát trực tuyến thích ứng và CDN',
+        body: [
+          'Trình phát không tải cả tệp video. Nó tải một tệp kê khai liệt kê các đoạn và các mức chất lượng có sẵn, rồi tải từng đoạn vài giây một. Nhờ vậy người xem bắt đầu xem gần như tức thì thay vì chờ tải xong.',
+          'Phát thích ứng nghĩa là trình phát tự đo băng thông và độ đầy bộ đệm rồi chọn mức chất lượng cho đoạn tiếp theo. Mạng yếu thì hạ xuống 360p để không giật; mạng khỏe thì lên 1080p. Đây là lý do phải chuyển mã ra nhiều độ phân giải ngay từ đầu thay vì nén lại theo yêu cầu.',
+          'Gần như toàn bộ byte đi qua [[CDN]]. Các đoạn video là nội dung tĩnh, bất biến sau khi tạo, nên đặt thời hạn sống rất dài và không cần xóa — thay đổi thì tạo đường dẫn mới. Đây là trường hợp lý tưởng cho bộ đệm ở biên.',
+          'Hai chi tiết nâng cao đáng nói. Thứ nhất là lớp đệm trung gian giữa biên và kho gốc: hàng trăm điểm biên cùng trượt một video mới sẽ dồn về kho gốc, nên đặt một tầng đệm khu vực ở giữa để hứng. Thứ hai là nạp trước cho video dự đoán sẽ nóng — kênh lớn vừa đăng bài thì chủ động đẩy các đoạn đầu ra biên trước khi có ai bấm xem.',
+        ],
+        diagram: `flowchart LR
+  V["Người xem"] --> M["Lấy tệp kê khai"]
+  M --> P["Trình phát chọn mức chất lượng"]
+  P --> E["CDN biên"]
+  E -->|trúng| P
+  E -->|trượt| S["Tầng đệm khu vực"]
+  S -->|trượt| O[("Kho gốc — các đoạn")]`,
+        table: {
+          headers: ['Thành phần', 'Ai phục vụ', 'Đặc điểm đệm'],
+          rows: [
+            ['Đoạn video, ảnh đại diện', 'CDN', 'Bất biến, thời hạn sống rất dài'],
+            ['Tệp kê khai', 'CDN với thời hạn ngắn', 'Đổi khi thêm độ phân giải mới'],
+            ['Metadata, bình luận', 'Tầng ứng dụng', 'Đệm phân tán, thời hạn vài phút'],
+            ['Số lượt xem, lượt thích', 'Tầng ứng dụng', 'Chấp nhận trễ, gộp lô rồi ghi'],
+          ],
+        },
+      },
+      {
+        heading: 'Bước 6: bộ đếm, bình luận và điểm nghẽn',
+        body: [
+          'Bộ đếm lượt xem và lượt thích là cái bẫy kinh điển. Cập nhật trực tiếp một hàng trong [[Database]] cho mỗi lượt xem sẽ tạo tranh chấp khủng khiếp trên các video nóng — hàng chục nghìn lệnh ghi mỗi giây vào đúng một hàng. Ba cách xử lý: đẩy sự kiện vào hàng đợi rồi gộp lô cộng dồn mỗi vài giây; chia bộ đếm thành nhiều mảnh rồi cộng lại khi đọc; hoặc tăng trong bộ nhớ đệm phân tán rồi định kỳ ghi xuống. Điểm chung là chấp nhận con số hiển thị trễ vài giây, điều mà nghiệp vụ hoàn toàn cho phép.',
+          'Bình luận phải phân trang theo con trỏ chứ không theo số thứ tự bỏ qua. Dùng bỏ qua thì trang thứ một nghìn buộc cơ sở dữ liệu đọc và bỏ đi một nghìn trang đầu, càng lùi càng chậm; ngoài ra bình luận mới chèn vào giữa làm lệch trang. Con trỏ dựa trên thời điểm và id thì luôn nhanh và ổn định.',
+          'Video lan truyền là [[Hot Partition]] ở mọi tầng cùng lúc: một video chiếm phần lớn lưu lượng xem, phần lớn lượt bình luận, phần lớn lượt thích. [[CDN]] hấp thụ phần byte, nhưng metadata và bộ đếm vẫn dồn về một chỗ — đây là lúc cần đệm cục bộ trong tiến trình và bộ đếm chia mảnh.',
+          'Về tìm kiếm, chỉ mục được xây từ tiêu đề, mô tả, thẻ và phụ đề tự động, đồng bộ từ database sang hệ tìm kiếm qua luồng sự kiện. Như đã nói ở buổi 5, hệ tìm kiếm là bản sao phục vụ đọc — dựng lại được, nên hỏng cũng không mất dữ liệu gốc.',
+        ],
+        table: {
+          headers: ['Vấn đề', 'Cách làm ngây thơ', 'Cách làm đúng'],
+          rows: [
+            ['Đếm lượt xem', 'Cập nhật một hàng mỗi lượt xem', 'Đẩy sự kiện, gộp lô cộng dồn mỗi vài giây'],
+            ['Đếm lượt thích trên video nóng', 'Tranh chấp trên một hàng', 'Chia bộ đếm thành nhiều mảnh, cộng khi đọc'],
+            ['Phân trang bình luận', 'Bỏ qua theo số thứ tự', 'Con trỏ theo thời điểm và id'],
+            ['Chuyển mã video dài', 'Một máy xử lý tuần tự', 'Cắt đoạn, chuyển mã song song rồi ghép'],
+          ],
+        },
+        callout:
+          'Đánh đổi tổng thể của bài này: hy sinh tính tức thời của các con số để đổi lấy khả năng phục vụ. Nói rõ điều đó và nói rõ nghiệp vụ chấp nhận được là câu kết mạnh.',
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Vì sao video không được đi qua tầng ứng dụng khi tải lên?',
+        answer:
+          'Vì băng thông sẽ giết chết tầng ứng dụng mà chẳng đem lại lợi ích gì. Client xin đường dẫn có chữ ký rồi tải thẳng lên kho đối tượng, chia thành nhiều phần để tải lại được đúng phần hỏng và tải song song. Tầng ứng dụng chỉ cấp phép và ghi metadata, sau đó phát một sự kiện vào hàng đợi cho các máy chuyển mã.',
+        pitfall:
+          'Vẽ mũi tên từ client qua app server rồi mới tới kho lưu trữ. Đây là dấu hiệu chưa từng làm việc với tệp lớn.',
+      },
+      {
+        question: 'Vì sao phải chuyển mã ra nhiều độ phân giải ngay từ đầu?',
+        answer:
+          'Vì trình phát dùng phát trực tuyến thích ứng: nó tự đo băng thông và độ đầy bộ đệm rồi chọn mức chất lượng cho từng đoạn tiếp theo. Mạng yếu thì hạ xuống để không giật, mạng khỏe thì lên cao. Nén lại theo yêu cầu sẽ quá chậm và tốn CPU khủng khiếp, nên phải chuẩn bị sẵn tất cả các mức ngay khi tải lên.',
+        pitfall:
+          'Quên trạng thái xử lý. Giữa lúc tải xong và lúc xem được có vài phút, giao diện phải biết hiển thị gì trong khoảng đó.',
+      },
+      {
+        question: 'Ranh giới trách nhiệm giữa hệ thống của bạn và CDN là gì?',
+        answer:
+          'Hệ thống của bạn phục vụ metadata, CDN phục vụ byte. Với 1 tỉ lượt xem mỗi ngày và mỗi luồng khoảng 2 Mbps, băng thông tổng lên tới hàng chục Tbps — không tầng ứng dụng nào chịu nổi. Các đoạn video là nội dung bất biến nên đặt thời hạn sống rất dài; muốn đổi thì tạo đường dẫn mới thay vì xóa khỏi biên.',
+        pitfall:
+          'Chỉ nói "dùng CDN" mà không tính ra con số băng thông. Chính con số mới chứng minh vì sao bắt buộc phải dùng.',
+      },
+      {
+        question: 'Đếm lượt xem và lượt thích thế nào để không nghẽn?',
+        answer:
+          'Không cập nhật trực tiếp một hàng cho mỗi lượt — video nóng sẽ tạo tranh chấp hàng chục nghìn lệnh ghi mỗi giây vào cùng một hàng. Ba cách: đẩy sự kiện vào hàng đợi rồi gộp lô cộng dồn mỗi vài giây; chia bộ đếm thành nhiều mảnh rồi cộng lại khi đọc; hoặc tăng trong bộ nhớ đệm phân tán rồi định kỳ ghi xuống. Cả ba đều đổi tính tức thời lấy khả năng phục vụ.',
+        pitfall:
+          'Không nói rõ nghiệp vụ chấp nhận số liệu trễ vài giây. Không có câu đó thì việc gộp lô nghe như đang làm sai.',
+      },
+      {
+        question: 'Vì sao phân trang bình luận phải dùng con trỏ thay vì bỏ qua theo số?',
+        answer:
+          'Vì bỏ qua theo số buộc cơ sở dữ liệu đọc rồi vứt đi toàn bộ các trang trước — trang thứ một nghìn chậm hơn trang đầu rất nhiều. Ngoài ra bình luận mới chèn vào giữa làm lệch ranh giới trang nên người dùng thấy trùng hoặc sót. Con trỏ dựa trên thời điểm và id luôn nhanh và ổn định trước dữ liệu thay đổi.',
+        pitfall:
+          'Dùng phân trang theo số thứ tự cho danh sách liên tục có dữ liệu mới chèn vào đầu — lỗi này gặp ở cả bình luận lẫn bảng tin.',
+      },
+      {
+        question: 'Video lan truyền gây nghẽn ở đâu, dù đã có CDN?',
+        answer:
+          'CDN hấp thụ phần byte video, nhưng metadata, bình luận và các bộ đếm vẫn dồn về cùng một phân vùng — đúng bản chất điểm nóng dữ liệu. Xử lý bằng đệm cục bộ trong tiến trình ứng dụng cho metadata, bộ đếm chia mảnh cho lượt xem và lượt thích, và nạp trước các đoạn đầu ra biên với video dự đoán sẽ nóng.',
+        pitfall:
+          'Nghĩ rằng có CDN là hết lo về video nóng. CDN chỉ giải quyết tầng byte, không giải quyết tầng metadata.',
+      },
+    ],
     keyTakeaway:
       'Upload và transcode phải bất đồng bộ qua queue — người dùng không chờ được quá trình mã hóa.',
     relatedTerms: ['CDN', 'Kafka'],
