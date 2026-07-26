@@ -310,21 +310,37 @@ Không có.
 | Task | Trạng thái | Commit |
 |---|---|---|
 | T2.1 nội dung buổi 1 | ✅ done — đã kiểm trên trình duyệt | `244110b` |
-| T2.2 nội dung buổi 2 | ⬜ tiếp theo | |
-| T2.3 cổng chặn: chốt data model | ⬜ | |
+| **Sửa `relatedTerms` sai** | ✅ done — **task phát sinh** | `47dc16a` |
+| T2.2 nội dung buổi 2 | ✅ done — đã kiểm trên trình duyệt | `859cfaf` |
+| T2.3 cổng chặn: chốt data model | 🔄 phần lớn đã làm cùng T2.2 | |
+
+**Task phát sinh `47dc16a`**: 6 giá trị `relatedTerms` khai báo từ M1 trỏ tới thuật ngữ không tồn tại trong glossary (`Sharding`, `Replication`, `Redis`, `Message Queue`, `Elasticsearch`, `Hash`). Đã ánh xạ sang thuật ngữ có thật thay vì bổ sung glossary (sửa glossary là non-goal). Ca kiểm thử `relatedTerms` được siết sang **toàn bộ 13 buổi** nên lỗi tương tự ở các buổi sau sẽ bị chặn ngay.
 
 **Thay đổi phạm vi**: `constants/system-design-content.test.ts` viết ngay ở T2.1 thay vì đợi T2.3, dùng danh sách `SLUGS_DA_VIET` mở rộng dần nên không bị vướng chuyện "ca fail đến hết M4". T2.3 giờ chỉ còn việc rà soát model + a11y + màn hình hẹp.
 
 **Kết quả T2.1**: mermaid render thật và **vẽ lại đúng khi đổi theme** (cơ chế `data-mermaid-src` hoạt động — đây là lỗi hai trang cũ đang mắc). Cross-link, bảng, callout, flashcard đều đúng.
 
-### 3 việc tiếp theo
-1. **T2.2** — nội dung buổi 2 (Load balancer + Database, replication, sharding)
-2. **T2.3** — cổng chặn: rà soát `LessonSection` có đủ field cho bài nhiều bảng, kiểm 360px, kiểm a11y bàn phím
-3. **T3.1** — nội dung buổi 3 (Networking) sau khi cổng M2 mở
+### Trạng thái cổng T2.3
 
-### Vùng cần chú ý sau T2.1
-- Sơ đồ CAP cao 720px, mermaid tự đặt `max-width` inline đè lên rule của container. Khung cha có `overflowX: auto` nên không vỡ layout, nhưng **phải kiểm ở 360px** ở T2.3.
-- Buổi 2 có nhiều bảng hơn buổi 1 — đây đúng là ca kiểm tra `LessonSection` mà cổng T2.3 cần.
+| Hạng mục cổng | Kết quả |
+|---|---|
+| `LessonSection` đủ field cho bài nhiều bảng? | ✅ **Có** — buổi 2 dùng 3 bảng, 2 sơ đồ, 4 callout mà **không phải thêm field nào**. Data model chốt, không đổi |
+| Bảng rộng cuộn trong khung riêng | ✅ đo được: khung 312px, nội dung 480px, `scrolls: true` |
+| Mermaid không tràn khung hẹp | ✅ SVG tự co xuống 310px ≤ 312px |
+| Mermaid vẽ lại khi đổi theme | ✅ đã kiểm ở T2.1 |
+| **Kiểm ở viewport 360px thật** | ❌ **chưa làm được** — xem dưới |
+| a11y bàn phím (tab, Enter/Space lật thẻ, focus ring) | ⬜ chưa |
+
+**Vì sao chưa kiểm được 360px**: công cụ điều khiển Chrome render trang ở viewport cố định 1440 bất kể kích thước cửa sổ (`window.outerWidth` đổi theo lệnh resize nhưng `window.innerWidth` luôn 1440). Đã mô phỏng bằng cách ép `body` xuống 360px và đo — kết quả cho thấy bảng cuộn nội bộ và mermaid co lại đúng như thiết kế, nhưng **đây là mô phỏng layout, không phải viewport thật**, nên media query của MUI không phản ứng. Ca "màn hình ≥ 360px không vỡ layout" **vẫn còn nợ**, chuyển sang M6 và cần kiểm bằng DevTools device mode hoặc điện thoại thật.
+
+### 3 việc tiếp theo
+1. **T2.3 phần còn lại** — a11y bàn phím trên flashcard và checkbox tiến độ
+2. **T3.1** — nội dung buổi 3 (Networking: HTTPS, REST, polling, WebSocket, gRPC, GraphQL, DNS)
+3. **T3.2** — nội dung buổi 4 (Caching, message queue, monitoring)
+
+### Vùng cần chú ý
+- Data model đã qua được ca thử khó nhất (buổi 2 nhiều bảng) → rủi ro **R1 coi như đã đóng**, M3/M4 có thể chạy nhanh hơn.
+- Nợ kiểm 360px là rủi ro tồn đọng duy nhất của phần giao diện.
 
 ### Vùng rủi ro cần chú ý ở M2
 - **R1 vẫn là rủi ro lớn nhất**: nếu `LessonSection` thiếu field thì phải sửa ở T2.3, không được để lọt sang M3.

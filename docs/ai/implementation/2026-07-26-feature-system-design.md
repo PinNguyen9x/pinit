@@ -12,7 +12,7 @@ description: Nhật ký triển khai — M1 hạ tầng đã xong, ghi lại quy
 | Milestone | Trạng thái | Ghi chú |
 |---|---|---|
 | M1 — Hạ tầng & khung dữ liệu | ✅ **Xong** (8/8 task), **đã kiểm trên trình duyệt** | Cổng M1 pass — xem mục Kiểm chứng |
-| M2 — Vertical slice buổi 1–2 | 🔄 **Đang làm** — T2.1 xong | Buổi 1 đã viết và kiểm trên trình duyệt; còn T2.2, T2.3 |
+| M2 — Vertical slice buổi 1–2 | 🔄 T2.1 + T2.2 xong | **Data model đã chốt** — buổi 2 dùng 3 bảng/2 sơ đồ mà không cần thêm field. Còn nợ kiểm a11y và 360px |
 | M3–M6 | ⬜ Chưa bắt đầu | |
 
 ## Development Setup

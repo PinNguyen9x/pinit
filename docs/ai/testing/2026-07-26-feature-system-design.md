@@ -206,7 +206,7 @@ Còn thiếu, thêm ở M6:
 - [ ] Chrome desktop
 - [ ] Safari desktop (chú ý `localStorage` ở private mode)
 - [ ] Safari iOS / Chrome Android
-- [ ] Màn hình hẹp 360px → không vỡ layout, tab System Design hiện trong menu mobile **[AC1]**
+- [ ] **Màn hình hẹp 360px → không vỡ layout, tab System Design hiện trong menu mobile [AC1]** — ⚠️ **NỢ, chưa kiểm được**. Công cụ điều khiển Chrome render ở viewport cố định 1440 (`outerWidth` đổi nhưng `innerWidth` không). Mô phỏng bằng cách ép `body` xuống 360px cho kết quả tốt (bảng cuộn nội bộ 312/480, mermaid co xuống 310px), nhưng media query MUI không phản ứng nên **không thay thế được kiểm thật**. Cần DevTools device mode hoặc điện thoại thật.
 
 ### Nội dung (không thuần kỹ thuật nhưng chặn merge)
 - [ ] 13 tiêu đề buổi khớp bảng ánh xạ trong `requirements` **[AC2]**
