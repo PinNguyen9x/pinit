@@ -12,4 +12,8 @@ export const ROUTE_LIST = [
     path: '/works?_page=1&_limit=10',
     requireLogin: false,
   },
+  {
+    label: 'System Design',
+    path: '/system-design',
+  },
 ]
