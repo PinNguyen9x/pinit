@@ -255,6 +255,8 @@ git branch -d feat/glossary-deeplink
 
 > ⚠️ Worktree **không có `node_modules`** (bị gitignore). Phải `yarn install` lại trong worktree, hoặc khai báo `.worktreeinclude` để tự copy.
 
+> Muốn biến mấy lệnh rời rạc này thành một setup chạy được hằng ngày — mỗi worktree một tmux session, giữ context qua `--continue`, bật lại toàn bộ sau khi restart máy — xem bài riêng: [Chạy nhiều agent Claude Code song song với git worktree + tmux + ai-devkit](/blog/multi-agent-claude-code-worktree-tmux).
+
 ### 4. Prompt có cấu trúc (buộc output kiểm chứng được)
 
 ```text
