@@ -1506,8 +1506,136 @@ export const LESSONS: Lesson[] = [
     track: 'Case study',
     keywords: ['Grab', 'Uber', 'geohash', 'quadtree', 'matching', 'realtime'],
     readingMinutes: 18,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Bước 1 và 2: yêu cầu và ước lượng',
+        body: [
+          'Chức năng trong phạm vi: tài xế cập nhật vị trí liên tục, khách đặt chuyến, hệ thống ghép tài xế phù hợp, và cả hai bên theo dõi chuyến đi theo thời gian thực. Để ngoài phạm vi: thanh toán, đánh giá, và giá động theo cung cầu.',
+          'Yêu cầu phi chức năng: ghép xe phải xong trong vài giây vì khách đang đứng chờ; vị trí trên bản đồ phải mượt; và hệ thống phải chịu được sự cố ở mức khu vực. Điều thú vị là bài này không cần nhất quán toàn cầu — một chuyến ở Hà Nội hoàn toàn độc lập với một chuyến ở Sài Gòn.',
+          'Ước lượng, và đây là chỗ bài này khác hẳn mọi bài trước. Giả sử 5 triệu tài xế đang hoạt động, mỗi người gửi vị trí bốn giây một lần. Được 1,25 triệu lệnh ghi vị trí mỗi giây. Trong khi đó số chuyến đặt chỉ khoảng 10 triệu mỗi ngày, tức khoảng 116 mỗi giây, đỉnh chừng 350.',
+          'Hai con số đó chênh nhau hơn ba nghìn lần. Nghĩa là đây là bài toán ghi nặng — ngược hẳn với TinyURL, YouTube hay bảng tin vốn đều đọc nặng. Nhận ra điều này quyết định toàn bộ phần còn lại: trọng tâm không phải cache, mà là làm sao hấp thụ được luồng cập nhật vị trí khổng lồ.',
+        ],
+        callout:
+          'Nếu chỉ rút ra một điều từ bài này: luồng cập nhật vị trí lớn gấp hàng nghìn lần luồng đặt xe. Mọi lựa chọn thiết kế phải xuất phát từ đó.',
+      },
+      {
+        heading: 'Bước 3: API và mô hình dữ liệu',
+        body: [
+          'Phía tài xế cần một kênh gửi vị trí — dùng [[WebSocket]] hoặc gom nhiều điểm rồi gửi theo lô, chứ không phải một request HTTP riêng cho mỗi điểm. Phía khách cần đặt chuyến, hủy chuyến, và một kênh nhận cập nhật vị trí tài xế cùng trạng thái chuyến.',
+          'Mô hình dữ liệu tách rất rõ theo tuổi thọ. Vị trí hiện tại của tài xế là dữ liệu sống rất ngắn: chỉ cần bản mới nhất, ghi đè liên tục, và mất cũng không sao vì bốn giây sau có bản mới. Loại dữ liệu này thuộc về bộ nhớ đệm phân tán, tuyệt đối không ghi từng điểm xuống [[Database]] bền vững.',
+          'Ngược lại, chuyến đi là dữ liệu bền vững cần đầy đủ tính giao dịch: ai đặt, ai nhận, thời điểm, lộ trình, trạng thái. Lịch sử đường đi thì ghi bất đồng bộ qua hàng đợi để phục vụ đối soát và phân tích sau, không nằm trên đường nóng.',
+          'Đây là ví dụ đẹp cho nguyên tắc chọn kho lưu trữ theo tuổi thọ và yêu cầu của từng loại dữ liệu, thay vì nhét tất cả vào một chỗ.',
+        ],
+      },
+      {
+        heading: 'Bước 4: chỉ mục không gian — phần cốt lõi',
+        body: [
+          'Bài toán trung tâm: tìm các tài xế rảnh trong bán kính vài ki-lô-mét quanh khách. Cách ngây thơ là tính khoảng cách từ khách tới toàn bộ 5 triệu tài xế rồi lọc — hoàn toàn không khả thi.',
+          'Cách thứ nhất là mã hóa lưới. Toàn bộ bản đồ được chia thành các ô, mỗi ô có một mã chuỗi sao cho hai điểm gần nhau thì mã chia sẻ tiền tố chung. Nhờ vậy tìm quanh một điểm trở thành tra các mã có cùng tiền tố — một phép tra khóa thông thường, chạy được ngay trên kho khóa-giá trị. Đơn giản và rất phổ biến.',
+          'Cách thứ hai là cây chia tư. Không gian được chia làm bốn phần, phần nào quá đông thì chia tiếp, nên ô ở trung tâm thành phố nhỏ và dày trong khi ô ở vùng thưa thì lớn. Ưu điểm là số tài xế mỗi ô cân bằng bất kể mật độ. Nhược điểm là cây phải cập nhật khi mật độ đổi, phức tạp hơn hẳn lưới cố định.',
+          'Hai vấn đề luôn bị hỏi thêm. Thứ nhất là biên ô: hai điểm cách nhau 50 mét vẫn có thể rơi vào hai ô khác nhau và mã không chia sẻ tiền tố. Cách xử lý chuẩn là truy vấn cả ô chứa điểm lẫn tám ô lân cận rồi mới lọc theo khoảng cách thật. Thứ hai là khoảng cách đường chim bay khác khoảng cách đi thật — nên dùng lưới để thu hẹp ứng viên, rồi mới tính thời gian tới nơi theo đường thật cho vài chục ứng viên đó.',
+        ],
+        diagram: `flowchart TD
+  R["Khách đặt xe tại một điểm"] --> G["Tính mã ô chứa điểm"]
+  G --> N["Lấy ô đó và 8 ô lân cận"]
+  N --> C["Danh sách ứng viên — vài chục tài xế"]
+  C --> F["Lọc theo khoảng cách thật và trạng thái rảnh"]
+  F --> RK["Xếp hạng theo thời gian tới nơi"]
+  RK --> M["Gửi lời mời lần lượt"]`,
+        table: {
+          headers: ['Cách lập chỉ mục', 'Ưu điểm', 'Nhược điểm'],
+          rows: [
+            ['Quét toàn bộ tài xế', 'Không cần cấu trúc gì', 'Không khả thi ở mọi quy mô thật'],
+            ['Lưới mã hóa theo tiền tố', 'Đơn giản, chạy trên kho khóa-giá trị', 'Ô cố định nên mật độ lệch, phải xử lý biên ô'],
+            ['Cây chia tư thích ứng', 'Số điểm mỗi ô cân bằng theo mật độ', 'Phải cập nhật cây khi mật độ đổi'],
+          ],
+        },
+        callout:
+          'Nguyên tắc chung của mọi bài toán không gian: dùng chỉ mục để thu hẹp ứng viên, rồi mới tính khoảng cách thật trên tập nhỏ. Đừng làm ngược lại.',
+      },
+      {
+        heading: 'Bước 5: ghép tài xế và vòng đời chuyến đi',
+        body: [
+          'Sau khi có vài chục ứng viên, việc xếp hạng không chỉ dựa vào khoảng cách. Các yếu tố thường dùng gồm thời gian tới nơi theo đường thật, tỉ lệ nhận chuyến của tài xế, đánh giá, và cả việc cân đối thu nhập giữa các tài xế. Lời mời được gửi lần lượt hoặc theo lô nhỏ, mỗi lời mời có hạn vài chục giây; hết hạn thì chuyển sang tài xế tiếp theo.',
+          'Đây là chỗ xuất hiện tranh chấp kinh điển: hai khách ở gần nhau cùng được ghép vào một tài xế. Nếu chỉ đọc trạng thái rồi ghi đè, cả hai đều nghĩ mình đã ghép thành công. Cách xử lý là dùng một thao tác nguyên tử — kiểm tra và đặt trạng thái trong cùng một bước, ai thắng thì tài xế chuyển sang trạng thái bận, ai thua thì tìm ứng viên khác. Kèm theo đó, mọi thao tác nhận chuyến phải [[Idempotency]] vì mạng di động rất hay gửi lại.',
+          'Vòng đời chuyến đi là một máy trạng thái rõ ràng: yêu cầu, đã ghép, tài xế đang tới, đang chở, hoàn thành hoặc hủy. Mọi chuyển trạng thái đều phải hợp lệ theo máy trạng thái này — không cho phép nhảy từ yêu cầu thẳng sang hoàn thành. Đây là chỗ tính giao dịch thực sự cần thiết.',
+          'Theo dõi thời gian thực dùng [[WebSocket]] để đẩy vị trí tài xế xuống ứng dụng của khách. Lưu ý không cần đẩy mọi điểm với tần suất tối đa — hai giây một lần là đủ mượt, và ứng dụng nội suy chuyển động giữa các điểm để bản đồ trông liền mạch.',
+        ],
+        diagram: `flowchart LR
+  A["Yêu cầu"] --> B["Đã ghép"]
+  B --> C["Tài xế đang tới"]
+  C --> D["Đang chở khách"]
+  D --> E["Hoàn thành"]
+  A -.-> X["Hủy"]
+  B -.-> X
+  C -.-> X`,
+      },
+      {
+        heading: 'Bước 6: phân vùng, điểm nghẽn và đánh đổi',
+        body: [
+          'Bài này có một món quà mà các bài trước không có: dữ liệu tự phân vùng theo địa lý. Một chuyến ở thành phố này không bao giờ cần dữ liệu của thành phố khác, nên hoàn toàn có thể chia hệ thống theo khu vực, mỗi khu vực chạy độc lập với chỉ mục không gian riêng. Sự cố ở một khu vực không lan sang khu vực khác, và mở rộng chỉ là thêm khu vực.',
+          'Điểm nghẽn rõ nhất là khu vực nóng: trung tâm thành phố giờ cao điểm, sân bay lúc có chuyến bay hạ cánh, khu vực có sự kiện lớn. Đây đúng là [[Hot Partition]] theo không gian. Cây chia tư xử lý tốt hơn lưới cố định trong trường hợp này vì nó tự chia nhỏ ô nơi đông.',
+          'Cách giảm tải luồng ghi vị trí quan trọng không kém. Ba mẹo thực dụng: không gửi khi tài xế đứng yên hoặc chưa di chuyển đủ xa; giảm tần suất khi tài xế đang rảnh và tăng lên khi đang chở khách; và gom nhiều điểm rồi gửi một lần thay vì gửi từng điểm. Chỉ ba mẹo này đã cắt được phần lớn lưu lượng.',
+          'Với 5 triệu kết nối dài đồng thời, cần một tầng quản lý phiên biết người dùng nào đang bám vào máy nào, và [[Load Balancer]] phải hỗ trợ nâng cấp giao thức. Khi ứng dụng khách tiêu thụ chậm hơn tốc độ đẩy thì cần [[Backpressure]] — bỏ bớt điểm trung gian thay vì để bộ đệm phình.',
+          'Đánh đổi tổng thể: chấp nhận vị trí trễ vài giây và chấp nhận ghép chưa tối ưu toàn cục, để đổi lấy tốc độ ghép và khả năng chịu tải. Không ai chờ nổi mười giây để hệ thống tìm ra tài xế tối ưu tuyệt đối.',
+        ],
+        table: {
+          headers: ['Điểm nghẽn', 'Nguyên nhân', 'Cách xử lý'],
+          rows: [
+            ['Luồng ghi vị trí khổng lồ', '5 triệu tài xế gửi mỗi 4 giây', 'Chỉ gửi khi di chuyển đủ xa, gom lô, ghi vào bộ nhớ đệm'],
+            ['Khu vực nóng', 'Sân bay, trung tâm giờ cao điểm', 'Cây chia tư tự chia nhỏ ô nơi đông'],
+            ['Ghép trùng một tài xế', 'Hai khách cùng chọn một người', 'Thao tác kiểm tra và đặt trạng thái nguyên tử'],
+            ['5 triệu kết nối dài', 'Mỗi tài xế giữ một WebSocket', 'Tầng quản lý phiên, load balancer hỗ trợ nâng cấp giao thức'],
+          ],
+        },
+        callout:
+          'Câu kết mạnh: "dữ liệu ở đây tự phân vùng theo địa lý, nên tôi chia hệ thống theo khu vực — vừa giới hạn phạm vi sự cố, vừa làm việc mở rộng trở thành thêm khu vực chứ không phải thiết kế lại".',
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Vì sao đặt xe là bài toán ghi nặng, khác các case study trước?',
+        answer:
+          'Vì luồng cập nhật vị trí áp đảo. Với 5 triệu tài xế hoạt động gửi vị trí bốn giây một lần, ta có khoảng 1,25 triệu lệnh ghi mỗi giây. Trong khi số chuyến đặt chỉ khoảng 116 mỗi giây, đỉnh chừng 350 — chênh nhau hơn ba nghìn lần. Trọng tâm thiết kế vì thế là hấp thụ luồng ghi, không phải tối ưu đọc bằng cache.',
+        pitfall:
+          'Áp máy móc kết luận của các bài trước rằng đọc luôn lệch ghi. Ở đây ngược lại hoàn toàn.',
+      },
+      {
+        question: 'So sánh lưới mã hóa theo tiền tố với cây chia tư.',
+        answer:
+          'Lưới mã hóa: bản đồ chia thành ô cố định, hai điểm gần nhau có mã chia sẻ tiền tố nên tìm quanh một điểm chỉ là tra khóa theo tiền tố — đơn giản, chạy được ngay trên kho khóa-giá trị. Cây chia tư: chia thích ứng theo mật độ nên số tài xế mỗi ô cân bằng, xử lý khu vực đông tốt hơn, nhưng phải cập nhật cây khi mật độ thay đổi.',
+        pitfall:
+          'Quên rằng lưới cố định gặp vấn đề khi mật độ rất lệch — một ô ở sân bay có thể chứa hàng nghìn tài xế trong khi ô vùng ven trống rỗng.',
+      },
+      {
+        question: 'Vấn đề biên ô là gì và xử lý thế nào?',
+        answer:
+          'Hai điểm cách nhau 50 mét vẫn có thể rơi vào hai ô khác nhau và mã không chia sẻ tiền tố, nên tìm theo ô sẽ bỏ sót tài xế ở ngay bên kia biên. Cách xử lý chuẩn là truy vấn cả ô chứa điểm lẫn tám ô lân cận, rồi mới lọc theo khoảng cách thật trên tập ứng viên đó.',
+        pitfall:
+          'Chỉ tra đúng một ô. Đây là lỗi khiến hệ thống bỏ sót tài xế gần nhất một cách khó hiểu.',
+      },
+      {
+        question: 'Hai khách cùng được ghép vào một tài xế thì xử lý ra sao?',
+        answer:
+          'Dùng thao tác nguyên tử kiểm tra và đặt trạng thái trong cùng một bước, thay vì đọc rồi ghi đè. Ai thắng thì tài xế chuyển sang trạng thái bận, ai thua thì quay lại tìm ứng viên khác. Ngoài ra mọi thao tác nhận chuyến phải idempotent vì mạng di động rất hay gửi lại request.',
+        pitfall:
+          'Đọc trạng thái rồi ghi đè ở hai bước riêng. Cả hai khách sẽ cùng nghĩ mình ghép thành công.',
+      },
+      {
+        question: 'Ba cách giảm tải luồng cập nhật vị trí là gì?',
+        answer:
+          'Không gửi khi tài xế đứng yên hoặc chưa di chuyển đủ xa; giảm tần suất khi tài xế đang rảnh và tăng lên khi đang chở khách; gom nhiều điểm rồi gửi theo lô thay vì gửi từng điểm. Ngoài ra vị trí hiện tại chỉ cần nằm trong bộ nhớ đệm phân tán chứ không ghi từng điểm xuống database bền vững.',
+        pitfall:
+          'Ghi mọi điểm vị trí xuống database. Đó là dữ liệu sống bốn giây, ghi bền vững vừa lãng phí vừa không kịp.',
+      },
+      {
+        question: 'Vì sao phân vùng theo địa lý đặc biệt phù hợp với bài này?',
+        answer:
+          'Vì một chuyến ở thành phố này không bao giờ cần dữ liệu của thành phố khác — dữ liệu tự phân vùng theo bản chất nghiệp vụ. Mỗi khu vực chạy độc lập với chỉ mục không gian riêng, sự cố không lan sang khu vực khác, và mở rộng chỉ là thêm khu vực chứ không phải thiết kế lại.',
+        pitfall:
+          'Thiết kế một chỉ mục không gian toàn cầu duy nhất. Vừa không cần thiết vừa biến mọi sự cố thành sự cố toàn hệ thống.',
+      },
+    ],
     keyTakeaway:
       'Chia không gian thành ô (geohash/quadtree) để thu hẹp phạm vi tìm tài xế trước khi tính khoảng cách thật.',
     relatedTerms: ['WebSocket', 'Cache'],
