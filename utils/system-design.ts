@@ -38,3 +38,48 @@ export function computeProgressPercent(completedCount: number, total: number): n
   if (total <= 0) return 0
   return Math.min(100, Math.round((completedCount / total) * 100))
 }
+
+export interface TermToken {
+  type: 'text' | 'term'
+  value: string
+}
+
+/** Marker [[Term]] — tên thuật ngữ không được rỗng và không chứa dấu ]. */
+const TERM_MARKER = /\[\[([^\]]+?)\]\]/g
+
+/**
+ * Tách một đoạn văn thành các mảnh text và thuật ngữ.
+ * Thuật ngữ viết dưới dạng [[Term]] trong nội dung bài.
+ * Marker không đóng hoặc rỗng được giữ nguyên văn, không sinh link.
+ */
+export function parseTermMarkers(text: string): TermToken[] {
+  const tokens: TermToken[] = []
+  let lastIndex = 0
+
+  for (const match of text.matchAll(TERM_MARKER)) {
+    const term = match[1].trim()
+    if (!term) continue
+
+    const start = match.index ?? 0
+    if (start > lastIndex) {
+      tokens.push({ type: 'text', value: text.slice(lastIndex, start) })
+    }
+    tokens.push({ type: 'term', value: term })
+    lastIndex = start + match[0].length
+  }
+
+  if (lastIndex < text.length) {
+    tokens.push({ type: 'text', value: text.slice(lastIndex) })
+  }
+
+  return tokens
+}
+
+/**
+ * Link tới thuật ngữ trong trang từ điển.
+ * Bắt buộc encode: thuật ngữ như "Token / JWT" hay "C/C++" sẽ phá route nếu
+ * ghép thẳng vào hash.
+ */
+export function glossaryHref(term: string): string {
+  return `/glossary#${encodeURIComponent(term)}`
+}

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { computeProgressPercent, parseCompletedSlugs, toggleSlug } from './system-design'
+import {
+  computeProgressPercent,
+  glossaryHref,
+  parseCompletedSlugs,
+  parseTermMarkers,
+  toggleSlug,
+} from './system-design'
 
 const KNOWN = ['buoi-1', 'buoi-2', 'buoi-3']
 
@@ -70,5 +76,66 @@ describe('computeProgressPercent', () => {
 
   it('chặn trên ở 100% kể cả khi đếm vượt tổng', () => {
     expect(computeProgressPercent(20, 13)).toBe(100)
+  })
+})
+
+describe('parseTermMarkers', () => {
+  it('trả nguyên văn khi không có marker', () => {
+    expect(parseTermMarkers('Không có thuật ngữ nào.')).toEqual([
+      { type: 'text', value: 'Không có thuật ngữ nào.' },
+    ])
+  })
+
+  it('tách đúng 3 phần khi marker nằm giữa câu', () => {
+    expect(parseTermMarkers('Dùng [[Redis]] để cache.')).toEqual([
+      { type: 'text', value: 'Dùng ' },
+      { type: 'term', value: 'Redis' },
+      { type: 'text', value: ' để cache.' },
+    ])
+  })
+
+  it('tách đúng khi có nhiều marker', () => {
+    expect(parseTermMarkers('[[CAP]] và [[Sharding]] khác nhau')).toEqual([
+      { type: 'term', value: 'CAP' },
+      { type: 'text', value: ' và ' },
+      { type: 'term', value: 'Sharding' },
+      { type: 'text', value: ' khác nhau' },
+    ])
+  })
+
+  it('không sinh đoạn text rỗng khi marker ở đầu và cuối', () => {
+    expect(parseTermMarkers('[[CDN]]')).toEqual([{ type: 'term', value: 'CDN' }])
+  })
+
+  it('render nguyên văn khi marker không đóng', () => {
+    expect(parseTermMarkers('Thiếu dấu đóng [[Redis')).toEqual([
+      { type: 'text', value: 'Thiếu dấu đóng [[Redis' },
+    ])
+  })
+
+  it('không sinh link rỗng với marker rỗng', () => {
+    expect(parseTermMarkers('Trống [[]] ở giữa')).toEqual([
+      { type: 'text', value: 'Trống [[]] ở giữa' },
+    ])
+  })
+
+  it('cắt khoảng trắng thừa quanh tên thuật ngữ', () => {
+    expect(parseTermMarkers('[[  Redis  ]]')).toEqual([{ type: 'term', value: 'Redis' }])
+  })
+})
+
+describe('glossaryHref', () => {
+  it('tạo href cơ bản', () => {
+    expect(glossaryHref('Redis')).toBe('/glossary#Redis')
+  })
+
+  // Thuật ngữ có dấu / sẽ phá route nếu không encode — lỗi đã gặp ở feature
+  // glossary-index.
+  it('encode thuật ngữ chứa dấu gạch chéo và khoảng trắng', () => {
+    expect(glossaryHref('Token / JWT')).toBe('/glossary#Token%20%2F%20JWT')
+  })
+
+  it('encode thuật ngữ chứa ký tự đặc biệt', () => {
+    expect(glossaryHref('C/C++')).toBe('/glossary#C%2FC%2B%2B')
   })
 })
