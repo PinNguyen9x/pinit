@@ -67,6 +67,8 @@ Ba công cụ giải quyết đúng ba tầng đó:
 
 Và một script mỏng (`agents.sh`) dán chúng lại.
 
+> Bài này là phần **hạ tầng**: dựng chỗ cho nhiều agent cùng chạy. Còn phần **điều phối** — chia việc thế nào để agent không giẫm chân nhau, prompt ra sao để output kiểm chứng được, nghiệm thu trước khi gộp — nằm ở bài: [Nhiều agent hơn, vẫn một bộ não người: cách mình điều phối nhiều AI agent cùng lúc](/blog/orchestrate-multiple-ai-agents).
+
 ---
 
 ## 2. Kiến trúc
