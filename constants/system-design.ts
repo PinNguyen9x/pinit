@@ -466,8 +466,133 @@ export const LESSONS: Lesson[] = [
     track: 'Kiến thức lõi',
     keywords: ['cache', 'Redis', 'message queue', 'pub/sub', 'Kafka', 'monitoring'],
     readingMinutes: 15,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Cache: mua tốc độ bằng nguy cơ dữ liệu cũ',
+        body: [
+          '[[Cache]] tồn tại ở nhiều tầng cùng lúc, và nói được chuỗi này là điểm cộng: bộ nhớ trình duyệt, [[CDN]] ở biên, tầng đệm phân tán dùng chung giữa các máy chủ ứng dụng, bộ đệm cục bộ trong tiến trình, và cuối cùng là bộ đệm của chính [[Database]]. Mỗi tầng chặn được một phần lưu lượng, tầng nào chặn càng sớm càng rẻ.',
+          'Mẫu phổ biến nhất là cache-aside: ứng dụng hỏi cache trước, trượt thì đọc database rồi ghi ngược vào cache kèm thời hạn sống. Ưu điểm là chỉ dữ liệu thật sự được đọc mới nằm trong cache, và cache chết thì hệ thống vẫn chạy, chỉ chậm hơn. Nhược điểm là lần đọc đầu tiên luôn trượt, và có khoảng thời gian ngắn dữ liệu trong cache lệch với database.',
+          'Write-through ghi đồng thời vào cache và database nên cache luôn khớp, đổi lại mỗi lệnh ghi chậm hơn và cache chứa cả dữ liệu chẳng ai đọc. Write-behind ghi vào cache rồi đẩy xuống database sau — nhanh nhất nhưng mất dữ liệu nếu cache chết trước khi kịp đẩy, chỉ dùng khi chấp nhận được mất mát, ví dụ đếm lượt xem.',
+          'Câu hỏi khó nhất về cache không phải "dùng cái nào" mà là "làm mới thế nào". Ba cách: đặt thời hạn sống rồi chấp nhận cũ trong khoảng đó, chủ động xóa khóa khi dữ liệu đổi, hoặc phát sự kiện thay đổi để mọi tầng cùng xóa. Cách đầu đơn giản nhất và thường là câu trả lời đúng.',
+        ],
+        diagram: `flowchart LR
+  A["Ứng dụng"] --> C{"Có trong cache?"}
+  C -->|Trúng| R["Trả về ngay"]
+  C -->|Trượt| DB[("Database")]
+  DB --> W["Ghi vào cache kèm TTL"]
+  W --> R`,
+        table: {
+          headers: ['Chiến lược', 'Cách ghi', 'Ưu điểm', 'Rủi ro'],
+          rows: [
+            ['Cache-aside', 'Ứng dụng tự ghi vào cache khi trượt', 'Chỉ đệm dữ liệu thật sự được đọc', 'Lần đọc đầu luôn trượt, có khoảng lệch'],
+            ['Write-through', 'Ghi cache và database cùng lúc', 'Cache luôn khớp database', 'Mỗi lệnh ghi chậm hơn, đệm cả dữ liệu không ai đọc'],
+            ['Write-behind', 'Ghi cache trước, đẩy xuống sau', 'Ghi nhanh nhất', 'Mất dữ liệu nếu cache chết trước khi đẩy'],
+          ],
+        },
+        callout:
+          'Khi thêm cache vào thiết kế, hãy nói ngay chiến lược làm mới và mức dữ liệu cũ chấp nhận được. Thêm cache mà không nhắc hai điều này là câu trả lời chưa xong.',
+      },
+      {
+        heading: 'Ba sự cố kinh điển của cache',
+        body: [
+          'Sự cố thứ nhất là giẫm đạp: một khóa nóng hết hạn, hàng nghìn request cùng trượt và cùng lao xuống database trong một khoảnh khắc, đủ để làm sập tầng dữ liệu. Cách xử lý là cho một request duy nhất đi nạp lại trong khi các request khác chờ kết quả đó, cộng thêm rải ngẫu nhiên thời hạn sống để các khóa không hết hạn cùng lúc.',
+          'Sự cố thứ hai là xuyên thủng: kẻ tấn công liên tục hỏi những khóa chắc chắn không tồn tại, nên lần nào cũng trượt cache và xuống thẳng database. Cách xử lý là đệm cả kết quả rỗng với thời hạn ngắn, hoặc dùng bộ lọc xác suất để loại sớm những khóa chắc chắn không có.',
+          'Sự cố thứ ba là khóa nóng: một khóa duy nhất nhận quá nhiều lưu lượng đến mức chính node cache chứa nó bị quá tải, trong khi các node khác rảnh rỗi. Đây cùng bản chất với [[Hot Partition]] ở tầng dữ liệu. Cách xử lý là nhân bản khóa đó ra nhiều bản có hậu tố, hoặc thêm một tầng đệm cục bộ ngay trong tiến trình ứng dụng.',
+          'Về chính sách loại bỏ khi cache đầy: LRU loại thứ lâu không dùng, hợp với phần lớn trường hợp. LFU loại thứ ít được dùng, tốt hơn khi có nhóm dữ liệu nóng ổn định nhưng phản ứng chậm với thay đổi xu hướng. Chọn sai chính sách làm tỉ lệ trúng tụt mà không ai để ý, nên tỉ lệ trúng phải là một chỉ số được theo dõi.',
+        ],
+        callout:
+          'Rải ngẫu nhiên thời hạn sống là mẹo nhỏ giá trị lớn: đặt TTL 300 giây cho mọi khóa nghĩa là mỗi 5 phút sẽ có một đợt trượt đồng loạt.',
+      },
+      {
+        heading: 'Hàng đợi và pub/sub: tách rời người gửi khỏi người nhận',
+        body: [
+          'Hàng đợi giải quyết ba bài toán mà gọi trực tiếp không giải quyết được. Thứ nhất là hấp thụ đỉnh tải: lưu lượng tăng vọt được xếp hàng thay vì đánh sập dịch vụ phía sau. Thứ hai là tách rời: người gửi không cần biết ai xử lý, thêm một bên tiêu thụ mới không phải sửa bên gửi. Thứ ba là thử lại có kỷ luật: thông điệp xử lý hỏng quay lại hàng đợi thay vì mất hẳn.',
+          'Phân biệt hai mô hình. Hàng đợi điểm-tới-điểm: mỗi thông điệp chỉ một bên tiêu thụ nhận được, hợp với phân phối công việc. Pub/sub: mỗi thông điệp được gửi tới mọi bên đăng ký, hợp khi một sự kiện cần kích hoạt nhiều hành động độc lập — đặt hàng xong thì trừ kho, gửi email, ghi nhận doanh thu.',
+          '[[Kafka]] là lựa chọn khi cần thông lượng rất cao và giữ lại lịch sử sự kiện. Điểm khác biệt lớn nhất so với hàng đợi truyền thống: thông điệp không bị xóa sau khi đọc mà nằm lại theo chính sách [[Retention]], nên bên tiêu thụ mới có thể đọc lại từ đầu, và có thể tua lại khi cần xử lý lại. [[RabbitMQ]] hợp hơn khi cần định tuyến phức tạp và mỗi thông điệp là một việc cần làm.',
+          'Trong [[Kafka]], một [[Topic]] chia thành nhiều [[Partition]] — đây là đơn vị song song. Thêm partition thì tăng được [[Throughput]], nhưng số bên tiêu thụ hữu ích trong một [[Consumer Group]] không vượt quá số partition. Và thứ tự chỉ được bảo đảm trong phạm vi một partition, không phải toàn topic.',
+        ],
+        diagram: `flowchart LR
+  P["Producer — đặt hàng"] --> T["Topic: order.created"]
+  T --> C1["Consumer: trừ kho"]
+  T --> C2["Consumer: gửi email"]
+  T --> C3["Consumer: ghi nhận doanh thu"]
+  C1 -. hỏng nhiều lần .-> DLQ["Dead letter queue"]`,
+        callout:
+          'Muốn các sự kiện của cùng một người dùng giữ đúng thứ tự, hãy dùng chính id người dùng làm [[Partition Key]] — thứ tự chỉ được bảo đảm trong một partition.',
+      },
+      {
+        heading: 'Bảo đảm giao hàng: exactly-once phần lớn là ảo tưởng',
+        body: [
+          'Có ba mức bảo đảm. At-most-once: gửi rồi thôi, thông điệp có thể mất — chỉ chấp nhận được với dữ liệu đo lường không quan trọng. At-least-once: gửi lại cho tới khi có xác nhận, không mất nhưng có thể trùng. Exactly-once: mỗi thông điệp có tác dụng đúng một lần.',
+          'Câu trả lời trưởng thành trong phỏng vấn là: hầu như mọi hệ thống thực tế chạy at-least-once và đạt hiệu quả exactly-once bằng cách làm bên tiêu thụ [[Idempotency]]. Lưu id thông điệp đã xử lý, gặp lại thì bỏ qua. Kafka có cơ chế giao dịch trong nội bộ nó, nhưng ngay khi bên tiêu thụ ghi ra một hệ thống khác — gửi email, gọi cổng thanh toán — bảo đảm đó không còn kéo dài tới đầu kia được nữa.',
+          'Hai chỉ số vận hành cần nói được. [[Consumer Lag]] là khoảng cách giữa vị trí ghi mới nhất và vị trí bên tiêu thụ đang đọc; lag tăng đều nghĩa là năng lực xử lý không theo kịp tốc độ ghi, và đây là chỉ số đáng cảnh báo nhất. [[Dead Letter Queue]] là nơi chứa thông điệp hỏng sau nhiều lần thử; không có nó thì một thông điệp lỗi có thể chặn cả partition mãi mãi.',
+          'Cuối cùng là [[Backpressure]]: khi bên tiêu thụ chậm hơn bên gửi, phải có cơ chế báo ngược hoặc giới hạn tốc độ, chứ không để hàng đợi phình vô hạn rồi hết bộ nhớ.',
+        ],
+        table: {
+          headers: ['Mức bảo đảm', 'Rủi ro', 'Dùng khi', 'Cần thêm gì'],
+          rows: [
+            ['At-most-once', 'Mất thông điệp', 'Dữ liệu đo lường không quan trọng', 'Không'],
+            ['At-least-once', 'Thông điệp trùng', 'Mặc định cho hầu hết hệ thống', 'Bên tiêu thụ phải idempotent'],
+            ['Exactly-once', 'Phức tạp, giới hạn trong một hệ', 'Trong nội bộ một nền tảng', 'Giao dịch, và vẫn cần idempotency ở biên'],
+          ],
+        },
+      },
+      {
+        heading: 'Monitoring: biết hệ thống ốm trước khi người dùng báo',
+        body: [
+          'Ba loại dữ liệu quan sát bổ sung cho nhau. Số đo cho biết có chuyện gì đó bất thường và rẻ để lưu dài hạn. Nhật ký cho biết chi tiết chuyện gì đã xảy ra ở một thời điểm. Vết theo dõi phân tán cho biết một request cụ thể đã đi qua những dịch vụ nào và tốn thời gian ở đâu — thứ gần như bắt buộc khi đã tách [[Microservices]].',
+          'Với dịch vụ hướng request, bốn chỉ số cần theo là số request mỗi giây, tỉ lệ lỗi, độ trễ, và mức bão hòa tài nguyên. Điểm quan trọng nhất về độ trễ: đừng báo cáo giá trị trung bình. Trung bình che giấu phần đuôi, mà chính phần đuôi là trải nghiệm tệ nhất người dùng gặp phải. Hãy theo p95 và p99. Một hệ thống có trung bình 50 mili giây nhưng p99 là 4 giây nghĩa là cứ 100 request có một request khiến người dùng nghĩ trang bị treo.',
+          'Với hệ thống có nhiều lời gọi nội bộ, độ trễ đuôi còn bị khuếch đại: một trang gọi 20 dịch vụ, mỗi dịch vụ có p99 là 1%, thì xác suất trang đó dính ít nhất một lời gọi chậm lên tới khoảng 18%. Đây là lý do người ta cắt bớt số lời gọi tuần tự và gửi request dự phòng cho các lời gọi quan trọng.',
+          'Về cảnh báo: hãy cảnh báo theo triệu chứng người dùng cảm nhận được — tỉ lệ lỗi tăng, độ trễ p99 vượt ngưỡng, [[Consumer Lag]] tăng đều — chứ không cảnh báo theo mọi nguyên nhân có thể. Cảnh báo theo nguyên nhân sinh ra hàng loạt thông báo nhiễu, và đội ngũ sẽ nhanh chóng học cách phớt lờ chúng.',
+        ],
+        callout:
+          'Câu đáng nhớ khi bị hỏi về hiệu năng: "trung bình nói cho bạn biết hệ thống chạy thế nào, p99 nói cho bạn biết người dùng cảm thấy thế nào".',
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Cache-aside, write-through và write-behind khác nhau ở đâu?',
+        answer:
+          'Cache-aside: ứng dụng hỏi cache trước, trượt thì đọc database rồi ghi ngược vào cache — chỉ đệm dữ liệu thật sự được đọc, cache chết thì hệ thống vẫn chạy. Write-through: ghi cache và database cùng lúc, cache luôn khớp nhưng mỗi lệnh ghi chậm hơn. Write-behind: ghi cache trước rồi đẩy xuống database sau, nhanh nhất nhưng mất dữ liệu nếu cache chết trước khi đẩy.',
+        pitfall:
+          'Chỉ nói tên chiến lược mà không nói cách làm mới và mức dữ liệu cũ chấp nhận được — đó mới là phần khó của bài toán cache.',
+      },
+      {
+        question: 'Cache stampede là gì và xử lý thế nào?',
+        answer:
+          'Một khóa nóng hết hạn, hàng nghìn request cùng trượt và cùng lao xuống database trong một khoảnh khắc, đủ để làm sập tầng dữ liệu. Xử lý bằng cách cho một request duy nhất đi nạp lại trong khi các request khác chờ kết quả đó, kết hợp rải ngẫu nhiên thời hạn sống để các khóa không hết hạn cùng lúc.',
+        pitfall:
+          'Đặt cùng một TTL cho mọi khóa. Nghe gọn gàng nhưng tạo ra đợt trượt đồng loạt đều đặn theo chu kỳ.',
+      },
+      {
+        question: 'Vì sao nói exactly-once phần lớn là ảo tưởng?',
+        answer:
+          'Vì bảo đảm đó chỉ giữ được trong nội bộ một nền tảng. Ngay khi bên tiêu thụ ghi ra hệ thống khác — gửi email, gọi cổng thanh toán — bảo đảm không kéo dài tới đầu kia được. Thực tế mọi hệ thống chạy at-least-once và đạt hiệu quả exactly-once bằng cách làm bên tiêu thụ idempotent: lưu id thông điệp đã xử lý, gặp lại thì bỏ qua.',
+        pitfall:
+          'Trả lời "tôi bật exactly-once" rồi dừng lại. Người phỏng vấn sẽ hỏi ngay điều gì xảy ra khi consumer gọi ra dịch vụ bên ngoài.',
+      },
+      {
+        question: 'Thứ tự thông điệp được bảo đảm ở phạm vi nào?',
+        answer:
+          'Chỉ trong phạm vi một partition, không phải toàn topic. Muốn các sự kiện của cùng một thực thể giữ đúng thứ tự thì dùng id của thực thể đó làm partition key — ví dụ id người dùng hoặc id đơn hàng. Đổi lại, nếu một khóa quá nóng thì partition chứa nó thành điểm nghẽn.',
+        pitfall:
+          'Giả định toàn bộ topic có thứ tự toàn cục. Không hệ thống hàng đợi phân tán nào cho bạn điều đó mà vẫn giữ được thông lượng.',
+      },
+      {
+        question: 'Vì sao theo dõi p99 thay vì giá trị trung bình?',
+        answer:
+          'Trung bình che giấu phần đuôi, mà phần đuôi chính là trải nghiệm tệ nhất người dùng gặp. Hệ thống trung bình 50 mili giây nhưng p99 là 4 giây nghĩa là cứ 100 request có một request khiến người dùng nghĩ trang bị treo. Với hệ thống nhiều lời gọi nội bộ, độ trễ đuôi còn bị khuếch đại: 20 lời gọi mỗi cái p99 1% thì xác suất dính ít nhất một lời gọi chậm khoảng 18%.',
+        pitfall:
+          'Báo cáo độ trễ trung bình rồi kết luận hệ thống nhanh. Đây là lỗi kinh điển khi trình bày phần hiệu năng.',
+      },
+      {
+        question: 'Nên cảnh báo theo triệu chứng hay theo nguyên nhân?',
+        answer:
+          'Theo triệu chứng người dùng cảm nhận được: tỉ lệ lỗi tăng, p99 vượt ngưỡng, consumer lag tăng đều. Cảnh báo theo mọi nguyên nhân có thể sẽ sinh ra hàng loạt thông báo nhiễu và đội ngũ sẽ học cách phớt lờ. Nguyên nhân là thứ để điều tra sau khi triệu chứng đã báo, và đó là lúc dùng tới nhật ký và vết theo dõi phân tán.',
+        pitfall:
+          'Đặt cảnh báo cho từng chỉ số hạ tầng như CPU của mọi máy. Phần lớn sẽ là nhiễu, và cảnh báo thật sẽ chìm trong đó.',
+      },
+    ],
     keyTakeaway:
       'Cache mua tốc độ bằng nguy cơ dữ liệu cũ — luôn nói rõ chiến lược invalidation.',
     relatedTerms: ['Cache', 'Kafka', 'Backpressure'],

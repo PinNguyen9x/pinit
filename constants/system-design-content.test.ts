@@ -9,6 +9,7 @@ const SLUGS_DA_VIET = [
   'nguyen-ly-cap-microservices',
   'load-balancer-va-database',
   'networking-he-phan-tan',
+  'caching-message-queue-monitoring',
 ]
 
 const MIN_WORDS = 800
