@@ -17,6 +17,7 @@ const SLUGS_DA_VIET = [
   'case-study-social-media',
   'case-study-typeahead',
   'case-study-taxi-booking',
+  'case-study-messaging',
 ]
 
 const MIN_WORDS = 800

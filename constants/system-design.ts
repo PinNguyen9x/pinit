@@ -1649,8 +1649,133 @@ export const LESSONS: Lesson[] = [
     track: 'Case study',
     keywords: ['messaging', 'chat', 'WebSocket', 'presence', 'inbox', 'Zalo'],
     readingMinutes: 18,
-    sections: [],
-    flashcards: [],
+    sections: [
+      {
+        heading: 'Bước 1 và 2: yêu cầu và ước lượng',
+        body: [
+          'Chức năng trong phạm vi: nhắn tin một-một và nhóm, trạng thái đã gửi, đã nhận và đã đọc, hiển thị ai đang trực tuyến, và nhận được tin khi mở lại ứng dụng sau lúc ngoại tuyến. Để ngoài phạm vi: gọi thoại và video, gửi tệp lớn, và tìm kiếm toàn văn trong lịch sử.',
+          'Yêu cầu phi chức năng của bài này có một điểm khác hẳn mọi case study trước: không được mất tin nhắn. Ở bảng tin hay typeahead, mất một mục là chuyện không ai để ý; ở đây mất một tin nhắn là lỗi nghiêm trọng mà người dùng phát hiện ngay. Kèm theo đó, thứ tự tin trong một cuộc trò chuyện phải đúng, và độ trễ nên dưới 200 mili giây để cảm giác trò chuyện được liền mạch.',
+          'Ước lượng. Giả sử 500 triệu người dùng hoạt động mỗi ngày, mỗi người gửi 40 tin, được 20 tỉ tin mỗi ngày, chia cho 86 nghìn giây ra khoảng 230 nghìn tin mỗi giây, đỉnh chừng 700 nghìn.',
+          'Nhưng con số định hình kiến trúc lại là số kết nối đồng thời. Nếu khoảng một phần năm người dùng mở ứng dụng cùng lúc thì có cỡ 100 triệu kết nối dài phải duy trì. Đây là đơn vị đo hoàn toàn khác với request mỗi giây, và nó buộc phải có một tầng cổng kết nối riêng biệt.',
+        ],
+        callout:
+          'Điểm phân biệt bài này với các bài trước: đây là hệ thống mà mất dữ liệu là không chấp nhận được. Nói rõ ràng buộc đó ngay từ đầu vì nó chi phối mọi quyết định sau.',
+      },
+      {
+        heading: 'Bước 3: API và mô hình dữ liệu',
+        body: [
+          'Kênh chính là [[WebSocket]] cho việc gửi và nhận theo thời gian thực. Ngoài ra vẫn cần một [[API]] thông thường để tải lịch sử khi mở lại cuộc trò chuyện, vì kéo lịch sử qua kết nối dài không có lợi ích gì.',
+          'Mô hình dữ liệu xoay quanh cuộc trò chuyện. Mỗi tin nhắn gồm mã cuộc trò chuyện, mã tin, người gửi, nội dung và thời điểm. Khóa truy cập luôn giống nhau: lấy các tin của một cuộc trò chuyện, sắp theo thời gian giảm dần, phân trang bằng con trỏ. Đây là dấu hiệu rất rõ cho kho theo cột rộng, với mã cuộc trò chuyện làm [[Partition Key]] và thời gian làm khóa sắp xếp trong phân vùng.',
+          'Mã tin nhắn phải vừa duy nhất vừa sắp xếp được theo thời gian. Không dùng số tự tăng dùng chung vì nó thành điểm nghẽn ở quy mô này; cách phổ biến là mã gồm phần thời gian cộng phần định danh máy sinh cộng bộ đếm trong mili giây đó.',
+          'Trạng thái đọc thì không lưu theo từng cặp tin và người — cách đó sinh ra số bản ghi bằng số tin nhân số thành viên. Thay vào đó mỗi người trong cuộc trò chuyện chỉ giữ một con trỏ chỉ tới tin cuối cùng họ đã đọc. Muốn biết ai đã đọc tin nào thì so sánh con trỏ với mã tin.',
+        ],
+      },
+      {
+        heading: 'Bước 4: đường đi của một tin nhắn — phần cốt lõi',
+        body: [
+          'Người gửi đẩy tin qua kết nối dài tới một cổng kết nối. Cổng này không xử lý nghiệp vụ, chỉ chuyển tiếp vào dịch vụ tin nhắn. Dịch vụ gán mã, rồi làm việc quan trọng nhất: lưu bền vững trước khi báo thành công cho người gửi.',
+          'Thứ tự này không được đảo. Nếu báo thành công trước rồi mới lưu, một sự cố ở giữa sẽ khiến người gửi thấy dấu tích đã gửi trong khi tin nhắn không tồn tại ở đâu cả — đúng kiểu lỗi mà người dùng không bao giờ tha thứ. Ràng buộc không được mất tin nhắn quy định chính xác thứ tự này.',
+          'Sau khi lưu xong và báo thành công, tin được đẩy tới người nhận. Muốn vậy phải biết người nhận đang bám vào cổng nào — đó là vai trò của một sổ đăng ký phiên, ánh xạ người dùng tới cổng, thường nằm trong bộ nhớ đệm phân tán vì đọc rất nhiều và mất cũng dựng lại được.',
+          'Nếu người nhận đang ngoại tuyến, tin nhắn đã nằm an toàn trong kho nên không cần làm gì thêm ngoài việc gửi [[Push Notification]] qua dịch vụ của hệ điều hành. Khi họ mở lại ứng dụng, ứng dụng đồng bộ mọi tin có mã lớn hơn mã cuối cùng đã nhận — không cần một hàng đợi riêng cho từng người.',
+          'Việc phát tán tới nhiều thiết bị của cùng một người và tới các thành viên nhóm chạy qua luồng sự kiện như [[Kafka]], tách khỏi đường phản hồi cho người gửi.',
+        ],
+        diagram: `flowchart LR
+  S["Người gửi"] -->|WebSocket| G1["Cổng kết nối"]
+  G1 --> MS["Dịch vụ tin nhắn"]
+  MS -->|"1. Lưu bền vững"| DB[("Kho tin nhắn")]
+  MS -->|"2. Báo đã gửi"| S
+  MS -->|"3. Phát tán"| K["Luồng sự kiện"]
+  K --> SR{"Người nhận trực tuyến?"}
+  SR -->|Có| G2["Cổng của người nhận"]
+  SR -->|Không| PN["Push notification"]
+  G2 --> R["Người nhận"]`,
+        callout:
+          'Câu hỏi kiểm tra ngay được kinh nghiệm: "dấu tích đã gửi hiện ra ở thời điểm nào?". Trả lời đúng là sau khi tin đã nằm bền vững trong kho, không phải khi cổng nhận được gói tin.',
+      },
+      {
+        heading: 'Bước 5: thứ tự, trùng lặp và trạng thái đọc',
+        body: [
+          'Thứ tự chỉ cần đúng trong phạm vi một cuộc trò chuyện, không cần đúng trên toàn hệ thống. Đây là điều may mắn vì thứ tự toàn cục là bài toán rất đắt. Dùng mã cuộc trò chuyện làm khóa phân vùng thì mọi tin của cùng cuộc trò chuyện đi qua cùng một phân vùng và giữ nguyên thứ tự — đúng nguyên tắc đã học ở buổi 4.',
+          'Đừng dựa vào đồng hồ máy chủ để sắp xếp. Đồng hồ giữa các máy luôn lệch nhau vài mili giây, đủ để hai tin gửi gần nhau bị đảo. Mã tin sinh theo kiểu có phần thời gian cộng phần máy cộng bộ đếm vừa duy nhất vừa sắp xếp được, và đó là thứ nên dùng làm khóa sắp xếp.',
+          'Mạng di động chập chờn nên client sẽ gửi lại. Cách xử lý là client sinh sẵn một mã tạm cho mỗi tin trước khi gửi; server dùng mã đó làm khóa khử trùng, gặp lại thì trả về kết quả cũ thay vì tạo tin thứ hai. Đây chính là [[Idempotency]] áp dụng cho nghiệp vụ nhắn tin.',
+          'Ba mốc trạng thái tương ứng ba sự kiện khác nhau: đã lưu ở máy chủ, đã tới thiết bị người nhận, và người nhận đã mở đọc. Hai mốc sau đi ngược từ thiết bị người nhận về, và với nhóm đông thì chúng sinh ra lưu lượng đáng kể — nên gộp lô và cập nhật theo con trỏ thay vì báo từng tin một.',
+        ],
+        table: {
+          headers: ['Vấn đề', 'Cách làm ngây thơ', 'Cách làm đúng'],
+          rows: [
+            ['Thứ tự tin nhắn', 'Sắp theo đồng hồ máy chủ', 'Mã tin có phần thời gian, phân vùng theo cuộc trò chuyện'],
+            ['Client gửi lại khi mạng chập chờn', 'Tạo tin mới mỗi lần nhận', 'Client sinh mã tạm, server khử trùng theo mã đó'],
+            ['Trạng thái đã đọc', 'Một bản ghi cho mỗi cặp tin và người', 'Một con trỏ đọc cuối cùng cho mỗi người'],
+            ['Đồng bộ sau khi ngoại tuyến', 'Hàng đợi riêng cho từng người', 'Lấy mọi tin có mã lớn hơn mã cuối đã nhận'],
+          ],
+        },
+      },
+      {
+        heading: 'Bước 6: nhóm lớn, điểm nghẽn và đánh đổi',
+        body: [
+          'Nhắn tin nhóm làm bài toán phát tán quay lại, giống hệt buổi 9. Một tin trong nhóm nghìn người sinh ra nghìn lượt đẩy. Với nhóm cỡ vừa thì đẩy trực tiếp là ổn. Với nhóm rất lớn kiểu kênh phát thanh hàng trăm nghìn thành viên thì đẩy không còn khả thi — chuyển sang mô hình người nhận tự kéo khi mở ứng dụng, đúng cách đã dùng cho tài khoản đông người theo dõi.',
+          'Cuộc trò chuyện nóng là [[Hot Partition]]: một nhóm rất sôi động dồn toàn bộ lưu lượng vào một phân vùng vì khóa phân vùng chính là mã cuộc trò chuyện. Đây là cái giá phải trả để có thứ tự, và cách giảm nhẹ là tách các nhóm siêu lớn ra hạ tầng riêng thay vì cố nhét chung.',
+          'Tầng cổng kết nối cần chú ý riêng. Trăm triệu kết nối dài nghĩa là mỗi cổng giữ hàng trăm nghìn kết nối, cần điều chỉnh giới hạn hệ điều hành và bộ nhớ. Khi một cổng chết, toàn bộ client của nó kết nối lại cùng lúc — phải rải ngẫu nhiên thời gian thử lại, nếu không cổng còn sống sẽ bị đánh sập theo dây chuyền. Và khi thiết bị nhận chậm hơn tốc độ đẩy thì cần [[Backpressure]].',
+          'Về mã hóa đầu cuối, nếu được hỏi thì đây là đánh đổi đáng nói: máy chủ không đọc được nội dung nên không thể tìm kiếm phía máy chủ, không kiểm duyệt nội dung được, và đồng bộ lịch sử sang thiết bị mới trở nên phức tạp vì cần chuyển khóa. Đổi lại là quyền riêng tư thực sự.',
+          'Đánh đổi tổng thể của bài: ưu tiên không mất tin và đúng thứ tự hơn là độ trễ tuyệt đối. Đây là hướng ngược với bảng tin và typeahead, và nói rõ sự khác biệt đó cho thấy bạn chọn theo nghiệp vụ chứ không theo thói quen.',
+        ],
+        table: {
+          headers: ['Điểm nghẽn', 'Nguyên nhân', 'Cách xử lý'],
+          rows: [
+            ['Nhóm rất lớn', 'Một tin sinh hàng trăm nghìn lượt đẩy', 'Chuyển sang để người nhận tự kéo khi mở ứng dụng'],
+            ['Cuộc trò chuyện nóng', 'Khóa phân vùng là mã cuộc trò chuyện', 'Tách nhóm siêu lớn ra hạ tầng riêng'],
+            ['Cổng kết nối chết', 'Hàng trăm nghìn client kết nối lại cùng lúc', 'Rải ngẫu nhiên thời gian thử lại'],
+            ['Thiết bị nhận chậm', 'Đẩy nhanh hơn khả năng tiêu thụ', 'Backpressure, bỏ bớt cập nhật trạng thái trung gian'],
+          ],
+        },
+        callout:
+          'Câu kết phân biệt bài này với các bài khác: "ở bảng tin tôi đánh đổi nhất quán lấy tốc độ, còn ở đây tôi làm ngược lại — vì người dùng không tha thứ cho một tin nhắn bị mất".',
+      },
+    ],
+    flashcards: [
+      {
+        question: 'Dấu tích đã gửi nên hiện ra ở thời điểm nào và vì sao?',
+        answer:
+          'Sau khi tin nhắn đã được lưu bền vững, không phải khi cổng kết nối nhận được gói tin. Nếu báo thành công trước rồi mới lưu, một sự cố ở giữa sẽ khiến người gửi thấy dấu tích trong khi tin không tồn tại ở đâu cả. Ràng buộc không được mất tin nhắn quy định chính xác thứ tự lưu trước rồi mới báo.',
+        pitfall:
+          'Đảo thứ tự để giảm độ trễ. Ở hệ thống nhắn tin, mất tin nghiêm trọng hơn chậm vài chục mili giây.',
+      },
+      {
+        question: 'Bảo đảm thứ tự tin nhắn bằng cách nào?',
+        answer:
+          'Chỉ cần đúng thứ tự trong phạm vi một cuộc trò chuyện, không cần thứ tự toàn cục. Dùng mã cuộc trò chuyện làm khóa phân vùng để mọi tin của cùng cuộc đi qua một phân vùng. Không dựa vào đồng hồ máy chủ vì đồng hồ giữa các máy lệch nhau vài mili giây; dùng mã tin có phần thời gian cộng phần định danh máy cộng bộ đếm, vừa duy nhất vừa sắp xếp được.',
+        pitfall:
+          'Sắp xếp theo dấu thời gian do máy chủ gán. Hai tin gửi gần nhau qua hai máy khác nhau sẽ bị đảo thứ tự.',
+      },
+      {
+        question: 'Client gửi lại do mạng chập chờn thì chống trùng thế nào?',
+        answer:
+          'Client sinh sẵn một mã tạm cho mỗi tin trước khi gửi. Server dùng mã đó làm khóa khử trùng: gặp lại thì trả về kết quả cũ thay vì tạo tin thứ hai. Đây là idempotency áp dụng cho nghiệp vụ nhắn tin, và bắt buộc phải có vì mạng di động rất hay gửi lại.',
+        pitfall:
+          'Để server tự sinh toàn bộ mã. Khi đó server không có cách nào biết hai request là cùng một tin nhắn.',
+      },
+      {
+        question: 'Vì sao không lưu trạng thái đã đọc theo từng cặp tin và người?',
+        answer:
+          'Vì số bản ghi sẽ bằng số tin nhân số thành viên — với nhóm đông thì bùng nổ. Thay vào đó mỗi người chỉ giữ một con trỏ chỉ tới tin cuối cùng họ đã đọc; muốn biết ai đã đọc tin nào thì so sánh con trỏ với mã tin. Các cập nhật này cũng nên gộp lô thay vì báo từng tin một.',
+        pitfall:
+          'Thiết kế bảng trạng thái đọc theo từng tin. Đây là chỗ dữ liệu phình nhanh nhất trong cả hệ thống.',
+      },
+      {
+        question: 'Người nhận đang ngoại tuyến thì xử lý ra sao?',
+        answer:
+          'Không cần làm gì đặc biệt vì tin đã nằm an toàn trong kho, chỉ cần gửi thông báo đẩy qua dịch vụ của hệ điều hành. Khi họ mở lại ứng dụng, ứng dụng đồng bộ mọi tin có mã lớn hơn mã cuối cùng đã nhận. Không cần một hàng đợi riêng cho từng người.',
+        pitfall:
+          'Thiết kế hộp thư riêng cho mỗi người dùng để chứa tin chưa nhận. Kho tin nhắn đã đóng vai trò đó rồi.',
+      },
+      {
+        question: 'Nhóm hàng trăm nghìn thành viên thì phát tán thế nào?',
+        answer:
+          'Không đẩy nữa. Với nhóm cỡ vừa thì đẩy trực tiếp tới từng thành viên là ổn, nhưng nhóm rất lớn kiểu kênh phát thanh thì chuyển sang mô hình người nhận tự kéo khi mở ứng dụng — đúng cách đã dùng cho tài khoản đông người theo dõi ở bài mạng xã hội. Ngoài ra nên tách nhóm siêu lớn ra hạ tầng riêng vì chúng là phân vùng nóng.',
+        pitfall:
+          'Dùng một cơ chế phát tán duy nhất cho mọi kích cỡ nhóm. Ngưỡng theo số thành viên là thứ phải nói ra.',
+      },
+    ],
     keyTakeaway:
       'Kết nối dài (WebSocket) cần tầng session riêng để biết người dùng đang bám vào máy chủ nào.',
     relatedTerms: ['WebSocket', 'Kafka'],
