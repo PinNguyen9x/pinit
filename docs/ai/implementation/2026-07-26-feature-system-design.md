@@ -245,11 +245,25 @@ Chạy trên production server (`npm run build && npm start`).
 - **VoiceOver**: cần thao tác người thật.
 - **Review nội dung chuyên môn (T6.6)**: chặn merge, cần chủ site — xem Follow-up.
 
+## Sự cố tìm được ở dev-review: sơ đồ không vẽ khi chuyển buổi
+
+Phát hiện bằng cách đọc dependency array của `useMermaid`, không phải bằng test.
+
+Điều hướng giữa hai trang cùng route `[slug]` bằng link buổi trước/buổi sau là **client-side navigation**: Next không mount lại component, `bodyRef` giữ nguyên object, `isDark` không đổi. Deps chỉ có `[containerRef, isDark]` nên effect không chạy lại — sơ đồ của buổi mới không bao giờ được vẽ.
+
+**Vì sao lọt qua mọi lần kiểm trước**: mọi lần tôi mở trang đều bằng cách nạp URL đầy đủ (full page load), chưa lần nào bấm link buổi trước/buổi sau. Đây là bài học về việc kiểm đúng cách người dùng thật thao tác, không chỉ kiểm từng trang độc lập.
+
+**Bằng chứng trước khi sửa**: sau khi bấm "Buổi sau", trang có 2 node `.mermaid` nhưng **0 node có SVG**.
+
+**Cách sửa**: thêm tham số `contentKey` vào `useMermaid`, trang chi tiết truyền `lesson.slug`. Sau khi sửa: chuyển buổi 1 → 2 → 3 đều vẽ đủ 2/2 sơ đồ, đổi theme vẫn vẽ lại đúng.
+
+**Lưu ý cho hai trang cũ**: `blog/[slug].tsx` và `works/[workId]/details.tsx` có cùng cấu trúc deps và nhiều khả năng mắc đúng lỗi này khi điều hướng client-side giữa hai bài. Chưa kiểm, đã ghi vào Follow-up.
+
 ## Follow-up
 
 - **[M2]** Viết `constants/system-design-content.test.ts` (đủ số từ, có diagram, đủ flashcard, đếm `[[Term]]`) sau khi chốt khuôn mẫu ở T2.3.
 - **[T5.2]** Thêm lại CTA cheat sheet vào trang lộ trình khi trang đó tồn tại.
-- **[v2]** Refactor `blog/[slug].tsx` và `works/details.tsx` sang `useMermaid`; hai trang này hiện **không vẽ lại diagram khi đổi theme** và dùng `securityLevel: 'loose'`. Xóa stub chết `components/mermaid/MermaidFlowchart.tsx`.
+- **[v2]** Refactor `blog/[slug].tsx` và `works/details.tsx` sang `useMermaid`; hai trang này hiện **không vẽ lại diagram khi đổi theme**, dùng `securityLevel: 'loose'`, và **nhiều khả năng cũng không vẽ khi điều hướng client-side giữa hai bài** (cùng lỗi deps đã tìm ra ở dev-review — chưa kiểm). Xóa stub chết `components/mermaid/MermaidFlowchart.tsx`.
 - **[v2]** Thêm jsdom + testing-library để tự động hóa phần hành vi hook/component.
 - **[Vệ sinh repo]** `tsconfig.tsbuildinfo` đang bị track trong git — nên đưa vào `.gitignore`, nhưng là thay đổi ngoài scope feature.
 - **[CHẶN MERGE]** Chủ site review độ chính xác kỹ thuật nội dung 13 buổi, và đối chiếu riêng **buổi 11 (đặt xe)** vì đầu mục do AI suy đoán — ảnh lộ trình gốc chỉ ghi "Toggle Content".
