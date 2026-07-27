@@ -14,7 +14,18 @@ import { RefObject, useEffect } from 'react'
  *     mermaid.run() bỏ qua node đã có data-processed, nên nếu không khôi phục
  *     text gốc thì đổi theme sẽ không vẽ lại.
  */
-export function useMermaid(containerRef: RefObject<HTMLElement | null>, isDark: boolean) {
+export function useMermaid(
+  containerRef: RefObject<HTMLElement | null>,
+  isDark: boolean,
+  /**
+   * Khóa nội dung — bắt buộc truyền khi cùng một component render nhiều nội
+   * dung khác nhau. Điều hướng client-side giữa hai trang cùng route (ví dụ
+   * link buổi trước/buổi sau của `/system-design/[slug]`) KHÔNG mount lại
+   * component: ref giữ nguyên, isDark giữ nguyên, nên nếu thiếu khóa này thì
+   * effect không chạy lại và sơ đồ của trang mới sẽ không được vẽ.
+   */
+  contentKey?: string,
+) {
   useEffect(() => {
     let cancelled = false
     const container = containerRef.current
@@ -29,7 +40,6 @@ export function useMermaid(containerRef: RefObject<HTMLElement | null>, isDark: 
       } else {
         // Lần chạy lại (đổi theme): trả node về mã nguồn để mermaid vẽ lại.
         node.textContent = node.dataset.mermaidSrc
-        delete node.dataset.processed
       }
       node.removeAttribute('data-processed')
     })
@@ -50,5 +60,5 @@ export function useMermaid(containerRef: RefObject<HTMLElement | null>, isDark: 
     return () => {
       cancelled = true
     }
-  }, [containerRef, isDark])
+  }, [containerRef, isDark, contentKey])
 }

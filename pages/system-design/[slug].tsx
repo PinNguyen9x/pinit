@@ -29,7 +29,9 @@ export default function LessonPage({ lesson, prev, next }: LessonPageProps) {
   const { accent, line, chipBg, isDark } = useSystemDesignTokens()
   const { isCompleted, toggle, hydrated } = useLessonProgress()
 
-  useMermaid(bodyRef, isDark)
+  // Truyền slug làm khóa nội dung: điều hướng buổi trước/buổi sau không mount
+  // lại component nên thiếu khóa này thì sơ đồ của buổi mới sẽ không được vẽ.
+  useMermaid(bodyRef, isDark, lesson.slug)
 
   const completed = hydrated && isCompleted(lesson.slug)
 
