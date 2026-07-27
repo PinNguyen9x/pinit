@@ -14,7 +14,7 @@ ArgoCD là công cụ GitOps: nó theo dõi một repo chứa manifest Kubernete
 
 <!-- truncate -->
 
-## 1. Hai trạng thái cốt lõi: Sync & Health
+## 1. Hai trạng thái cốt lõi: Sync và Health
 
 Trước khi nói UI, phải hiểu hai "chỉ số sinh tồn" mà ArgoCD gắn cho mọi thứ:
 
@@ -45,7 +45,7 @@ Vào trong một app, bạn thấy một **sơ đồ cây**: từ `Application` 
 
 Mỗi node trong cây có:
 - **Viền màu** = Health (xanh/vàng/đỏ).
-- **Icon mũi tên** = Sync.
+- **Icon trạng thái** = Sync (dấu tick ✓ là Synced, mũi tên là OutOfSync).
 - Click vào node → panel chi tiết: **YAML** thực tế trên cụm, **Events**, **Logs** (với pod), và nút thao tác (Delete, Restart...).
 
 Nhìn cây này bạn thấy ngay: pod nào đỏ, service nào chưa có endpoint, deployment nào đang progressing — thay vì gõ hàng loạt lệnh `kubectl get`.
@@ -56,7 +56,7 @@ Trên thanh đầu app:
 
 | Nút | Làm gì |
 |---|---|
-| **Refresh** | Bảo ArgoCD **đọc lại Git ngay** (thay vì chờ chu kỳ poll). Có "Hard Refresh" bỏ qua cache. |
+| **Refresh** | Bảo ArgoCD **đọc lại Git ngay** (thay vì chờ chu kỳ quét định kỳ, mặc định 3 phút). Có "Hard Refresh" bỏ qua cache manifest đã render. |
 | **Sync** | **Áp Git xuống cụm ngay** — dùng khi để chế độ manual, hoặc muốn deploy tức thì. |
 | **App Diff** | Xem **khác biệt giữa Git và cụm** (OutOfSync ở chỗ nào) — như `git diff` nhưng cho hạ tầng. |
 | **History and Rollback** | Danh sách các lần sync đã qua; bấm một mốc cũ để **rollback**. |
@@ -64,23 +64,25 @@ Trên thanh đầu app:
 
 ## 5. Diff — "Git nói gì vs cụm đang gì"
 
-Khi app **OutOfSync**, mở **App Diff** để xem chính xác chỗ lệch: bên trái là manifest mong muốn (Git), bên phải là trạng thái thật (cụm), tô đậm dòng khác nhau. Ví dụ Git ghi `image: ...:gitops-2` mà cụm còn `gitops-1` → Diff chỉ rõ dòng đó. Cực hữu ích để hiểu "vì sao nó bảo lệch".
+Khi app **OutOfSync**, mở **App Diff** để xem chính xác chỗ lệch: một bên là manifest mong muốn (desired — dựng từ Git), bên kia là trạng thái thật đang chạy (live — trên cụm), tô đậm dòng khác nhau. Ví dụ Git ghi `image: ...:gitops-2` mà cụm còn `gitops-1` → Diff chỉ rõ dòng đó. Cực hữu ích để hiểu "vì sao nó bảo lệch".
 
 ## 6. Sync Policy — tự động hay thủ công
 
 Trong **App Details → Sync Policy**:
 - **Manual**: bạn phải bấm **Sync** mới deploy (giống một cổng duyệt).
-- **Automated**: ArgoCD tự sync khi Git đổi. Kèm 2 tùy chọn:
+- **Automated**: ArgoCD tự sync khi phát hiện Git đổi — theo chu kỳ quét định kỳ, hoặc ngay lập tức nếu bạn cấu hình webhook từ Git về ArgoCD. Kèm 2 tùy chọn:
   - **Prune**: xóa tài nguyên đã bị bỏ khỏi Git.
   - **Self-Heal**: ai sửa tay trên cụm → ArgoCD **tự kéo về đúng Git**.
 
 Đây là chỗ quyết định app "tự lái" hay "chờ người bấm".
 
-## 7. History & Rollback — sức mạnh thật của GitOps
+## 7. History và Rollback — sức mạnh thật của GitOps
 
 Vào **History**: mỗi lần sync là một dòng, kèm **commit Git** tương ứng. Muốn quay lại bản cũ? Bấm mốc đó → **Rollback** → ArgoCD deploy lại đúng trạng thái lúc ấy. Vì mọi thay đổi đều gắn với commit, rollback nhanh và không mơ hồ — khác hẳn việc phải nhớ "hôm qua mình deploy tag nào".
 
-## 8. Xem log & debug ngay trong UI
+Một lưu ý dễ vấp: nếu app đang bật **Automated sync**, nút Rollback sẽ bị khóa — vì rollback đưa cụm về một commit cũ, còn auto-sync sẽ lập tức kéo ngược lên commit mới nhất trên Git. Muốn rollback thì tắt auto-sync trước, và nhớ rằng cách "GitOps đúng bài" vẫn là `git revert` rồi để ArgoCD tự sync.
+
+## 8. Xem log và debug ngay trong UI
 
 Click một **Pod** trong cây → tab **Logs**: xem log real-time không cần `kubectl logs`. Tab **Events** cho biết vì sao pod pending/crash (thiếu image, hết tài nguyên...). Với người mới học Kubernetes, đây là cách debug trực quan hơn nhiều so với dòng lệnh.
 
