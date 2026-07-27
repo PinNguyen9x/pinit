@@ -33,18 +33,23 @@ description: Nhật ký triển khai — M1 hạ tầng đã xong, ghi lại quy
 **How is the code organized?**
 
 ```
-models/system-design.ts            Type: Lesson, LessonSection, Flashcard, InterviewStep, MockPrompt
-constants/system-design.ts         13 lesson (metadata đủ, nội dung điền dần)
-constants/system-design.test.ts    10 ca toàn vẹn cấu trúc
-constants/storage-key.ts           + SYSTEM_DESIGN_PROGRESS
-utils/system-design.ts             Logic thuần: parse tiến độ, toggle, percent, parser [[Term]], glossaryHref
-utils/system-design.test.ts        25 ca
-hooks/use-lesson-progress.ts       Wiring localStorage ↔ React state
-hooks/use-mermaid.ts               Render .mermaid client-side
-components/system-design/          tokens, TermLink, RichText, LessonSectionView, FlashcardDeck, LessonCard, RoadmapProgress
-pages/system-design/index.tsx      Lộ trình + tiến độ + search
-pages/system-design/[slug].tsx     13 trang tĩnh
-components/common/header/routes.ts + tab System Design
+models/system-design.ts                   Lesson, LessonSection, Flashcard, InterviewStep, MockPrompt, CheatSheetTable
+constants/system-design.ts                13 lesson + INTERVIEW_STEPS + CHEAT_SHEET_TABLES
+constants/system-design.test.ts           10 ca toàn vẹn cấu trúc
+constants/system-design-content.test.ts   Chuẩn nội dung, cross-link, chống markdown, INTERVIEW_STEPS
+constants/barrel-bundle.test.ts           Chặn tái phát lỗi lọt bundle dùng chung
+constants/storage-key.ts                  + SYSTEM_DESIGN_PROGRESS
+constants/index.ts                        CỐ Ý không re-export ./system-design — xem sự cố bundle
+utils/system-design.ts                    Logic thuần: parse tiến độ, toggle, percent, parser [[Term]], glossaryHref
+utils/system-design.test.ts               27 ca
+hooks/use-lesson-progress.ts              Wiring localStorage ↔ state; nhận slug qua tham số
+hooks/use-mermaid.ts                      Render .mermaid client-side, vẽ lại khi đổi theme
+components/system-design/                 tokens, TermLink, RichText, LessonSectionView,
+                                          FlashcardDeck, LessonCard, RoadmapProgress, MockPractice
+pages/system-design/index.tsx             Lộ trình + tiến độ + search + CTA cheat sheet
+pages/system-design/[slug].tsx            13 trang tĩnh
+pages/system-design/cheat-sheet.tsx       Trang ôn gấp
+components/common/header/index.tsx        + tab System Design trong navItems
 ```
 
 Quy ước: file kebab-case, barrel `index.ts` mỗi thư mục — bám theo repo sẵn có.
