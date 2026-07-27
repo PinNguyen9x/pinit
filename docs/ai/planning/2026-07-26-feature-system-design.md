@@ -25,7 +25,7 @@ Lý do: rủi ro lớn nhất của feature này không phải code (UI khá th�
 - [x] **M3 — Kiến thức lõi (buổi 3–6)** ✅ **xong 2026-07-26** — buổi 3 (`f0c38af`), buổi 4 (`b072be3`), buổi 5 + 6 (`a2fc8c5`)
 - [x] **M4 — Case study (buổi 7–12)** ✅ **xong 2026-07-26** — buổi 7 `d60130e`, 8 `c7ca4e6`, 9 `bc8ef3b`, 10 `66e0971`, 11 `44520eb`, 12 `d2dfd81`
 - [x] **M5 — Buổi 13 tự luyện + cheat sheet** ✅ **xong** — buổi 13 `6518e4b`, cheat sheet `8e6135f`, kèm fix bundle `ed0d424`
-- [ ] **M6 — Kiểm thử, a11y, regression, sign-off**
+- [x] **M6 — Kiểm thử, a11y, regression** ✅ **xong phần làm được** — còn nợ 360px, VoiceOver, và review nội dung (chặn merge)
 
 **Cổng chặn**: không sang M3 khi M2 chưa qua toàn bộ validation — đây là điểm quyết định có phải sửa lại data model hay không.
 
@@ -335,10 +335,16 @@ Không có.
 
 **Vì sao chưa kiểm được 360px**: công cụ điều khiển Chrome render trang ở viewport cố định 1440 bất kể kích thước cửa sổ (`window.outerWidth` đổi theo lệnh resize nhưng `window.innerWidth` luôn 1440). Đã mô phỏng bằng cách ép `body` xuống 360px và đo — kết quả cho thấy bảng cuộn nội bộ và mermaid co lại đúng như thiết kế, nhưng **đây là mô phỏng layout, không phải viewport thật**, nên media query của MUI không phản ứng. Ca "màn hình ≥ 360px không vỡ layout" **vẫn còn nợ**, chuyển sang M6 và cần kiểm bằng DevTools device mode hoặc điện thoại thật.
 
-### Việc còn lại: chỉ còn M6
-1. Chạy checklist toàn vẹn dữ liệu và 7 luồng E2E
-2. Regression `/glossary`, `/blog`, `/works`, header
-3. Trả hai khoản nợ: **kiểm viewport 360px thật** và **a11y bàn phím**
+### Trạng thái cuối: toàn bộ 6 milestone đã xong
+
+Kết quả M6 đầy đủ nằm ở `docs/ai/implementation`. Tóm tắt: 122/122 test, lint không thêm warning, build sạch, 8 luồng E2E và toàn bộ regression pass, a11y bàn phím pass.
+
+**Nợ đã trả**: a11y bàn phím (Enter/Space lật thẻ, `aria-expanded`, `aria-pressed`, `role="progressbar"`) ✅
+
+**Nợ chưa trả được** — cần người thật, không phải do thiếu sót thiết kế:
+1. **Viewport 360px** — công cụ điều khiển Chrome render cố định ở 1440, đã thử ba lần. Kiểm 30 giây bằng DevTools device toolbar.
+2. **VoiceOver**.
+3. **Review nội dung chuyên môn** — chặn merge. Riêng buổi 11 cần đối chiếu vì đầu mục do AI suy đoán.
 
 ### Task phát sinh ở M5: nội dung bị lọt vào bundle dùng chung
 Phát hiện khi đọc output `next build` sau khi thêm trang cheat sheet: first-load JS dùng chung nhảy từ 287 kB lên 340 kB.

@@ -12,8 +12,11 @@ description: Nhật ký triển khai — M1 hạ tầng đã xong, ghi lại quy
 | Milestone | Trạng thái | Ghi chú |
 |---|---|---|
 | M1 — Hạ tầng & khung dữ liệu | ✅ **Xong** (8/8 task), **đã kiểm trên trình duyệt** | Cổng M1 pass — xem mục Kiểm chứng |
-| M2 — Vertical slice buổi 1–2 | 🔄 T2.1 + T2.2 xong | **Data model đã chốt** — buổi 2 dùng 3 bảng/2 sơ đồ mà không cần thêm field. Còn nợ kiểm a11y và 360px |
-| M3–M6 | ⬜ Chưa bắt đầu | |
+| M2 — Vertical slice buổi 1–2 | ✅ Xong | Data model chốt từ đây, không sửa lần nào nữa |
+| M3 — Kiến thức lõi (buổi 3–6) | ✅ Xong | |
+| M4 — Case study (buổi 7–12) | ✅ Xong | |
+| M5 — Buổi 13 + cheat sheet | ✅ Xong | Kèm fix bundle |
+| M6 — Kiểm thử & sign-off | ✅ **Xong phần tự động và E2E** | Còn nợ 360px, VoiceOver, và review nội dung |
 
 ## Development Setup
 **How do we get started?**
@@ -180,6 +183,63 @@ Lần đầu có nội dung thật nên đây cũng là lần đầu mermaid, b�
 
 **Điểm cần theo dõi**: sơ đồ quyết định CAP cao 720px, chiếm nhiều màn hình. Mermaid tự đặt `style="max-width: 711px"` inline nên đè lên rule `maxWidth: 100%` của container; may là khung cha có `overflowX: auto` nên màn hình hẹp sẽ cuộn ngang trong khung thay vì vỡ layout. **Chưa kiểm ở 360px** — để T2.3.
 
+## Kiểm chứng M6 (2026-07-27)
+
+Chạy trên production server (`npm run build && npm start`).
+
+### Tự động
+| Hạng mục | Kết quả |
+|---|---|
+| `npm test` | ✅ **122/122** pass, 4 file test |
+| `npm run lint` | ✅ 0 error, **1 warning có sẵn** ở `works` — không thêm warning nào |
+| `npm run build` | ✅ pass, sinh 15 trang tĩnh của feature |
+| Toàn vẹn dữ liệu 13 buổi | ✅ mỗi buổi ≥ 839 từ, ≥ 3 khối, ≥ 1 sơ đồ, đúng 6 flashcard |
+| Marker `[[Term]]` | ✅ **116** trên toàn feature (yêu cầu ≥ 15) **[AC8]**, 0 marker trỏ thuật ngữ không tồn tại |
+
+### Luồng người dùng
+| Luồng | Kết quả |
+|---|---|
+| L1 — tab header → lộ trình 13 buổi | ✅ 14 link (13 buổi + CTA cheat sheet) |
+| L2 — mở buổi, lật thẻ, tick | ✅ |
+| L3 — tiến độ bền vững qua reload | ✅ 13/13 — 100% giữ nguyên |
+| L4 — search | ✅ "sharding" → 1/13, empty state đúng |
+| L5 — cheat sheet | ✅ 3 bảng, 13 dòng chốt, có con số latency |
+| L6 — buổi 13 tự luyện | ✅ 6 đề, 51 checkbox, khung 45 phút |
+| L7 — cross-link glossary | ✅ `/glossary#Load%20Balancer` mở đúng, encode đúng |
+| **Critical path** — tick đủ 13 buổi | ✅ **13/13 → 100%**, `aria-valuenow=100`, URL không đổi (click tick không điều hướng) |
+
+### Regression
+| Route | Kết quả |
+|---|---|
+| `/`, `/about`, `/blog`, `/glossary`, `/glossary/muc-luc`, `/works?_page=1&_limit=10` | ✅ 200 |
+| 13 trang buổi + `/system-design` + `/system-design/cheat-sheet` | ✅ 200 |
+| Slug lạ | ✅ 404 |
+
+### Accessibility
+| Hạng mục | Kết quả |
+|---|---|
+| Flashcard nhận focus | ✅ `tabindex="0"`, `document.activeElement` đúng |
+| Enter lật thẻ | ✅ `aria-expanded` false → true |
+| Space lật thẻ | ✅ true → false |
+| Thanh tiến độ | ✅ `role="progressbar"` + `aria-valuenow` đúng |
+| Nút đã ôn xong | ✅ `aria-pressed` phản ánh trạng thái |
+| Theme sáng và tối | ✅ đọc được cả hai, mermaid vẽ lại khi đổi theme |
+
+### Bundle **[AC10]**
+| Mốc | Shared first-load | `_app` chunk |
+|---|---|---|
+| Trước feature | 287 kB | 183 kB |
+| Khi phát hiện lỗi | 340 kB | 236 kB |
+| Sau khi gỡ nội dung khỏi barrel | 287 kB | 183 kB |
+| **Sau khi sửa cả 6 hook** | **264 kB** | **160 kB** |
+
+`build-manifest.json` xác nhận chunk nội dung chỉ nạp trên 3 route `system-design`. Mermaid không nằm trong first-load.
+
+### ❌ Chưa làm được
+- **Viewport 360px thật**: công cụ điều khiển Chrome render cố định ở 1440 (`window.innerWidth` luôn 1440 dù `resize_window` báo thành công, `outerWidth` trả 0). Đã thử ba lần ở M2 và M6. Mô phỏng bằng cách ép chiều rộng `body` cho kết quả tốt (bảng cuộn nội bộ 312/480, mermaid co xuống 310px) nhưng **media query của MUI không phản ứng** nên không thay thế được kiểm thật. **Cách kiểm 30 giây**: mở DevTools, bật device toolbar (Cmd+Shift+M), chọn 360px.
+- **VoiceOver**: cần thao tác người thật.
+- **Review nội dung chuyên môn (T6.6)**: chặn merge, cần chủ site — xem Follow-up.
+
 ## Follow-up
 
 - **[M2]** Viết `constants/system-design-content.test.ts` (đủ số từ, có diagram, đủ flashcard, đếm `[[Term]]`) sau khi chốt khuôn mẫu ở T2.3.
@@ -187,3 +247,6 @@ Lần đầu có nội dung thật nên đây cũng là lần đầu mermaid, b�
 - **[v2]** Refactor `blog/[slug].tsx` và `works/details.tsx` sang `useMermaid`; hai trang này hiện **không vẽ lại diagram khi đổi theme** và dùng `securityLevel: 'loose'`. Xóa stub chết `components/mermaid/MermaidFlowchart.tsx`.
 - **[v2]** Thêm jsdom + testing-library để tự động hóa phần hành vi hook/component.
 - **[Vệ sinh repo]** `tsconfig.tsbuildinfo` đang bị track trong git — nên đưa vào `.gitignore`, nhưng là thay đổi ngoài scope feature.
+- **[CHẶN MERGE]** Chủ site review độ chính xác kỹ thuật nội dung 13 buổi, và đối chiếu riêng **buổi 11 (đặt xe)** vì đầu mục do AI suy đoán — ảnh lộ trình gốc chỉ ghi "Toggle Content".
+- **[Chưa kiểm]** Viewport 360px và VoiceOver — cần thao tác người thật.
+- **[Gợi ý cho glossary]** Năm thuật ngữ cốt lõi của System Design không có trong `constants/glossary.ts`: Sharding, Replication, Redis, Message Queue, Elasticsearch. Bổ sung sẽ tăng số cross-link dùng được. Ngoài scope feature này.
