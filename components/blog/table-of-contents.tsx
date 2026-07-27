@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { pickActiveHeadingId } from './toc-active-heading'
 
 export interface TocItem {
   id: string
@@ -11,29 +12,82 @@ interface TableOfContentsProps {
   items: TocItem[]
 }
 
-export function TableOfContents({ items }: TableOfContentsProps) {
+/**
+ * Tracks which heading the reader is currently on.
+ *
+ * Measures positions on scroll rather than using IntersectionObserver, whose
+ * "is a heading inside a narrow band near the top of the screen" model has no
+ * answer while the reader is in the middle of a section taller than that band.
+ */
+function useActiveHeading(items: TocItem[]) {
   const [activeId, setActiveId] = useState<string>('')
 
   useEffect(() => {
     if (items.length === 0) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting)
-        if (visible.length > 0) setActiveId(visible[0].target.id)
-      },
-      { rootMargin: '0px 0px -70% 0px', threshold: 0 },
-    )
-    items.forEach(({ id }) => {
-      const el = document.getElementById(id)
-      if (el) observer.observe(el)
-    })
-    return () => observer.disconnect()
+
+    const headings = items
+      .map(({ id }) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null)
+    if (headings.length === 0) return
+
+    let frame = 0
+    const measure = () => {
+      frame = 0
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2
+      setActiveId(
+        pickActiveHeadingId(
+          headings.map((el) => ({ id: el.id, top: el.getBoundingClientRect().top })),
+          atBottom,
+        ),
+      )
+    }
+
+    const onScroll = () => {
+      if (frame) return
+      frame = requestAnimationFrame(measure)
+    }
+
+    measure()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    return () => {
+      if (frame) cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
   }, [items])
+
+  return activeId
+}
+
+export function TableOfContents({ items }: TableOfContentsProps) {
+  const activeId = useActiveHeading(items)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Long posts overflow the rail, so the highlighted entry can sit out of sight.
+  // Nudge the rail's own scroll — never scrollIntoView, which would drag the page
+  // along with it.
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container || !activeId) return
+    const link = Array.from(container.querySelectorAll<HTMLElement>('[data-toc-id]')).find(
+      (el) => el.dataset.tocId === activeId,
+    )
+    if (!link) return
+
+    const rail = container.getBoundingClientRect()
+    const entry = link.getBoundingClientRect()
+    const margin = 16
+    if (entry.top < rail.top) container.scrollTop -= rail.top - entry.top + margin
+    else if (entry.bottom > rail.bottom) container.scrollTop += entry.bottom - rail.bottom + margin
+  }, [activeId])
 
   if (items.length === 0) return null
 
   return (
     <Box
+      ref={scrollRef}
       sx={{
         position: 'sticky',
         top: 100,
@@ -70,6 +124,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
       </Typography>
       <Box
         component="nav"
+        aria-label="Table of contents"
         sx={{
           borderLeft: '1px solid',
           borderColor: 'divider',
@@ -81,6 +136,8 @@ export function TableOfContents({ items }: TableOfContentsProps) {
             key={id}
             component="a"
             href={`#${id}`}
+            data-toc-id={id}
+            aria-current={activeId === id ? 'location' : undefined}
             onClick={(e: React.MouseEvent) => {
               e.preventDefault()
               document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -99,7 +156,10 @@ export function TableOfContents({ items }: TableOfContentsProps) {
               ml: '-1px',
               lineHeight: 1.5,
               transition: 'color 0.15s, border-color 0.15s',
-              '&:hover': { color: 'text.primary', borderColor: activeId === id ? 'primary.main' : 'text.disabled' },
+              '&:hover': {
+                color: 'text.primary',
+                borderColor: activeId === id ? 'primary.main' : 'text.disabled',
+              },
               cursor: 'pointer',
             }}
           >
