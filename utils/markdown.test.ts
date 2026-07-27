@@ -29,3 +29,38 @@ describe('renderMarkdown — table of contents', () => {
     ])
   })
 })
+
+describe('renderMarkdown — custom heading ids', () => {
+  it('uses a trailing {#id} as the heading id and hides it from the text', async () => {
+    const { html, toc } = await renderMarkdown('## 1. Flow thực tế {#flow-thuc-te}\n')
+
+    expect(toc[0].id).toBe('flow-thuc-te')
+    expect(toc[0].text).toBe('1. Flow thực tế')
+    expect(html).toContain('id="flow-thuc-te"')
+  })
+
+  it('makes hand-written contents links resolve to a real heading', async () => {
+    const { html } = await renderMarkdown(
+      ['1. [Flow thực tế](#flow-thuc-te)', '', '## Flow thực tế {#flow-thuc-te}', ''].join('\n'),
+    )
+
+    const capture = (pattern: RegExp) => {
+      const found: string[] = []
+      let match
+      while ((match = pattern.exec(html)) !== null) found.push(match[1])
+      return found
+    }
+    const ids = new Set(capture(/id="([^"]+)"/g))
+    const targets = capture(/href="#([^"]+)"/g)
+
+    expect(targets).toContain('flow-thuc-te')
+    expect(targets.filter((t) => !ids.has(t))).toEqual([])
+  })
+
+  it('still slugifies headings that carry no marker', async () => {
+    const { toc } = await renderMarkdown('## Dựng worktree\n')
+
+    expect(toc[0].id).toBe('dựng-worktree')
+    expect(toc[0].text).toBe('Dựng worktree')
+  })
+})

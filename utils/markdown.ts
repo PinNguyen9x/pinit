@@ -67,6 +67,25 @@ function remarkMermaid() {
   }
 }
 
+// Several posts end a heading with a Pandoc-style `{#custom-id}` and then link
+// to that id from a hand-written contents list at the top. remark has no such
+// syntax, so the braces used to render as literal heading text while rehype-slug
+// derived an id from the whole line — leaving every one of those links dead.
+// Consume the marker and hand the id to remark-rehype instead.
+function remarkCustomHeadingIds() {
+  return (tree: any) => {
+    visit(tree, 'heading', (node: any) => {
+      const last = node.children?.[node.children.length - 1]
+      if (!last || last.type !== 'text' || typeof last.value !== 'string') return
+      const match = /^([\s\S]*?)\s*\{#([\w-]+)\}\s*$/.exec(last.value)
+      if (!match) return
+      last.value = match[1]
+      node.data = { ...(node.data || {}) }
+      node.data.hProperties = { ...(node.data.hProperties || {}), id: match[2] }
+    })
+  }
+}
+
 // Collect the h2–h4 headings straight from the syntax tree, into the array we
 // hand back to the page. Reading the tree gives us the *decoded* heading text;
 // scraping the stringified HTML instead would hand the sidebar whatever rehype
@@ -102,6 +121,7 @@ export async function renderMarkdown(markdown: string): Promise<RenderedMarkdown
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkToc, { heading: 'agenda.*' })
+    .use(remarkCustomHeadingIds)
     .use(remarkMermaid)
     .use(require('remark-prism'))
     .use(remarkRehype, { allowDangerousHtml: true })
