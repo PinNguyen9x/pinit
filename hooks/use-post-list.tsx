@@ -1,5 +1,5 @@
 import postApi from '@/api-client/post-api'
-import { QueryKeys } from '@/constants'
+import { QueryKeys } from '@/constants/query-key'
 import { ListParams } from '@/models'
 import useSWR, { SWRConfiguration } from 'swr'
 export interface UsePostListProps {
