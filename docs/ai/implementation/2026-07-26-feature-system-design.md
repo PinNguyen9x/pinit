@@ -67,7 +67,7 @@ Quy ước: file kebab-case, barrel `index.ts` mỗi thư mục — bám theo re
 
 4. **`RichText` tách riêng khỏi `LessonSectionView`** để dùng lại được ở cả body, ô bảng, callout và đáp án flashcard — thuật ngữ `[[Term]]` cần link ở mọi chỗ, không chỉ trong đoạn văn.
 
-5. **`useMermaid` lưu mã nguồn vào `data-mermaid-src`.** `mermaid.run()` bỏ qua node đã có `data-processed`, nên đổi theme sáng/tối sẽ không vẽ lại nếu không khôi phục text gốc. Hai trang cũ (`blog/[slug].tsx`, `works/details.tsx`) **có lỗi này** nhưng không sửa — ngoài scope, đã ghi thành follow-up.
+5. **`useMermaid` lưu mã nguồn vào `data-mermaid-src`.** Cơ chế phòng ngừa cho trường hợp `mermaid.run()` bỏ qua node đã có `data-processed` khi đổi theme. ⚠️ **Đính chính 2026-07-27**: tôi từng ghi ở đây rằng hai trang cũ `blog/[slug].tsx` và `works/details.tsx` mắc lỗi này. **Sai** — đã đo lại và cả hai vẫn vẽ lại đúng khi đổi theme, xem mục Đính chính bên dưới. Cơ chế này là phòng ngừa, tôi **chưa chứng minh** nó thực sự cần thiết.
 
 ### Lệch so với thiết kế
 
@@ -257,13 +257,29 @@ Phát hiện bằng cách đọc dependency array của `useMermaid`, không ph�
 
 **Cách sửa**: thêm tham số `contentKey` vào `useMermaid`, trang chi tiết truyền `lesson.slug`. Sau khi sửa: chuyển buổi 1 → 2 → 3 đều vẽ đủ 2/2 sơ đồ, đổi theme vẫn vẽ lại đúng.
 
-**Lưu ý cho hai trang cũ**: `blog/[slug].tsx` và `works/[workId]/details.tsx` có cùng cấu trúc deps và nhiều khả năng mắc đúng lỗi này khi điều hướng client-side giữa hai bài. Chưa kiểm, đã ghi vào Follow-up.
+**Nguyên nhân gốc**: thiết kế ban đầu ghi `useMermaid(containerRef, deps?)`. Tôi thu hẹp thành `(containerRef, isDark)` với lý do "chỉ có đúng một dependency thật là theme" — lý do đó **sai**, và chính việc bỏ tham số nội dung đã tạo ra lỗi. Hai trang cũ vốn đã làm đúng: `blog/[slug].tsx` dùng `[post.htmlContent, isDark]`, `works/details.tsx` dùng `[work?.fullDescription, isDark]`.
+
+**Bài học**: khi thu hẹp một interface do thiết kế đề ra, phải đối chiếu với code đang chạy trước — ở đây code cũ đã trả lời sẵn câu hỏi mà tôi tự suy đoán sai.
+
+## Đính chính 2026-07-27: hai trang cũ không có lỗi render
+
+Sau khi tìm ra lỗi sơ đồ không vẽ khi chuyển buổi ở feature này, tôi ghi vào docs hai nghi vấn về `blog/[slug].tsx` và `works/[workId]/details.tsx`. **Cả hai đều sai.** Dưới đây là số đo thật, chạy trên production build.
+
+| Kiểm tra | Kết quả đo | Kết luận |
+|---|---|---|
+| `/blog/redis-chuyen-sau` — đổi theme | 6 node, 6 SVG; fill `rgb(236,236,255)` → `rgb(31,32,32)` | ✅ **vẽ lại đúng** |
+| `/blog` → bấm link sang bài redis (điều hướng client) | 6 node, 6 SVG | ✅ **không lỗi** |
+| `/works/2feaafad.../details` — đổi theme | 1 node, 1 SVG; fill `rgb(31,32,32)` → `rgb(236,236,255)` | ✅ **vẽ lại đúng** |
+
+**Vì sao tôi đoán sai**: tôi suy luận từ hành vi của `mermaid.run()` với `data-processed` mà không đo, rồi ghi suy luận đó vào docs như một sự thật về code người khác viết. Nghi vấn thứ hai còn tệ hơn — tôi khái quát lỗi của chính mình sang code cũ mà chỉ cần đọc dependency array của chúng là đủ để bác bỏ.
+
+**Nguyên tắc rút ra**: không ghi nhận định về code chưa đo vào tài liệu dưới dạng khẳng định. Nếu buộc phải nêu nghi vấn thì đánh dấu rõ là chưa kiểm và ưu tiên kiểm sớm — nghi vấn nằm trong docs lâu ngày sẽ được đọc như sự thật.
 
 ## Follow-up
 
 - **[M2]** Viết `constants/system-design-content.test.ts` (đủ số từ, có diagram, đủ flashcard, đếm `[[Term]]`) sau khi chốt khuôn mẫu ở T2.3.
 - **[T5.2]** Thêm lại CTA cheat sheet vào trang lộ trình khi trang đó tồn tại.
-- **[v2]** Refactor `blog/[slug].tsx` và `works/details.tsx` sang `useMermaid`; hai trang này hiện **không vẽ lại diagram khi đổi theme**, dùng `securityLevel: 'loose'`, và **nhiều khả năng cũng không vẽ khi điều hướng client-side giữa hai bài** (cùng lỗi deps đã tìm ra ở dev-review — chưa kiểm). Xóa stub chết `components/mermaid/MermaidFlowchart.tsx`.
+- **[v2]** Refactor `blog/[slug].tsx` và `works/details.tsx` sang `useMermaid` để bớt lặp code, và nâng `securityLevel` từ `'loose'` lên `'strict'` — đây là **khác biệt thật duy nhất còn lại** giữa hai trang đó và hook mới. Xóa stub chết `components/mermaid/MermaidFlowchart.tsx`. Lưu ý: hai trang này **không có lỗi render**, xem mục Đính chính.
 - **[v2]** Thêm jsdom + testing-library để tự động hóa phần hành vi hook/component.
 - **[Vệ sinh repo]** `tsconfig.tsbuildinfo` đang bị track trong git — nên đưa vào `.gitignore`, nhưng là thay đổi ngoài scope feature.
 - **[CHẶN MERGE]** Chủ site review độ chính xác kỹ thuật nội dung 13 buổi, và đối chiếu riêng **buổi 11 (đặt xe)** vì đầu mục do AI suy đoán — ảnh lộ trình gốc chỉ ghi "Toggle Content".
