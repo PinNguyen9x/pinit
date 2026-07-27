@@ -267,6 +267,11 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
               </Box>
             )}
 
+            {/* Mobile TOC — the sidebar rail is desktop-only */}
+            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+              <TableOfContents items={toc} variant="collapsible" />
+            </Box>
+
             {/* Article body */}
             <Box
               id="article-body"
