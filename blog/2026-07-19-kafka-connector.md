@@ -48,7 +48,7 @@ Ai cũng viết producer/consumer để làm việc này. Mà đã tự viết t
 
 ## 3. Cấu hình thay vì code
 
-Bạn không viết Java. Bạn gửi một file JSON tới REST API của Connect. Ví dụ một **Sink connector** đẩy topic `orders` sang Elasticsearch:
+Bạn không viết Java. Bạn gửi một file JSON tới REST API của Connect. Connect chạy được ở hai chế độ: **standalone** (một tiến trình, khai báo bằng file `.properties` — chỉ hợp để thử nghiệm) và **distributed** (nhiều worker, khai báo bằng REST API ở cổng `8083`). Mọi ví dụ dưới đây là distributed mode — cũng là thứ bạn dùng ở production. Ví dụ một **Sink connector** đẩy topic `orders` sang Elasticsearch:
 
 ```json
 {
@@ -93,9 +93,9 @@ Kafka Connect chạy như một cụm các **worker** (tiến trình JVM). Khi b
 └─────────────┘   └─────────────┘
 ```
 
-- `tasks.max` quyết định số task tối đa. Với Sink connector, số task hữu ích **không vượt quá số [partition](/glossary#Partition)** của topic — vì mỗi partition chỉ được một task đọc (đúng luật consumer group).
+- `tasks.max` quyết định số task tối đa. Với Sink connector, số task hữu ích **không vượt quá số [partition](/glossary#Partition)** của topic — vì mỗi partition chỉ được một task đọc (đúng luật consumer group). Với Source connector thì con số thật do chính connector quyết định theo nguồn dữ liệu: Debezium MySQL luôn chỉ 1 task vì chỉ có một binlog, còn JDBC source có thể chia theo số bảng.
 - Worker chết → task được **rebalance** sang worker còn sống (giống **[rebalancing](/glossary#Rebalancing)** của consumer group).
-- Trạng thái (offset, config, status) được lưu trong các **internal topic** của Connect, nên cụm khởi động lại không mất dấu.
+- Trạng thái được lưu ngoài worker nên cụm khởi động lại không mất dấu: config và status nằm ở các **internal topic** của Connect (`connect-configs`, `connect-status`), offset của Source connector nằm ở `connect-offsets`, riêng Sink connector dùng luôn cơ chế commit offset của consumer group Kafka.
 
 > Điểm hay: bạn nhận được khả năng chịu lỗi và scale của consumer group mà không phải tự code — đó là giá trị thật của Connect.
 
@@ -117,7 +117,9 @@ Source connector mạnh nhất khi kết hợp với **[CDC (Change Data Capture
 }
 ```
 
-Mỗi lần có `INSERT`/`UPDATE`/`DELETE` trên bảng `orders`, Debezium sinh một event vào topic `cdc.public.orders` với cả giá trị **trước** (`before`) và **sau** (`after`) khi thay đổi:
+(Config đã lược `database.user` / `database.password` cho gọn. Tên topic sinh ra theo quy tắc `topic.prefix.schema.table`.)
+
+Mỗi lần có `INSERT`/`UPDATE`/`DELETE` trên bảng `orders`, Debezium sinh một event vào topic `cdc.public.orders` với cả giá trị **trước** (`before`) và **sau** (`after`) khi thay đổi — dưới đây là phần lõi, đã lược bỏ khối `source` metadata:
 
 ```json
 {
@@ -150,6 +152,9 @@ Bạn khai báo một **chuỗi** transform (chạy tuần tự) qua key `transf
     "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
     "topics": "orders",
     "connection.url": "http://elasticsearch:9200",
+    "key.ignore": "true",
+    "schema.ignore": "true",
+    "tasks.max": "3",
 
     "transforms": "maskPhone,dropInternal,addTs",
 
@@ -188,14 +193,17 @@ Có thể gắn thêm **predicate** để SMT chỉ chạy với message thỏa 
 
 Connect "không cần code" không có nghĩa là "không cần hiểu". Đây là các vết xe đổ phổ biến:
 
-**1. Schema và converter lệch nhau.** Đây là lỗi số một. Cấu hình `key.converter` / `value.converter` (JSON, Avro, Protobuf) ở producer và ở connector phải khớp. Dùng Avro thì thường cần thêm **[Schema Registry](/glossary#Schema%20Registry)**. Sai converter → Connect ném lỗi deserialize và task chết ngay message đầu tiên.
+**1. Schema và converter lệch nhau.** Đây là lỗi số một. **Converter** là thứ Connect dùng để đổi giữa dữ liệu trong Kafka (bytes) và cấu trúc nội bộ của Connect — tương đương serializer/deserializer của producer/consumer thường. Vì vậy `key.converter` / `value.converter` (JSON, Avro, Protobuf) khai báo ở connector phải khớp với định dạng mà producer đã dùng để ghi vào topic. Dùng Avro thì cần thêm **[Schema Registry](/glossary#Schema%20Registry)**. Sai converter → Connect ném lỗi deserialize và task chết ngay message đầu tiên. Một cái bẫy nữa: `JsonConverter` mặc định bật `schemas.enable=true`, nếu message là JSON trần không có phần `schema` thì phải tắt đi (`value.converter.schemas.enable=false`).
 
 **2. Một message hỏng làm chết cả task (poison message).** Mặc định, gặp message không parse được là task dừng. Hãy bật cơ chế bỏ qua và đẩy vào **[dead letter queue](/glossary#Dead%20Letter%20Queue)**:
 
 ```json
 "errors.tolerance": "all",
-"errors.deadletterqueue.topic.name": "orders-dlq"
+"errors.deadletterqueue.topic.name": "orders-dlq",
+"errors.deadletterqueue.context.headers.enable": "true"
 ```
+
+Hai lưu ý: DLQ **chỉ hỗ trợ cho Sink connector** (Source connector lỗi thì chỉ có retry hoặc dừng), và `errors.tolerance: all` nghĩa là mọi message lỗi đều bị bỏ qua âm thầm — bật cùng `context.headers.enable` để header ghi lại nguyên nhân, rồi phải thật sự đặt alert trên topic DLQ, không thì dữ liệu mất mà không ai biết.
 
 **3. `tasks.max` cao hơn số partition.** Đặt `tasks.max: 10` cho topic chỉ có 3 partition → chỉ 3 task chạy, 7 task còn lại ngồi chơi. Không lỗi, nhưng bạn tưởng đã scale mà thực ra không.
 
