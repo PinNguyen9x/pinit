@@ -29,10 +29,13 @@ export function useLessonProgress(knownSlugs?: string[]) {
   const [hydrated, setHydrated] = useState(false)
 
   // Chuỗi hóa để dependency ổn định kể cả khi phía gọi tạo mảng mới mỗi render.
-  const slugKey = knownSlugs?.join('|') ?? ''
+  // Dùng null cho "không truyền" để phân biệt với chuỗi rỗng của mảng rỗng —
+  // mảng rỗng nghĩa là lộ trình không có buổi nào nên phải lọc sạch, khác hẳn
+  // với việc không truyền nghĩa là bỏ qua bước lọc.
+  const slugKey = knownSlugs ? knownSlugs.join('|') : null
 
   useEffect(() => {
-    const slugs = slugKey ? slugKey.split('|') : undefined
+    const slugs = slugKey === null ? undefined : slugKey === '' ? [] : slugKey.split('|')
     try {
       setCompletedSlugs(parseCompletedSlugs(window.localStorage.getItem(KEY), slugs))
     } catch {

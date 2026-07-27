@@ -49,6 +49,12 @@ describe('parseCompletedSlugs', () => {
   it('vẫn lọc phần tử sai kiểu khi không truyền danh sách', () => {
     expect(parseCompletedSlugs('["buoi-1",42,null]')).toEqual(['buoi-1'])
   })
+
+  // Mảng rỗng KHÁC không truyền: rỗng nghĩa là lộ trình không có buổi nào nên
+  // mọi slug đã lưu đều mồ côi và phải bị lọc sạch.
+  it('mảng slug rỗng thì lọc sạch, không phải bỏ qua bước lọc', () => {
+    expect(parseCompletedSlugs('["buoi-1","buoi-2"]', [])).toEqual([])
+  })
 })
 
 describe('toggleSlug', () => {
