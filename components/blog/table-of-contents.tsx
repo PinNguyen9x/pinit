@@ -12,6 +12,14 @@ interface TableOfContentsProps {
   items: TocItem[]
 }
 
+/** Scroll to a heading and put its id in the URL, so the reader can copy a deep link. */
+function goToHeading(id: string) {
+  const el = document.getElementById(id)
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  window.history.replaceState(null, '', `#${id}`)
+}
+
 /**
  * Tracks which heading the reader is currently on.
  *
@@ -140,7 +148,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
             aria-current={activeId === id ? 'location' : undefined}
             onClick={(e: React.MouseEvent) => {
               e.preventDefault()
-              document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              goToHeading(id)
             }}
             sx={{
               display: 'block',
