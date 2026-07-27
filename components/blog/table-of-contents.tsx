@@ -33,7 +33,29 @@ export function TableOfContents({ items }: TableOfContentsProps) {
   if (items.length === 0) return null
 
   return (
-    <Box sx={{ position: 'sticky', top: 100, maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+    <Box
+      sx={{
+        position: 'sticky',
+        top: 100,
+        maxHeight: 'calc(100vh - 120px)',
+        overflowY: 'auto',
+        // The rail scrolls on its own, but its scrollbar sits right next to the
+        // window's and reads as a second page scrollbar. Keep the gutter (so the
+        // list never reflows) and only paint the thumb while the pointer is here.
+        overscrollBehavior: 'contain',
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'transparent transparent',
+        '&:hover': { scrollbarColor: 'rgba(128,128,128,0.4) transparent' },
+        '&::-webkit-scrollbar': { width: 6 },
+        '&::-webkit-scrollbar-track': { background: 'transparent' },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: 'transparent',
+          borderRadius: 3,
+          transition: 'background-color 0.2s',
+        },
+        '&:hover::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(128,128,128,0.4)' },
+      }}
+    >
       <Typography
         variant="caption"
         fontWeight={700}
