@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@emotion/cache": "^11.13.0",
@@ -61,6 +63,7 @@
     "@types/sanitize-html": "^2.13.0",
     "eslint": "8.57.0",
     "eslint-config-next": "^15.3.0",
-    "typescript": "5.5.3"
+    "typescript": "5.5.3",
+    "vitest": "^4.1.10"
   }
 }

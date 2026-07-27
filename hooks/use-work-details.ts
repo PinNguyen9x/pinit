@@ -1,5 +1,5 @@
 import workApi from '@/api-client/work-api'
-import { QueryKeys } from '@/constants'
+import { QueryKeys } from '@/constants/query-key'
 import useSWR, { SWRConfiguration } from 'swr'
 export interface UseWorkDetailsProps {
   workId: string

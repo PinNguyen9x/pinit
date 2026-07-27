@@ -1,5 +1,5 @@
 import tagApi from '@/api-client/tag-api'
-import { QueryKeys } from '@/constants'
+import { QueryKeys } from '@/constants/query-key'
 import { ListParams } from '@/models'
 import useSWR, { SWRConfiguration } from 'swr'
 export interface UseTagListProps {

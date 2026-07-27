@@ -1,5 +1,5 @@
 import authApi from '@/api/auth-api'
-import { StorageKeys } from '@/constants'
+import { StorageKeys } from '@/constants/storage-key'
 import { LoginPayload, UserProfile } from '@/models'
 import useSWR, { SWRConfiguration } from 'swr'
 // Auth -> protected page
