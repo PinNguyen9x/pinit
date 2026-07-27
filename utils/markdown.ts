@@ -67,6 +67,47 @@ function remarkMermaid() {
   }
 }
 
+// Several posts end a heading with a Pandoc-style `{#custom-id}` and then link
+// to that id from a hand-written contents list at the top. remark has no such
+// syntax, so the braces used to render as literal heading text while rehype-slug
+// derived an id from the whole line — leaving every one of those links dead.
+// Consume the marker and hand the id to remark-rehype instead.
+function remarkCustomHeadingIds() {
+  return (tree: any) => {
+    visit(tree, 'heading', (node: any) => {
+      const last = node.children?.[node.children.length - 1]
+      if (!last || last.type !== 'text' || typeof last.value !== 'string') return
+      const match = /^([\s\S]*?)\s*\{#([\w-]+)\}\s*$/.exec(last.value)
+      if (!match) return
+      last.value = match[1]
+      node.data = { ...(node.data || {}) }
+      node.data.hProperties = { ...(node.data.hProperties || {}), id: match[2] }
+    })
+  }
+}
+
+// Collect the h2–h4 headings straight from the syntax tree, into the array we
+// hand back to the page. Reading the tree gives us the *decoded* heading text;
+// scraping the stringified HTML instead would hand the sidebar whatever rehype
+// escaped on the way out, so "Checklist & kết luận" reached the reader as
+// "Checklist &#x26; kết luận".
+function rehypeCollectToc(toc: TocHeading[]) {
+  const textOf = (node: any): string => {
+    if (node.type === 'text') return typeof node.value === 'string' ? node.value : ''
+    if (Array.isArray(node.children)) return node.children.map(textOf).join('')
+    return ''
+  }
+  return (tree: any) => {
+    visit(tree, 'element', (node: any) => {
+      const level = /^h([2-4])$/.exec(node.tagName)?.[1]
+      const id = node.properties?.id
+      if (!level || !id) return
+      const text = textOf(node).replace(/\s+/g, ' ').trim()
+      if (text) toc.push({ level: Number(level), id: String(id), text })
+    })
+  }
+}
+
 /**
  * Render markdown (or admin-authored HTML, which round-trips via rehype-raw) to
  * sanitized-by-trust HTML plus a heading-based table of contents. Content is
@@ -74,34 +115,24 @@ function remarkMermaid() {
  * the blog's existing behaviour.
  */
 export async function renderMarkdown(markdown: string): Promise<RenderedMarkdown> {
+  const toc: TocHeading[] = []
+
   const file = await unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkToc, { heading: 'agenda.*' })
+    .use(remarkCustomHeadingIds)
     .use(remarkMermaid)
     .use(require('remark-prism'))
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeDecodePrismEntities)
     .use(rehypeSlug)
+    .use(rehypeCollectToc, toc)
     .use(rehypeAutolinkHeadings, { behavior: 'wrap' })
     .use(rehypeFormat)
     .use(rehypeStringify)
     .process(markdown || '')
 
-  const html = file.toString()
-
-  // Extract TOC from generated HTML (headings h2–h4 with slug IDs)
-  const toc: TocHeading[] = []
-  const tocPattern = /<h([2-4])\s[^>]*id="([^"]*)"[^>]*>([\s\S]*?)<\/h[2-4]>/g
-  let match
-  while ((match = tocPattern.exec(html)) !== null) {
-    toc.push({
-      level: parseInt(match[1]),
-      id: match[2],
-      text: match[3].replace(/<[^>]+>/g, '').trim(),
-    })
-  }
-
-  return { html, toc }
+  return { html: file.toString(), toc }
 }

@@ -39,7 +39,7 @@ Vậy phải có cách chuyển image từ Mac sang VPS. Có hai lối:
 
 ## 3. ghcr.io — cái "kho" ở giữa
 
-**GitHub Container Registry (ghcr.io)** là kho lưu image, miễn phí, gắn liền tài khoản GitHub. Luồng:
+**GitHub Container Registry (ghcr.io)** là kho lưu image gắn liền tài khoản GitHub, miễn phí không giới hạn với image để **public**. Luồng:
 
 ```
 Mac:  docker build ──► docker push ──► ghcr.io/pinnguyen9x/learn-nextjs:prod-14
@@ -54,14 +54,18 @@ Lệnh cụ thể phía CI (trên Mac):
 docker build --platform linux/amd64 --provenance=false \
   -t ghcr.io/pinnguyen9x/learn-nextjs:prod-14 .
 
+# $TOKEN = GitHub PAT (classic) có scope write:packages
 echo "$TOKEN" | docker login ghcr.io -u pinnguyen9x --password-stdin
 docker push ghcr.io/pinnguyen9x/learn-nextjs:prod-14
 ```
 
+Lưu ý phần tên image: `ghcr.io/<chủ sở hữu>/<tên package>:<tag>` — phần `<chủ sở hữu>` phải là username hoặc organization GitHub và **viết thường**, nếu không `push` sẽ bị từ chối.
+
 Vài điểm đáng nhớ khi "ship" lên ghcr:
 - **Tag** (`prod-14`) là số phiên bản — mỗi build một tag, để biết chính xác cái gì đang chạy và rollback được.
 - **`--platform linux/amd64`**: Mac là ARM, VPS là x86 — không khai báo là image chạy sai kiến trúc.
-- **Image public**: đặt package public thì VPS `pull` **không cần đăng nhập** (chỉ `push` mới cần token).
+- **Image public**: đặt package public thì VPS `pull` **không cần đăng nhập** (chỉ `push` mới cần token). Nếu để private, VPS cũng phải `docker login ghcr.io` bằng token có quyền đọc package.
+- **Quyền của token**: PAT dùng để `push` cần scope `write:packages`. Nếu chạy trong GitHub Actions thì dùng luôn `secrets.GITHUB_TOKEN`, chỉ cần khai `permissions: packages: write` trong workflow.
 
 ## 4. Docker Compose — "bản khai báo" container
 
@@ -93,9 +97,10 @@ networks:
 
 Đọc file này như đọc một tờ khai:
 - **image**: kéo bản nào từ ghcr (biến `${IMAGE}` do CI truyền vào lúc deploy).
-- **ports** `"3000:3000"`: map cổng 3000 của VPS vào cổng 3000 trong container.
+- **ports** `"${HOST_PORT:-3000}:3000"`: map cổng của VPS (mặc định 3000, staging truyền 3001) vào cổng 3000 trong container. Cú pháp `${BIẾN:-giá trị mặc định}` nghĩa là "lấy biến môi trường, không có thì dùng giá trị sau dấu `:-`".
 - **restart: unless-stopped**: container chết là Docker tự dựng lại — không cần người canh.
-- **networks: webnet**: cả frontend và backend cùng một mạng ảo, nên frontend gọi backend bằng **tên container** (`json-server-blog`) thay vì IP. Nhờ vậy backend **không cần mở cổng ra internet** — ẩn hoàn toàn.
+- **environment**: bên trái dấu `=` là tên biến mà app đọc bên trong container (`API_URL`), bên phải là giá trị lấy từ biến `API_TARGET` ở môi trường chạy lệnh compose. `HOSTNAME=0.0.0.0` để Next.js standalone lắng nghe mọi địa chỉ, nếu không nó bind vào hostname của container và bên ngoài không gọi vào được.
+- **networks: webnet**: cả frontend và backend cùng một mạng ảo, nên frontend gọi backend bằng **tên container** (`json-server-blog`) thay vì IP. Nhờ vậy backend **không cần mở cổng ra internet** — ẩn hoàn toàn. Khai `external: true` nghĩa là mạng này do bạn tạo sẵn ngoài compose (`docker network create webnet`), không phải compose tự dựng — chưa tạo thì `up` sẽ báo lỗi không tìm thấy network.
 - **healthcheck**: Docker định kỳ "bắt mạch" container; hỏng thì báo `unhealthy`.
 
 ## 5. Khoan — file docker-compose.yml nằm ở đâu trên VPS?
@@ -107,9 +112,13 @@ File gốc nằm trong **Git repo** (có version), và pipeline **tự copy (scp
 ```bash
 # 1. Ship file compose TỪ repo (workspace Jenkins) LÊN VPS
 scp docker-compose.yml  pin@vps:/opt/learn-nextjs/docker-compose.yml
-# 2. Vào đúng thư mục đó rồi chạy
-ssh pin@vps "cd /opt/learn-nextjs && docker compose pull && docker compose up -d"
+# 2. Vào đúng thư mục đó rồi chạy, kèm biến IMAGE cho tag vừa build
+ssh pin@vps "cd /opt/learn-nextjs && \
+  IMAGE=ghcr.io/pinnguyen9x/learn-nextjs:prod-14 docker compose pull && \
+  IMAGE=ghcr.io/pinnguyen9x/learn-nextjs:prod-14 docker compose up -d"
 ```
+
+Biến `IMAGE` phải có mặt ở **cả hai** lệnh: `pull` và `up` đều đọc lại `docker-compose.yml`, thiếu biến là compose rơi về giá trị mặc định `:latest` và bạn deploy nhầm bản. (Cách gọn hơn: ghi biến vào file `.env` cạnh `docker-compose.yml` trên VPS — compose tự đọc file này.)
 
 Luồng đầy đủ:
 

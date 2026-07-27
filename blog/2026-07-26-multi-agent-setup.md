@@ -20,7 +20,7 @@ Setup gốc dựng trên macOS. Toàn bộ script trong bài đã được **t�
 
 ## Mục lục
 
-1. [Vấn đề & động lực](#1-vấn-đề--động-lực)
+1. [Vấn đề và động lực](#1-vấn-đề-và-động-lực)
 2. [Kiến trúc](#2-kiến-trúc)
 3. [Cài đặt công cụ](#3-cài-đặt-công-cụ)
 4. [Dựng worktree](#4-dựng-worktree)
@@ -31,15 +31,15 @@ Setup gốc dựng trên macOS. Toàn bộ script trong bài đã được **t�
 9. [Hai hệ tên — chỗ dễ nhầm nhất](#9-hai-hệ-tên--chỗ-dễ-nhầm-nhất)
 10. [Quản lý model](#10-quản-lý-model)
 11. [Điều hướng tmux tối thiểu](#11-điều-hướng-tmux-tối-thiểu)
-12. [ai-devkit console lag & cách né](#12-ai-devkit-console-lag--cách-né)
+12. [ai-devkit console lag và cách né](#12-ai-devkit-console-lag-và-cách-né)
 13. [One-command restore sau khi restart máy](#13-one-command-restore-sau-khi-restart-máy)
 14. [Bẫy thường gặp](#14-bẫy-thường-gặp)
 15. [Áp dụng trên Ubuntu](#15-áp-dụng-trên-ubuntu)
-16. [Checklist & kết luận](#16-checklist--kết-luận)
+16. [Checklist và kết luận](#16-checklist-và-kết-luận)
 
 ---
 
-## 1. Vấn đề & động lực
+## 1. Vấn đề và động lực
 
 Khi bạn giao cho Claude Code một việc dài (refactor một module, viết docs, sửa pipeline deploy), agent sẽ chiếm lấy repo: nó sửa file, chạy test, tạo commit. Bạn không thể vừa để nó chạy vừa tự làm việc khác trên cùng thư mục — và càng không thể chạy hai agent cùng lúc.
 
@@ -63,7 +63,7 @@ Ba công cụ giải quyết đúng ba tầng đó:
 
 - **git worktree** → cách ly filesystem
 - **tmux** → tiến trình sống sót khi rời terminal
-- **ai-devkit** → quan sát và điều khiển tập trung
+- **ai-devkit** (một CLI kèm TUI cài qua npm, chuyên để theo dõi các phiên Claude đang chạy) → quan sát và điều khiển tập trung
 
 Và một script mỏng (`agents.sh`) dán chúng lại.
 
@@ -178,7 +178,7 @@ ai-devkit --version
 
 > Nếu không muốn cài `ai-devkit` toàn cục, `npx ai-devkit@latest agent list` cũng chạy — nhưng mỗi lần gọi sẽ chậm hơn đáng kể. Với script gọi ai-devkit thường xuyên, cài global đáng hơn.
 
-Ngoài ra: **nên cài một terminal tăng tốc GPU** (Ghostty, kitty, Alacritty, WezTerm). Lý do ở [mục 12](#12-ai-devkit-console-lag--cách-né) — TUI của ai-devkit vẽ lại rất nặng, terminal render bằng CPU (Apple Terminal, gnome-terminal) sẽ lag thấy rõ.
+Ngoài ra: **nên cài một terminal tăng tốc GPU** (Ghostty, kitty, Alacritty, WezTerm). Lý do ở [mục 12](#12-ai-devkit-console-lag-và-cách-né) — TUI của ai-devkit vẽ lại rất nặng, terminal render bằng CPU (Apple Terminal, gnome-terminal) sẽ lag thấy rõ.
 
 ---
 
@@ -518,7 +518,7 @@ Hai chi tiết đáng chú ý:
 Duyệt danh sách, bỏ qua `main`, gọi `start_one` cho từng agent chưa chạy:
 
 ```bash
-tmux new-session -d -s "$name" -c "$path" "$CLAUDE_CONT"
+tmux new-session -d -s "$(tmux_name "$name")" -c "$path" "$CLAUDE_CONT"
 ```
 
 - `-d`: tạo detached, **không** cướp terminal của bạn. Bật 5 agent trong 1 giây.
@@ -530,7 +530,7 @@ tmux new-session -d -s "$name" -c "$path" "$CLAUDE_CONT"
 ### `agents new <name>` — tái tạo
 
 ```bash
-tmux kill-session -t "$name" 2>/dev/null || true
+tmux kill-session -t "$(tmux_name "$name")" 2>/dev/null || true
 start_one "$name"
 ```
 
@@ -596,7 +596,7 @@ agents detail glossary
 
 ### `agents console`
 
-Tạo session tmux riêng tên `console`, pane trên chạy `ai-devkit agent console`, pane dưới là shell trống, chia 50/50. Lý do chia pane nằm ở [mục 12](#12-ai-devkit-console-lag--cách-né).
+Tạo session tmux riêng tên `console`, pane trên chạy `ai-devkit agent console`, pane dưới là shell trống, chia 50/50. Lý do chia pane nằm ở [mục 12](#12-ai-devkit-console-lag-và-cách-né).
 
 ### `usage`
 
@@ -661,8 +661,10 @@ agents send glossary "thêm deep-link cho từng thuật ngữ, chạy lint trư
 ```bash
 agents console             # TUI, xem tất cả trong một màn hình
 # hoặc rẻ hơn:
-watch -n5 'agents ls'
+watch -n5 ~/bin/agents.sh ls
 ```
+
+> `watch` chạy lệnh qua một shell con nên **không thấy alias** — phải gọi thẳng đường dẫn script như trên. Trên macOS `watch` không có sẵn: `brew install watch`.
 
 ### Đồng bộ với main
 
@@ -800,7 +802,7 @@ Prefix mặc định là `Ctrl-b`. Dưới đây là đúng những phím bạn 
 | `Ctrl-b ↑ ↓ ← →` | Chuyển pane theo hướng | pane |
 | `Ctrl-b o` | Pane kế tiếp | pane |
 | `Ctrl-b "` | Chia ngang (pane mới ở dưới) | pane |
-| `Ctrl-b %` | Chia dọc | pane |
+| `Ctrl-b %` | Chia dọc (pane mới ở bên phải) | pane |
 | `Ctrl-b z` | Zoom pane hiện tại toàn màn hình / bỏ zoom | pane |
 | `Ctrl-b [` | Chế độ copy/scroll (`q` để thoát) | pane |
 
@@ -819,7 +821,7 @@ Trong console, bấm **`o`** trên một agent → nhảy sang **session tmux** 
 
 ---
 
-## 12. ai-devkit console lag & cách né
+## 12. ai-devkit console lag và cách né
 
 `ai-devkit agent console` là một TUI vẽ lại toàn màn hình liên tục. Với nhiều agent đang stream output, nó bơm rất nhiều lệnh vẽ xuống terminal. Kết quả: gõ phím trễ, cuộn giật.
 
@@ -1147,7 +1149,7 @@ Vì vậy socket phải được tham số hoá **ngay trong script**. Bản `ag
 ```bash
 AGENTS_TMUX_SOCKET=myproj agents up    # mọi lệnh tmux trong script chạy trên socket 'myproj'
 AGENTS_TMUX_SOCKET=myproj agents ls
-tmux -L myproj ls                      # gõ tmux tay thì tự thêm -L
+tmux -L myproj ls                      # gõ tmux tay thì phải tự thêm -L
 ```
 
 Muốn cố định cho một project thì đặt **biến môi trường** trong alias — chỉ biến, không kèm gì khác:
@@ -1193,7 +1195,7 @@ Vài lưu ý cho server:
 
 ---
 
-## 16. Checklist & kết luận
+## 16. Checklist và kết luận
 
 ### Checklist dựng từ đầu
 
@@ -1223,6 +1225,6 @@ Vài lưu ý cho server:
 6. **Script tự suy agent từ `git worktree list`.** Thêm worktree là xong, không phải sửa script — đây là lý do setup này không mục theo thời gian.
 7. **Conflict thì dừng, không tự resolve.** Với code do agent viết, tự động merge là cách tạo bug âm thầm.
 
-Toàn bộ hạ tầng là **hai script bash, khoảng 200 dòng**, không daemon, không cấu hình YAML, không dịch vụ nền. Tất cả trạng thái đã nằm sẵn ở nơi khác — trong git (worktree), trong tmux (session), trên đĩa (lịch sử hội thoại của Claude). Script chỉ đọc ba nguồn đó rồi nối chúng lại.
+Toàn bộ hạ tầng là **hai script bash, khoảng 300 dòng**, không daemon, không cấu hình YAML, không dịch vụ nền. Tất cả trạng thái đã nằm sẵn ở nơi khác — trong git (worktree), trong tmux (session), trên đĩa (lịch sử hội thoại của Claude). Script chỉ đọc ba nguồn đó rồi nối chúng lại.
 
 Đó cũng là lý do nó portable: chép hai file, sửa bốn dòng biến, chạy được ở project khác, máy khác, hệ điều hành khác.

@@ -81,7 +81,8 @@ Partition 2:  [msg0][msg1][msg2][msg3][msg4] ──▶
 
 - Mỗi partition là một **append-only log**: message chỉ được ghi thêm vào cuối, không sửa/xóa.
 - **Thứ tự (ordering) chỉ được đảm bảo trong phạm vi 1 partition**, KHÔNG đảm bảo giữa các partition.
-- Message có cùng **key** sẽ luôn vào cùng 1 partition (hash key % số partition) → dùng key để giữ ordering. Ví dụ: dùng `user_id` làm key thì mọi event của cùng 1 user luôn được xử lý theo đúng thứ tự.
+- Message có cùng **key** sẽ luôn vào cùng 1 partition (hash key % số partition) → dùng key để giữ ordering. Ví dụ: dùng `user_id` làm key thì mọi event của cùng 1 user luôn được xử lý theo đúng thứ tự. Lưu ý: điều này chỉ đúng **chừng nào số partition không đổi** — tăng partition sẽ làm key nhảy sang partition khác.
+- Message **không có key** được rải đều qua các partition (sticky partitioner) → throughput tốt hơn nhưng không giữ được thứ tự theo thực thể.
 
 ### 3.3. Offset
 
@@ -104,7 +105,7 @@ Partition 0: [0][1][2][3][4][5][6][7][8][9]
 
 **[Broker](/glossary#Broker)** là một **server Kafka** — nhận message từ producer, lưu xuống disk, phục vụ consumer. Một cluster production thường có tối thiểu 3 brokers.
 
-### 3.5. Replication (Leader & Follower)
+### 3.5. Replication (Leader và Follower)
 
 Mỗi partition có nhiều **replica** nằm trên các broker khác nhau để chống mất data:
 
@@ -117,9 +118,10 @@ Partition 1:  follower        LEADER          follower
 Partition 2:  follower        follower        LEADER
 ```
 
-- **[Leader](/glossary#Leader%20%2F%20Follower)**: replica duy nhất nhận read/write cho partition đó.
+- **[Leader](/glossary#Leader%20%2F%20Follower)**: replica duy nhất nhận write, và mặc định cũng phục vụ toàn bộ read cho partition đó (từ Kafka 2.4 có thể cấu hình cho consumer đọc từ follower gần nhất để tiết kiệm băng thông cross-rack).
 - **Follower**: liên tục sao chép (replicate) data từ leader.
-- **[ISR (In-Sync Replicas)](/glossary#ISR)**: tập các replica đang bắt kịp leader. Khi leader chết, một follower trong ISR được bầu làm leader mới → cluster tự phục hồi, không mất data.
+- **[ISR (In-Sync Replicas)](/glossary#ISR)**: tập các replica (gồm cả leader) đang bắt kịp leader. Khi leader chết, một follower trong ISR được bầu làm leader mới → cluster tự phục hồi, không mất data.
+- **`min.insync.replicas`**: số replica trong ISR tối thiểu phải ghi thành công thì write mới được chấp nhận — chỉ có tác dụng khi producer dùng `acks=all`. Với `replication.factor=3` + `min.insync.replicas=2`: chết 1 broker vẫn ghi bình thường, chết 2 thì broker từ chối ghi (thà báo lỗi còn hơn âm thầm mất data).
 
 ### 3.6. Producer
 
@@ -129,9 +131,9 @@ Partition 2:  follower        follower        LEADER
 |---|---|
 | `acks=0` | Gửi xong không chờ xác nhận — nhanh nhất, có thể mất data |
 | `acks=1` | Chờ leader ghi xong — cân bằng |
-| `acks=all` | Chờ toàn bộ ISR ghi xong — an toàn nhất, chậm hơn |
+| `acks=all` | Chờ toàn bộ ISR ghi xong — an toàn nhất, chậm hơn; đi kèm `min.insync.replicas` mới thực sự chống mất data |
 | `retries` | Số lần retry khi gửi fail |
-| `enable.idempotence=true` | Chống duplicate khi retry (exactly-once ở phía produce) |
+| `enable.idempotence=true` | Chống duplicate khi retry (exactly-once ở phía produce) — mặc định `true` từ Kafka 3.0 |
 | `batch.size` / `linger.ms` | Gom message thành batch để tăng throughput |
 | `compression.type` | Nén batch (lz4, snappy, zstd) — giảm băng thông và disk |
 
@@ -147,7 +149,7 @@ Partition 2:  follower        follower        LEADER
 7. Leader trả ack về producer (tùy acks config)
 ```
 
-### 3.7. Consumer & Consumer Group
+### 3.7. Consumer và Consumer Group
 
 Consumer đọc message từ topic. **[Consumer Group](/glossary#Consumer%20Group)** là cơ chế scale:
 
@@ -170,12 +172,12 @@ Quy tắc vàng:
 
 Khi consumer join/leave group (deploy, crash, scale), Kafka **phân chia lại partition** giữa các consumer — gọi là **[rebalance](/glossary#Rebalancing)**. Trong lúc rebalance (kiểu eager cũ), toàn bộ group tạm dừng consume → gây "stop-the-world". Các phiên bản mới dùng **cooperative sticky / incremental rebalance** để giảm gián đoạn.
 
-### 3.9. Retention & Compaction
+### 3.9. Retention và Compaction
 
 - **[Retention](/glossary#Retention) theo thời gian/dung lượng**: `retention.ms=604800000` (7 ngày) → message cũ hơn 7 ngày bị xóa.
 - **[Log compaction](/glossary#Log%20Compaction)** (`cleanup.policy=compact`): chỉ giữ **message mới nhất của mỗi key** — phù hợp lưu state/snapshot (ví dụ: số dư ví mới nhất của mỗi user).
 
-## 4. Kafka Connect & Connector
+## 4. Kafka Connect và Connector
 
 ### 4.1. Khái niệm
 
@@ -233,6 +235,8 @@ Connect Cluster (distributed mode):
   }
 }
 ```
+
+> Config trên đã lược bớt `database.user` / `database.password` và cấu hình schema history cho gọn. `tasks.max` luôn là `1` với Debezium MySQL vì chỉ có một binlog để đọc — Source connector không tự chia task tùy ý như Sink.
 
 **Sink — đổ data lake S3:**
 
@@ -297,7 +301,7 @@ Connect Cluster (distributed mode):
 | At-least-once | Không mất, có thể duplicate | Commit offset SAU khi xử lý (phổ biến nhất) |
 | Exactly-once | Không mất, không duplicate | Idempotent producer + transactions (`isolation.level=read_committed`), hoặc consumer tự idempotent |
 
-## 6. Các lỗi thường gặp & cách xử lý
+## 6. Các lỗi thường gặp và cách xử lý
 
 ### 6.1. Consumer Lag — consume không theo kịp produce ⭐
 
@@ -331,14 +335,16 @@ msg/s │  produce rate ────────────────── 1
 
 **Triệu chứng:** consumer group liên tục rebalance, throughput tụt về gần 0, log đầy `Attempt to heartbeat failed since group is rebalancing`.
 
-**Nguyên nhân phổ biến:** xử lý 1 batch lâu hơn `max.poll.interval.ms` (mặc định 5 phút) → broker tưởng consumer chết → kick khỏi group → rebalance → consumer quay lại → rebalance tiếp → vòng lặp.
+**Nguyên nhân phổ biến:** xử lý 1 batch lâu hơn `max.poll.interval.ms` (mặc định 5 phút) → group coordinator coi consumer là đã chết → kick khỏi group → rebalance → consumer quay lại → rebalance tiếp → vòng lặp.
+
+> Phân biệt 2 timeout hay bị nhầm: `session.timeout.ms` (mặc định 45s) đo **heartbeat** — chạy ở thread nền, chỉ báo consumer còn sống; còn `max.poll.interval.ms` đo **khoảng cách giữa 2 lần gọi `poll()`** — tức tốc độ xử lý message thật sự. Rebalance storm gần như luôn do cái thứ hai.
 
 **Giải pháp:**
 
 - Giảm `max.poll.records` (xử lý ít message hơn mỗi vòng poll).
 - Tăng `max.poll.interval.ms` nếu job thật sự cần xử lý lâu.
 - Tách phần xử lý nặng ra worker thread riêng, thread poll chỉ lo poll + commit.
-- Dùng `partition.assignment.strategy=CooperativeStickyAssignor` để rebalance không stop-the-world.
+- Dùng `partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor` (phải ghi đủ tên class) để rebalance không stop-the-world.
 - Đặt `group.instance.id` (static membership) để restart/deploy không trigger rebalance.
 
 ### 6.3. Message bị duplicate
@@ -357,13 +363,13 @@ msg/s │  produce rate ────────────────── 1
 | Producer mất msg | `acks=0/1` + leader chết trước khi replicate | `acks=all`, `min.insync.replicas=2` |
 | Consumer "mất" msg | Auto-commit offset trước khi xử lý xong, rồi crash | Tắt auto-commit, commit thủ công SAU khi xử lý |
 | Msg bị xóa trước khi đọc | Lag lớn hơn retention → message hết hạn bị xóa | Tăng `retention.ms`, alert lag sớm |
-| `unclean.leader.election=true` | Follower ngoài ISR được bầu làm leader → mất msg chưa replicate | Giữ mặc định `false` |
+| Bật `unclean.leader.election.enable=true` | Follower ngoài ISR được bầu làm leader → mất msg chưa replicate | Giữ mặc định `false` |
 
 ### 6.5. Message quá lớn
 
 **Lỗi:** `RecordTooLargeException` (mặc định giới hạn ~1MB).
 
-**Giải pháp:** nén (`compression.type=zstd`); hoặc **claim-check pattern** — lưu payload lớn lên S3, chỉ gửi reference qua Kafka; hạn chế tăng `message.max.bytes` vì ảnh hưởng memory và latency toàn cluster.
+**Giải pháp:** nén (`compression.type=zstd`); hoặc **claim-check pattern** — lưu payload lớn lên S3, chỉ gửi reference qua Kafka; hạn chế nới giới hạn vì ảnh hưởng memory và latency toàn cluster. Nếu buộc phải nới thì phải nới **đồng bộ cả 3 phía**, chỉ sửa một chỗ sẽ vẫn lỗi: broker `message.max.bytes` (hoặc `max.message.bytes` ở mức topic), producer `max.request.size`, consumer `fetch.max.bytes`.
 
 ### 6.6. Partition skew — phân bố lệch
 
@@ -386,7 +392,11 @@ msg/s │  produce rate ────────────────── 1
 
 **Tình huống:** producer đổi format (xóa field, đổi type) → consumer deserialize fail hàng loạt.
 
-**Giải pháp:** dùng **[Schema Registry](/glossary#Schema%20Registry)** (Avro/Protobuf) với compatibility mode `BACKWARD` — mọi schema mới phải được registry chấp nhận trước khi producer dùng, đảm bảo consumer cũ vẫn đọc được.
+**Giải pháp:** dùng **[Schema Registry](/glossary#Schema%20Registry)** (Avro/Protobuf) — mọi schema mới phải được registry duyệt trước khi producer dùng, schema phá vỡ tương thích sẽ bị chặn ngay từ lúc đăng ký. Nhớ chọn đúng compatibility mode:
+
+- `BACKWARD` (mặc định): consumer dùng **schema mới** đọc được data ghi bằng **schema cũ** → phải nâng cấp **consumer trước**, producer sau. Cho phép xóa field và thêm field có default.
+- `FORWARD`: consumer dùng **schema cũ** vẫn đọc được data ghi bằng **schema mới** → nâng cấp **producer trước**. Chọn cái này khi bạn không kiểm soát được hết consumer (nhiều team dùng chung topic).
+- `FULL`: thỏa cả hai chiều — an toàn nhất nhưng gò bó nhất.
 
 ## 7. Checklist config production tham khảo
 
@@ -405,9 +415,9 @@ max.poll.interval.ms=300000
 partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
 auto.offset.reset=earliest
 
-# ---- Topic ----
-replication.factor=3
-min.insync.replicas=2
+# ---- Topic (đặt lúc tạo topic, không phải file config của client) ----
+replication.factor=3              # truyền qua --replication-factor khi tạo topic
+min.insync.replicas=2             # chỉ có tác dụng cùng acks=all ở producer
 retention.ms=604800000            # 7 ngày
 ```
 

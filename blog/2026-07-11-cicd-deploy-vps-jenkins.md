@@ -16,13 +16,13 @@ Không lý thuyết suông — mình kể cả những chỗ vấp thật và c�
 
 <!-- truncate -->
 
-## 1. Bối cảnh & mục tiêu
+## 1. Bối cảnh và mục tiêu
 
 Project gồm 2 phần:
 - **Frontend**: Next.js 15 (blog bạn đang đọc).
 - **Backend**: một json-server nhỏ cấp API.
 
-Ban đầu mình deploy kiểu "cắm cơm": ssh vào VPS, `git pull`, `npm build`, `next start`. Mỗi lần đổi code là lặp lại toàn bộ, hay quên bước, và app chết là không ai biết. Mục tiêu đặt ra:
+Ban đầu mình deploy kiểu "cắm cơm": ssh vào VPS, `git pull`, `npm run build`, `npm start`. Mỗi lần đổi code là lặp lại toàn bộ, hay quên bước, và app chết là không ai biết. Mục tiêu đặt ra:
 
 - **Push là tự deploy** — không đụng tay vào server.
 - **Tách staging / production** — test trước khi lên thật.
@@ -46,18 +46,23 @@ Một hệ quả thú vị: Mac là ARM64, VPS là x86_64. Nên mọi lệnh bui
 
 Thay vì `docker save | ssh | docker load` (nén image rồi bắn qua SSH mỗi lần — tốn băng thông), mình dùng **Container Registry** — cụ thể là **ghcr.io** (GitHub Container Registry, miễn phí):
 
-```
+```bash
 docker build --platform linux/amd64 --provenance=false -t ghcr.io/<user>/app:tag .
+echo "$GHCR_TOKEN" | docker login ghcr.io -u <user> --password-stdin
 docker push ghcr.io/<user>/app:tag        # Jenkins đẩy lên
 # trên VPS:
-docker compose pull && docker compose up -d   # kéo về & chạy
+docker compose pull && docker compose up -d   # kéo về rồi chạy
 ```
+
+`GHCR_TOKEN` là một GitHub PAT có scope `write:packages`, lưu trong Jenkins Credentials (kiểu Secret text) và lấy ra bằng `withCredentials` chứ không viết thẳng vào Jenkinsfile.
 
 Đây đúng là cách các công ty làm với Harbor/Nexus — chỉ khác là ghcr free và không phải tự dựng.
 
-## 4. Staging & Production: một Jenkinsfile, hai môi trường
+## 4. Staging và Production: một Jenkinsfile, hai môi trường
 
-Chìa khóa để tách môi trường mà không nhân đôi code: **Jenkinsfile "branch-aware"** — tự nhận biết đang build nhánh nào:
+Chìa khóa để tách môi trường mà không nhân đôi code: **Jenkinsfile "branch-aware"** — tự nhận biết đang build nhánh nào.
+
+Đoạn dưới nằm trong một khối `script { }` ở stage đầu tiên của pipeline (declarative pipeline không cho viết logic Groovy trực tiếp trong `steps`):
 
 ```groovy
 def br = (env.GIT_BRANCH ?: '').replaceAll('^origin/', '')
@@ -82,6 +87,8 @@ stage('Approve deploy to PROD') {
 }
 ```
 
+Một lưu ý: `input` đặt trong `steps` sẽ **giữ executor** của Jenkins suốt thời gian chờ người duyệt. Với pipeline nhỏ thì không sao, nhưng nếu muốn giải phóng executor, hãy dùng khai báo `input` ở cấp `stage` (ngang hàng với `when`/`steps`) — Jenkins sẽ hỏi trước khi cấp agent cho stage đó. Cái `timeout` 30 phút ở trên cũng quan trọng: hết giờ không ai bấm thì build tự hủy thay vì treo mãi.
+
 Đây chính là bản "bình dân" của mô hình công ty: staging chạy thoải mái, prod phải có người bấm nút chịu trách nhiệm.
 
 ## 5. Toàn cảnh một lần deploy
@@ -91,11 +98,11 @@ git push develop → build → push ghcr(staging-N) → deploy staging TỰ Đ�
 git merge develop → main → build → push ghcr(prod-N) → ⏸ DUYỆT → deploy → nipit.pro
 ```
 
-Trên VPS, frontend gọi backend qua **Docker network nội bộ** (`http://json-server-blog:4000`) chứ không qua IP public — nhờ vậy backend **ẩn hoàn toàn** khỏi internet, chỉ truy cập được qua proxy của Next.js. Nginx đứng trước cùng, chấm dứt HTTPS cho `nipit.pro`.
+Trên VPS, frontend gọi backend qua **Docker network nội bộ** (`http://json-server-blog:4000`) chứ không qua IP public — nhờ vậy backend **ẩn hoàn toàn** khỏi internet, chỉ truy cập được qua proxy của Next.js. Nginx đứng trước cùng, làm reverse proxy và xử lý HTTPS (gỡ TLS rồi chuyển tiếp request sang container ở cổng 3000) cho `nipit.pro`.
 
-## 6. Real-time deploy: webhook & giới hạn
+## 6. Real-time deploy: webhook và giới hạn
 
-Để "push là chạy ngay" thay vì chờ Jenkins hỏi thăm định kỳ, mình dùng **webhook**: GitHub gọi thẳng vào Jenkins mỗi lần push. Nhưng Jenkins chạy local (`localhost:8080`) — internet không với tới được. Giải pháp: **ngrok** tạo một đường hầm public → Jenkins local.
+Để "push là chạy ngay" thay vì chờ Jenkins hỏi thăm định kỳ, mình dùng **webhook**: GitHub gọi thẳng vào Jenkins mỗi lần push. Nhưng Jenkins chạy local (`localhost:8080`) — internet không với tới được. Giải pháp: **ngrok** tạo một đường hầm public → Jenkins local; lấy URL ngrok dán vào phần Webhooks của repo GitHub (đường dẫn `/github-webhook/`). Lưu ý bản ngrok miễn phí đổi URL sau mỗi lần khởi động lại, nên phải cập nhật webhook tương ứng.
 
 Kèm theo là bài học: **Poll SCM vẫn phải giữ làm lưới an toàn.** Vì webhook chỉ hoạt động khi laptop bật + tunnel sống; khi máy ngủ, Poll SCM (15 phút/lần) vẫn bắt được thay đổi khi máy bật lại.
 
@@ -104,7 +111,7 @@ Kèm theo là bài học: **Poll SCM vẫn phải giữ làm lưới an toàn.**
 | Triệu chứng | Thủ phạm | Cách sửa |
 |---|---|---|
 | `docker: command not found` | Jenkins (launchd) có PATH tối giản | thêm `/usr/local/bin` vào PATH |
-| App crash `getaddrinfo EAI_AGAIN` | Next standalone bind vào tên container | `ENV HOSTNAME=0.0.0.0` |
+| App crash `getaddrinfo EAI_AGAIN` | Next standalone bind vào biến `HOSTNAME` mà Docker đặt sẵn bằng ID container | `ENV HOSTNAME=0.0.0.0` |
 | Container báo `unhealthy` | healthcheck `localhost` → IPv6 `::1` | đổi sang `127.0.0.1` |
 | Push ghcr lỗi `500` | buildx sinh attestation manifest | `--provenance=false` |
 | Push ghcr lỗi `401` | osxkeychain trả token chập chờn | dùng `DOCKER_CONFIG` riêng + retry |
@@ -116,7 +123,7 @@ Mỗi dòng ở trên là một buổi tối debug. Ghi lại để lần sau (v
 
 Registry và đĩa sẽ phình theo thời gian nếu không dọn:
 - **VPS**: mỗi lần deploy tự `docker image prune -af` — chỉ giữ image đang chạy.
-- **ghcr**: một **GitHub Actions** chạy cron hàng tuần, xóa bản untagged và chỉ giữ 10 tag mới nhất.
+- **ghcr**: một workflow **GitHub Actions** chạy theo lịch (`on: schedule` với biểu thức cron hàng tuần), xóa bản untagged và chỉ giữ 10 tag mới nhất. Workflow này cần khai `permissions: packages: write` thì `GITHUB_TOKEN` mới có quyền xóa package version.
 
 ## 9. Kết
 
