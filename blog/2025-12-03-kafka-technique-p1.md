@@ -4,7 +4,7 @@ title: Apache Kafka Complete Knowledge Base
 author: Pin Nguyen
 author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
-tags: [NodeJS, Docker, TypeScript]
+tags: [Kafka, Architecture, NodeJS, Docker, TypeScript]
 date: '2024-12-02T12:00:00Z'
 image: https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1200&auto=format&fit=crop&q=80
 ---

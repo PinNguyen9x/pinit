@@ -4,7 +4,7 @@ title: Kafka vs RabbitMQ - Which Message Queue Should You Choose? 🚀
 author: Pin Nguyen
 author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
-tags: [NodeJS, Docker, TypeScript]
+tags: [Kafka, Messaging, NodeJS, Docker, TypeScript]
 date: '2024-12-02T12:00:00Z'
 image: https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&auto=format&fit=crop&q=80
 ---
