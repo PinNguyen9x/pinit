@@ -1,15 +1,10 @@
-import { Work, WorkStatus } from '@/models'
+import { Work } from '@/models'
+import { getWorkHref } from '@/utils'
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
 import Link from 'next/link'
 
 export interface WorkMiniCardProps {
   work: Work
-}
-
-function getWorkHref(work: Work) {
-  return work.status === WorkStatus.PUBLISHED && work.slug
-    ? `/works/${work.id}/${work.slug}`
-    : `/works/${work.id}/details`
 }
 
 export function WorkMiniCard({ work }: WorkMiniCardProps) {

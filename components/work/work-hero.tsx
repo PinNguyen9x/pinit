@@ -1,4 +1,5 @@
-import { Work, WorkStatus } from '@/models'
+import { Work } from '@/models'
+import { getWorkHref } from '@/utils'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import StarIcon from '@mui/icons-material/Star'
@@ -7,12 +8,6 @@ import Link from 'next/link'
 
 export interface WorkHeroProps {
   work: Work
-}
-
-function getWorkHref(work: Work) {
-  return work.status === WorkStatus.PUBLISHED && work.slug
-    ? `/works/${work.id}/${work.slug}`
-    : `/works/${work.id}/details`
 }
 
 export function WorkHero({ work }: WorkHeroProps) {

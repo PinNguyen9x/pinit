@@ -1,12 +1,15 @@
 import { BackgroundFx, Seo } from '@/components/common'
-import { HeroSection } from '@/components/home'
+import { HeroSection, KnowledgeTracks } from '@/components/home'
 import { MainLayout } from '@/components/layouts'
-import { RecentPost } from '@/components/post'
 import { FeatureWork } from '@/components/work'
+import { KNOWLEDGE_TRACKS } from '@/constants/tracks'
 import { API_BASE, safeFetchJson } from '@/utils'
+import { getPostList } from '@/utils/posts'
+import { TrackWithCount, countPostsByTrack } from '@/utils/tracks'
 import { Box } from '@mui/material'
 import { GetStaticProps } from 'next'
-import { NextPageWithLayout, Post, Work } from '../models'
+import { NextPageWithLayout, Work } from '../models'
+import type { HeroStat } from '@/components/home/hero'
 
 // const HeroSection = dynamic(() => import('@/components/home/hero').then((mod) => mod.HeroSection), {
 //   ssr: false,
@@ -25,11 +28,13 @@ import { NextPageWithLayout, Post, Work } from '../models'
 // )
 
 interface HomeProps {
-  posts?: Post[]
   works?: Work[]
+  tracks?: TrackWithCount[]
+  totalPosts?: number
+  stats?: HeroStat[]
 }
 
-const Home: NextPageWithLayout = ({ posts, works }: HomeProps) => {
+const Home: NextPageWithLayout = ({ works, tracks, totalPosts, stats }: HomeProps) => {
   return (
     <Box>
       <Seo
@@ -43,8 +48,8 @@ const Home: NextPageWithLayout = ({ posts, works }: HomeProps) => {
         }}
       />
       <BackgroundFx parallax={false} />
-      <HeroSection />
-      <RecentPost postList={posts || []} />
+      <HeroSection stats={stats} />
+      <KnowledgeTracks tracks={tracks || []} totalPosts={totalPosts || 0} />
       <FeatureWork workList={works || []} />
     </Box>
   )
@@ -53,15 +58,36 @@ const Home: NextPageWithLayout = ({ posts, works }: HomeProps) => {
 Home.Layout = MainLayout
 
 export const getStaticProps: GetStaticProps<{}> = async () => {
-  const [postsData, worksData] = await Promise.all([
-    safeFetchJson<{ data: Post[] }>(`${API_BASE}/api/posts?_page=1&_limit=2`),
+  // Dữ liệu lớn (13 bài system design ~2000 dòng, 109 thuật ngữ ~900 dòng) chỉ
+  // import BÊN TRONG getStaticProps để không lọt vào bundle client. Cùng lý do
+  // với constants/index.ts không re-export './system-design'.
+  const [worksData, posts, { LESSONS }, { GLOSSARY }] = await Promise.all([
     safeFetchJson<{ data: Work[] }>(`${API_BASE}/api/works?_page=1&_limit=3`),
+    getPostList(),
+    import('@/constants/system-design'),
+    import('@/constants/glossary'),
   ])
+
+  const tracks = countPostsByTrack(
+    KNOWLEDGE_TRACKS,
+    posts.map((post) => post.tagList),
+  )
+
+  const stats: HeroStat[] = [
+    // 8 năm: 2017 → 2024, khớp workExperience trong pages/about.tsx. Đây là số
+    // duy nhất không đếm được từ dữ liệu trong repo.
+    { value: '8+', label: 'năm kinh nghiệm' },
+    { value: String(posts.length), label: 'bài viết' },
+    { value: String(LESSONS.length), label: 'bài system design' },
+    { value: String(GLOSSARY.length), label: 'thuật ngữ' },
+  ]
 
   return {
     props: {
-      posts: postsData?.data ?? [],
       works: worksData?.data ?? [],
+      tracks,
+      totalPosts: posts.length,
+      stats,
     },
     revalidate: 60, // ISR: Revalidate every 60 seconds
   }

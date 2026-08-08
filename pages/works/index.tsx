@@ -7,7 +7,8 @@ import {
   WorkSkeleton,
 } from '@/components/work'
 import { useAuth, useWorkList } from '@/hooks'
-import { Work } from '@/models'
+import { Work, WorkStatus } from '@/models'
+import { getWorkGameSlug } from '@/utils'
 import AddIcon from '@mui/icons-material/Add'
 import { Box, Button, Container, Grid, Stack, Typography, useTheme } from '@mui/material'
 import { useRouter } from 'next/router'
@@ -137,10 +138,20 @@ export default function WorksPage() {
     })
   }, [sorted, query, activeTag])
 
+  // Case study = project đã publish và có bài viết đầy đủ. Game là demo chơi
+  // được, xếp cùng nhóm thử nghiệm để không đứng ngang hàng với case study.
+  const caseStudies = useMemo(
+    () => sorted.filter((w) => w.status === WorkStatus.PUBLISHED && !getWorkGameSlug(w)),
+    [sorted],
+  )
+  const caseStudyIds = useMemo(() => new Set(caseStudies.map((w) => w.id)), [caseStudies])
+
   const isFiltering = query.trim() !== '' || activeTag !== 'All'
-  const featured = !isFiltering ? filtered[0] : undefined
-  const editorsPicks = !isFiltering ? filtered.slice(1, 4) : []
-  const remaining = !isFiltering ? filtered.slice(4) : filtered
+  const featured = !isFiltering ? caseStudies[0] : undefined
+  const editorsPicks = !isFiltering ? caseStudies.slice(1, 4) : []
+  const remaining = !isFiltering
+    ? filtered.filter((w) => !caseStudyIds.has(w.id))
+    : filtered
 
   return (
     <Box>
@@ -222,7 +233,7 @@ export default function WorksPage() {
                     mb: 0.25,
                   }}
                 >
-                  Notable picks
+                  Case studies
                 </Typography>
                 {editorsPicks.map((w) => (
                   <WorkMiniCard key={w.id} work={w} />
@@ -250,7 +261,7 @@ export default function WorksPage() {
                   color: 'text.secondary',
                 }}
               >
-                {isFiltering ? `Results · ${filtered.length}` : 'All projects'}
+                {isFiltering ? `Results · ${filtered.length}` : 'Other experiments'}
               </Typography>
               <Typography
                 sx={{

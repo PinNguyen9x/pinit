@@ -40,11 +40,11 @@ export default function AddEditWorkPage(props: AddEditWorkPageProps) {
         <Typography component="h1" variant="h5" mt={8} mb={4}>
           {isAddMode ? 'Add new work' : `Edit work #${workId}`}
         </Typography>
-        <Box>
-          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Minus porro amet quam sequi
-          quia, delectus error voluptas voluptatem explicabo. Laborum molestiae modi similique,
-          nostrum voluptates sit blanditiis adipisci nobis. Ipsa?
-        </Box>
+        <Typography variant="body2" color="text.secondary" mb={4}>
+          Trường <strong>Full description</strong> nhận Markdown và sơ đồ <code>mermaid</code>, render
+          ở trang chi tiết. Viết theo 4 phần để thành case study: Bối cảnh · Vấn đề · Giải pháp ·
+          Kết quả. Chỉ nêu số liệu đo được thật.
+        </Typography>
         <Box>
           {(isAddMode || !!workDetails) && (
             <WorkForm initialValues={workDetails} onSubmit={handleSubmit} />

@@ -6,10 +6,22 @@ import { getErrorMessage } from '@/utils'
 import { Box, Button, CircularProgress, Container, keyframes, Stack, Typography, useTheme } from '@mui/material'
 import Image from 'next/image'
 import { useState } from 'react'
+import { FaGithub, FaLinkedin } from 'react-icons/fa'
 import { MdDownload, MdLock, MdVisibility } from 'react-icons/md'
 import { toast } from 'react-toastify'
 
 const techStack = ['TypeScript', 'React', 'Next.js', 'Node.js', 'Go', 'Java', 'Python']
+
+// Chỉ công khai GitHub + LinkedIn. URL trùng với components/common/footer.tsx.
+const SOCIAL_LINKS = [
+  { href: 'https://github.com/PinNguyen9x', label: 'GitHub', Icon: FaGithub },
+  { href: 'https://www.linkedin.com/in/pin-nguyen-69123b16a/', label: 'LinkedIn', Icon: FaLinkedin },
+]
+
+export interface HeroStat {
+  value: string
+  label: string
+}
 
 const floatY = keyframes`
   0%, 100% { transform: translateY(0px); }
@@ -92,7 +104,11 @@ function Sparkle({
   )
 }
 
-export function HeroSection() {
+interface HeroSectionProps {
+  stats?: HeroStat[]
+}
+
+export function HeroSection({ stats = [] }: HeroSectionProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const sparkleColor = isDark ? 'rgba(134,239,172,0.9)' : 'rgba(22,163,74,0.55)'
@@ -398,6 +414,81 @@ export function HeroSection() {
               >
                 Read Blog
               </Button>
+            </Stack>
+
+            {/* Số liệu đếm từ dữ liệu thật (blog/, constants/) — xem getStaticProps
+                ở pages/index.tsx. Không hardcode để khỏi lệch khi thêm bài. */}
+            <Stack
+              direction="row"
+              spacing={{ xs: 3, sm: 4 }}
+              flexWrap="wrap"
+              useFlexGap
+              justifyContent={{ xs: 'center', md: 'flex-start' }}
+              sx={{ mt: 5 }}
+            >
+              {stats.map((stat) => (
+                <Box key={stat.label} sx={{ textAlign: { xs: 'center', md: 'left' } }}>
+                  <Typography
+                    component="div"
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: { xs: '1.5rem', md: '1.75rem' },
+                      letterSpacing: '-0.02em',
+                      color: 'primary.main',
+                      lineHeight: 1.1,
+                    }}
+                  >
+                    {stat.value}
+                  </Typography>
+                  <Typography
+                    component="div"
+                    sx={{
+                      color: 'text.secondary',
+                      fontSize: '0.78rem',
+                      fontWeight: 500,
+                      mt: 0.5,
+                    }}
+                  >
+                    {stat.label}
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+
+            <Stack
+              direction="row"
+              spacing={2}
+              sx={{ mt: 3.5 }}
+              justifyContent={{ xs: 'center', md: 'flex-start' }}
+            >
+              {SOCIAL_LINKS.map(({ href, label, Icon }) => (
+                <Box
+                  key={label}
+                  component="a"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 38,
+                    height: 38,
+                    borderRadius: '10px',
+                    color: 'text.secondary',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      color: 'primary.main',
+                      borderColor: 'primary.main',
+                      transform: 'translateY(-2px)',
+                    },
+                  }}
+                >
+                  <Icon size={17} />
+                </Box>
+              ))}
             </Stack>
           </Box>
 

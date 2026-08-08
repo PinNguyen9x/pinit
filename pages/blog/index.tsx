@@ -8,7 +8,8 @@ import {
 import { Post } from '@/models'
 import { Box, Container, Grid, Stack, Typography, useTheme } from '@mui/material'
 import { GetStaticProps, GetStaticPropsContext } from 'next'
-import { useMemo, useState } from 'react'
+import { useRouter } from 'next/router'
+import { useEffect, useMemo, useState } from 'react'
 import { getPostList } from '../../utils/posts'
 
 export interface BlogPageProps {
@@ -98,6 +99,15 @@ export default function BlogPage({ posts }: BlogPageProps) {
 
   const [query, setQuery] = useState('')
   const [activeTag, setActiveTag] = useState('All')
+
+  // Nhận ?tag= từ URL để card Knowledge Tracks ở trang chủ lọc được thật.
+  // Chạy khi router sẵn sàng: với SSG, router.query rỗng ở lần render đầu.
+  const router = useRouter()
+  useEffect(() => {
+    if (!router.isReady) return
+    const tag = router.query.tag
+    if (typeof tag === 'string' && tag) setActiveTag(tag)
+  }, [router.isReady, router.query.tag])
 
   const tagBuckets = useMemo(() => {
     const counts = new Map<string, number>()

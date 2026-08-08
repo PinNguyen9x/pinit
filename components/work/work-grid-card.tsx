@@ -1,16 +1,11 @@
-import { Work, WorkStatus } from '@/models'
+import { Work } from '@/models'
+import { getWorkHref } from '@/utils'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
 import Link from 'next/link'
 
 export interface WorkGridCardProps {
   work: Work
-}
-
-function getWorkHref(work: Work) {
-  return work.status === WorkStatus.PUBLISHED && work.slug
-    ? `/works/${work.id}/${work.slug}`
-    : `/works/${work.id}/details`
 }
 
 export function WorkGridCard({ work }: WorkGridCardProps) {

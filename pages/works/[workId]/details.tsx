@@ -3,8 +3,9 @@ import { MainLayout } from '@/components/layouts'
 import { WorkDetailSkeleton } from '@/components/work'
 import { useAuth, useRenderTagIcon } from '@/hooks'
 import { Work, WorkStatus } from '@/models'
-import { API_BASE, safeFetchJson } from '@/utils'
+import { API_BASE, RelatedPost, findRelatedPosts, getWorkGameSlug, safeFetchJson } from '@/utils'
 import { renderMarkdown } from '@/utils/markdown'
+import { getPostList } from '@/utils/posts'
 import { Box, Container, Stack, useTheme } from '@mui/material'
 import { format } from 'date-fns'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
@@ -12,10 +13,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FaGithub } from 'react-icons/fa'
-import { MdEdit, MdLaunch, MdOpenInNew } from 'react-icons/md'
+import { MdEdit, MdLaunch, MdOpenInNew, MdPlayArrow } from 'react-icons/md'
 
 export interface WorkDetailsProps {
   work: Work
+  relatedPosts?: RelatedPost[]
 }
 
 const SERIF = '"Fraunces", Georgia, serif'
@@ -34,12 +36,15 @@ function parseDate(value: string | number | undefined): Date | null {
   return Number.isNaN(d.getTime()) ? null : d
 }
 
-export default function WorkDetails({ work }: WorkDetailsProps) {
+export default function WorkDetails({ work, relatedPosts = [] }: WorkDetailsProps) {
   const router = useRouter()
   const { isLoggedIn } = useAuth()
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const techStack = useRenderTagIcon(work?.tagList || [])
+  // Work có game chơi được thì hiện nút "Play demo"; game là hành động phụ,
+  // không thay thế bài viết. Xem utils/work.ts.
+  const gameSlug = work ? getWorkGameSlug(work) : null
 
   const accent = theme.palette.primary.main
   const accentSoft = isDark ? 'rgba(74,222,128,0.10)' : 'rgba(22,163,74,0.08)'
@@ -72,8 +77,9 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
     if (work?.fullDescription) list.push({ id: 'narrative', label: 'Project narrative' })
     if (layers.length > 0) list.push({ id: 'architecture', label: 'Architecture flow' })
     if (techStack.length > 0) list.push({ id: 'stack', label: 'Tech stack' })
+    if (relatedPosts.length > 0) list.push({ id: 'reading', label: 'Đọc thêm' })
     return list
-  }, [work, layers, techStack])
+  }, [work, layers, techStack, relatedPosts])
 
   const [active, setActive] = useState<string>(sections[0]?.id ?? 'overview')
 
@@ -428,6 +434,21 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
             {/* Actions */}
             <Box sx={panelSx}>
               <Stack spacing={1}>
+                {gameSlug && (
+                  <SideButton
+                    href={`/works/${work.id}/${gameSlug}`}
+                    primary={!work.linkDemo}
+                    accent={accent}
+                    line={line}
+                    bg2={bg2}
+                    bg3={bg3}
+                    ink={ink}
+                    inkFaint={inkFaint}
+                  >
+                    <MdPlayArrow size={15} />
+                    Play demo
+                  </SideButton>
+                )}
                 {work.linkDemo && (
                   <SideButton
                     href={work.linkDemo}
@@ -474,7 +495,7 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
                     Edit project
                   </SideButton>
                 )}
-                {!work.linkDemo && !work.linkSource && !isLoggedIn && (
+                {!gameSlug && !work.linkDemo && !work.linkSource && !isLoggedIn && (
                   <SideButton
                     href="/works"
                     accent={accent}
@@ -948,6 +969,67 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
                 </Box>
               </Box>
             )}
+
+            {relatedPosts.length > 0 && (
+              <Box
+                component="section"
+                id="reading"
+                sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}
+              >
+                <SectionHead
+                  num={String(
+                    2 +
+                      (work.fullDescription ? 1 : 0) +
+                      (layers.length > 0 ? 1 : 0) +
+                      (techStack.length > 0 ? 1 : 0),
+                  ).padStart(2, '0')}
+                  title="Đọc thêm."
+                  meta={`${relatedPosts.length} bài cùng chủ đề`}
+                  accent={accent}
+                  line={line}
+                  inkFaint={inkFaint}
+                  ink={ink}
+                />
+                <Stack spacing={1.5}>
+                  {relatedPosts.map((post) => (
+                    <Link
+                      key={post.slug}
+                      href={`/blog/${post.slug}`}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <Box
+                        sx={{
+                          p: 2.25,
+                          border: `1px solid ${line}`,
+                          borderRadius: '10px',
+                          bgcolor: bg1,
+                          transition: 'border-color 0.2s, transform 0.2s',
+                          '&:hover': { borderColor: accent, transform: 'translateY(-2px)' },
+                        }}
+                      >
+                        <Box
+                          sx={{ fontWeight: 600, fontSize: '15px', color: ink, lineHeight: 1.4 }}
+                        >
+                          {post.title}
+                        </Box>
+                        <Box
+                          sx={{
+                            mt: 0.75,
+                            fontFamily: MONO,
+                            fontSize: '11px',
+                            color: inkFaint,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.08em',
+                          }}
+                        >
+                          {post.matchedTags.join(' · ')} — {post.readingMinutes} min
+                        </Box>
+                      </Box>
+                    </Link>
+                  ))}
+                </Stack>
+              </Box>
+            )}
           </Box>
         </Box>
       </Container>
@@ -1337,9 +1419,16 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
   // via rehype-raw, so older Quill-authored entries still display.
   const raw = (data.fullDescription ?? '').trim()
   data.fullDescription = raw ? (await renderMarkdown(raw)).html : ''
+
+  // Nối project với bài viết cùng tag: bằng chứng làm xong thì viết lại được.
+  // getPostList đọc từ blog/*.md nên chỉ chạy được ở phía server.
+  const posts = await getPostList()
+  const relatedPosts = findRelatedPosts(data.tagList, posts)
+
   return {
     props: {
       work: data as Work,
+      relatedPosts,
     },
     revalidate: 300,
   }
