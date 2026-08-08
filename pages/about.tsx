@@ -18,7 +18,6 @@ import {
   FaGraduationCap,
   FaHeart,
   FaMapMarkerAlt,
-  FaPhone,
 } from 'react-icons/fa'
 
 const personal = {
@@ -27,7 +26,8 @@ const personal = {
   bio: 'Full-stack engineer with 8+ years of experience building web applications and data platforms. Focused on scalable architectures, real-time pipelines, and polished user interfaces.',
   birthYear: '1995',
   location: 'Ho Chi Minh City, Vietnam',
-  phone: '+84 090 690 1419',
+  // Không public số điện thoại: trang này index được trên Google, bot quét được.
+  // Nhà tuyển dụng liên hệ qua email hoặc LinkedIn.
   email: 'nguyenthanhpin95@gmail.com',
 }
 
@@ -290,18 +290,6 @@ function AboutPage() {
                   Location
                 </Typography>
                 <Typography variant="body2">{personal.location}</Typography>
-              </Box>
-              <Box sx={infoRowSx}>
-                <Typography
-                  variant="caption"
-                  sx={{ minWidth: 90, color: 'text.disabled', fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.72rem', textTransform: 'uppercase' }}
-                >
-                  <FaPhone size={11} style={{ marginRight: 4 }} />
-                  Phone
-                </Typography>
-                <Typography variant="body2" component="a" href={`tel:${personal.phone}`} sx={{ color: 'inherit', '&:hover': { color: 'primary.main' } }}>
-                  {personal.phone}
-                </Typography>
               </Box>
               <Box sx={infoRowSx}>
                 <Typography
