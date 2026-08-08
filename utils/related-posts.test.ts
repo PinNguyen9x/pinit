@@ -7,6 +7,15 @@ const POSTS = [
   { slug: 'c', title: 'Kafka + Docker', tagList: ['Kafka', 'Docker'], readingMinutes: 8 },
 ]
 
+// Sát với dữ liệu thật: bài Kafka mang thêm tag stack chung chung nên khớp
+// với mọi project backend dù nội dung không liên quan.
+const KAFKA_OVER_TAGGED = {
+  slug: 'kafka-kb',
+  title: 'Apache Kafka Complete Knowledge Base',
+  tagList: ['Kafka', 'Architecture', 'NodeJS', 'Docker', 'TypeScript'],
+  readingMinutes: 25,
+}
+
 describe('findRelatedPosts', () => {
   it('trả bài có tag trùng', () => {
     const result = findRelatedPosts(['Kafka'], POSTS)
@@ -30,6 +39,23 @@ describe('findRelatedPosts', () => {
 
   it('không tag nào khớp thì trả rỗng để trang ẩn mục này', () => {
     expect(findRelatedPosts(['Rust'], POSTS)).toEqual([])
+  })
+
+  it('trùng mỗi tag stack thì không tính là liên quan', () => {
+    // Project backend kiểu Json-Server: chung NodeJS + Docker + TypeScript với
+    // bài Kafka, nhưng nội dung không dính gì nhau.
+    const work = ['NodeJS', 'ExpressJS', 'JWT', 'Docker', 'TypeScript']
+    expect(findRelatedPosts(work, [KAFKA_OVER_TAGGED])).toEqual([])
+  })
+
+  it('vẫn nhận bài khi có tag chủ đề trùng, dù kèm tag stack', () => {
+    // Project pinit: trùng CI/CD (chủ đề) nên bài CI/CD được nhận.
+    const work = ['NextJS', 'TypeScript', 'Docker', 'CI/CD', 'Jenkins']
+    expect(findRelatedPosts(work, POSTS).map((p) => p.slug)).toEqual(['b'])
+  })
+
+  it('project về Kafka vẫn thấy bài Kafka — tag chủ đề vẫn tính', () => {
+    expect(findRelatedPosts(['Kafka', 'Docker'], [KAFKA_OVER_TAGGED])).toHaveLength(1)
   })
 
   it('giới hạn số bài trả về', () => {
