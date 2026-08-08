@@ -21,7 +21,7 @@
                     └─────┼────────────────────────── ssh + docker compose ────────────────────────┘
                           │
                           ▼
-   ┌──────────────────────────── VPS Vultr (Ubuntu, amd64, 149.28.18.204) ───────────────────────────┐
+   ┌──────────────────────────── VPS Vultr (Ubuntu, amd64) ──────────────────────────────────────────┐
    │  Nginx (reverse proxy, HTTPS Let's Encrypt)                                                       │
    │     ├── nipit.pro (:80/:443) ──► learn-nextjs (:3000)  ─┐                                          │
    │     └── (IP:3001)            ──► learn-nextjs-staging   │  webnet (Docker network nội bộ)          │

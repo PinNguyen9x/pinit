@@ -9,7 +9,8 @@ on:
 
 env:
   IMAGE: ghcr.io/pinnguyen9x/learn-nextjs
-  VPS: pin@149.28.18.204
+  # Host/user để trong Actions Variables (Settings > Variables), không hard-code IP trong repo public
+  VPS: ${{ vars.VPS_USER }}@${{ vars.VPS_HOST }}
 
 jobs:
   build-push:
@@ -57,14 +58,14 @@ jobs:
     # url: để GitHub hiện link deployment (nipit.pro) ở trang Environments/Deployments
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
-      url: ${{ github.ref_name == 'main' && 'https://nipit.pro' || 'http://149.28.18.204:3001' }}
+      url: ${{ github.ref_name == 'main' && 'https://nipit.pro' || format('http://{0}:3001', vars.VPS_HOST) }}
     steps:
       - name: Chuẩn bị SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 149.28.18.204 >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H ${{ vars.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Deploy lên VPS
         run: |

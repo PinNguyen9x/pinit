@@ -11,7 +11,8 @@ pipeline {
     // Jenkins (launchd) có PATH tối giản, không thấy /usr/local/bin nơi có docker
     PATH     = "/usr/local/bin:/opt/homebrew/bin:$PATH"
     IMAGE    = 'ghcr.io/pinnguyen9x/learn-nextjs'
-    VPS_HOST = 'pin@149.28.18.204'
+    // Đọc từ Jenkins credential (Secret text 'vps-host' = user@ip) — không hard-code IP trong repo public
+    VPS_HOST = credentials('vps-host')
   }
 
   stages {
