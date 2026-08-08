@@ -13,11 +13,8 @@ import {
 } from '@mui/material'
 import Image from 'next/image'
 import {
-  FaAward,
   FaBriefcase,
-  FaCertificate,
   FaEnvelope,
-  FaExternalLinkAlt,
   FaGraduationCap,
   FaHeart,
   FaMapMarkerAlt,
@@ -67,35 +64,6 @@ const education = [
     institution: 'University of Science — VNUHCM',
     major: 'Software Engineering',
     year: '2013 — 2017',
-  },
-]
-
-interface Certificate {
-  name: string
-  issuer: string
-  date: string
-  credentialUrl?: string
-}
-
-// Placeholder certificates — replace with your real ones.
-const certificates: Certificate[] = [
-  {
-    name: 'AWS Certified Solutions Architect – Associate',
-    issuer: 'Amazon Web Services',
-    date: '2024',
-    credentialUrl: '#',
-  },
-  {
-    name: 'Professional Scrum Master I',
-    issuer: 'Scrum.org',
-    date: '2023',
-    credentialUrl: '#',
-  },
-  {
-    name: 'Meta Front-End Developer Professional Certificate',
-    issuer: 'Meta / Coursera',
-    date: '2022',
-    credentialUrl: '#',
   },
 ]
 
@@ -457,102 +425,6 @@ function AboutPage() {
                 ))}
               </Stack>
             </Box>
-          </Box>
-        </Grid>
-
-        {/* Certificates */}
-        <Grid item xs={12}>
-          <Box sx={panelSx}>
-            <SectionHeading icon={<FaCertificate size={18} />}>Certificates</SectionHeading>
-            <Grid container spacing={2}>
-              {certificates.map((cert) => (
-                <Grid item xs={12} sm={6} md={4} key={cert.name}>
-                  <Box
-                    sx={{
-                      p: 2.25,
-                      height: '100%',
-                      bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                      border: `1px solid ${theme.palette.divider}`,
-                      borderRadius: '10px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 1,
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        borderColor: 'primary.main',
-                        transform: 'translateY(-2px)',
-                        boxShadow: isDark
-                          ? '0 8px 24px -12px rgba(22,163,74,0.45)'
-                          : '0 8px 24px -12px rgba(22,163,74,0.25)',
-                      },
-                    }}
-                  >
-                    <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'primary.main',
-                          bgcolor: isDark ? 'rgba(22,163,74,0.12)' : 'rgba(22,163,74,0.08)',
-                          border: `1px solid ${isDark ? 'rgba(22,163,74,0.22)' : 'rgba(22,163,74,0.18)'}`,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <FaAward size={14} />
-                      </Box>
-                      <Chip
-                        label={cert.date}
-                        size="small"
-                        sx={{
-                          fontSize: '0.68rem',
-                          height: 20,
-                          bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-                          color: 'text.secondary',
-                          fontWeight: 600,
-                          ml: 'auto',
-                        }}
-                      />
-                    </Stack>
-                    <Typography
-                      variant="subtitle2"
-                      fontWeight={700}
-                      sx={{ lineHeight: 1.35, fontSize: '0.9rem' }}
-                    >
-                      {cert.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                      {cert.issuer}
-                    </Typography>
-                    {cert.credentialUrl && (
-                      <Box
-                        component="a"
-                        href={cert.credentialUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        sx={{
-                          mt: 'auto',
-                          pt: 1,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 0.75,
-                          fontSize: '0.75rem',
-                          fontWeight: 500,
-                          color: 'primary.main',
-                          textDecoration: 'none',
-                          '&:hover': { textDecoration: 'underline' },
-                        }}
-                      >
-                        View credential <FaExternalLinkAlt size={10} />
-                      </Box>
-                    )}
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
           </Box>
         </Grid>
 
