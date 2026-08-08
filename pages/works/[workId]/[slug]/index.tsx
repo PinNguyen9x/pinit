@@ -3,7 +3,7 @@ import { GameColorMatching, GameSkeleton, GomeTicTacToe } from '@/components/gam
 import { MainLayout } from '@/components/layouts'
 import { SlUG } from '@/constants'
 import { Work } from '@/models'
-import { API_BASE, safeFetchJson } from '@/utils'
+import { API_BASE, getWorkGameSlug, safeFetchJson } from '@/utils'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
 import { useRouter } from 'next/router'
 
@@ -44,6 +44,12 @@ export const getStaticProps: GetStaticProps<WorkDetailsProps> = async (
   }
   const data = await safeFetchJson<Work>(`${API_BASE}/api/works/${workId}?slug=${slug}`)
   if (!data || !data.id) {
+    return { notFound: true, revalidate: 60 }
+  }
+  // Route này chỉ phục vụ work có game chơi được. Không có guard thì mọi slug
+  // lạ đều render Color Matching (fallback 'blocking' dựng trang theo yêu cầu),
+  // biến nhánh game thành catch-all.
+  if (!getWorkGameSlug(data)) {
     return { notFound: true, revalidate: 60 }
   }
   return {

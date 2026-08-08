@@ -3,7 +3,7 @@ import { MainLayout } from '@/components/layouts'
 import { WorkDetailSkeleton } from '@/components/work'
 import { useAuth, useRenderTagIcon } from '@/hooks'
 import { Work, WorkStatus } from '@/models'
-import { API_BASE, safeFetchJson } from '@/utils'
+import { API_BASE, getWorkGameSlug, safeFetchJson } from '@/utils'
 import { renderMarkdown } from '@/utils/markdown'
 import { Box, Container, Stack, useTheme } from '@mui/material'
 import { format } from 'date-fns'
@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FaGithub } from 'react-icons/fa'
-import { MdEdit, MdLaunch, MdOpenInNew } from 'react-icons/md'
+import { MdEdit, MdLaunch, MdOpenInNew, MdPlayArrow } from 'react-icons/md'
 
 export interface WorkDetailsProps {
   work: Work
@@ -40,6 +40,9 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const techStack = useRenderTagIcon(work?.tagList || [])
+  // Work có game chơi được thì hiện nút "Play demo"; game là hành động phụ,
+  // không thay thế bài viết. Xem utils/work.ts.
+  const gameSlug = work ? getWorkGameSlug(work) : null
 
   const accent = theme.palette.primary.main
   const accentSoft = isDark ? 'rgba(74,222,128,0.10)' : 'rgba(22,163,74,0.08)'
@@ -428,6 +431,21 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
             {/* Actions */}
             <Box sx={panelSx}>
               <Stack spacing={1}>
+                {gameSlug && (
+                  <SideButton
+                    href={`/works/${work.id}/${gameSlug}`}
+                    primary={!work.linkDemo}
+                    accent={accent}
+                    line={line}
+                    bg2={bg2}
+                    bg3={bg3}
+                    ink={ink}
+                    inkFaint={inkFaint}
+                  >
+                    <MdPlayArrow size={15} />
+                    Play demo
+                  </SideButton>
+                )}
                 {work.linkDemo && (
                   <SideButton
                     href={work.linkDemo}
@@ -474,7 +492,7 @@ export default function WorkDetails({ work }: WorkDetailsProps) {
                     Edit project
                   </SideButton>
                 )}
-                {!work.linkDemo && !work.linkSource && !isLoggedIn && (
+                {!gameSlug && !work.linkDemo && !work.linkSource && !isLoggedIn && (
                   <SideButton
                     href="/works"
                     accent={accent}

@@ -1,4 +1,5 @@
-import { Work, WorkStatus } from '@/models'
+import { Work } from '@/models'
+import { getWorkHref } from '@/utils'
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward'
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
 import Image from 'next/image'
@@ -9,8 +10,7 @@ export interface WorkItemProps {
 }
 
 export function WorkItem({ work }: WorkItemProps) {
-  const { id, status = WorkStatus.DRAFT, slug } = work || {}
-  const href = status === WorkStatus.PUBLISHED ? `/works/${id}/${slug}` : `/works/${id}/details`
+  const href = getWorkHref(work)
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
 
