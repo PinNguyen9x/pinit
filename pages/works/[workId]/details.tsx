@@ -894,7 +894,9 @@ export default function WorkDetails({ work, relatedPosts = [] }: WorkDetailsProp
                 <SectionHead
                   num={String(2 + (work.fullDescription ? 1 : 0) + (layers.length > 0 ? 1 : 0)).padStart(2, '0')}
                   title="Technical stack."
-                  meta={`${techStack.length} dependencies`}
+                  // techStack dựng từ work.tagList nên đây là TAG, không phải
+                  // dependency — không đọc package.json của project nào cả.
+                  meta={`${techStack.length} ${techStack.length === 1 ? 'tag' : 'tags'}`}
                   accent={accent}
                   line={line}
                   inkFaint={inkFaint}
@@ -945,21 +947,12 @@ export default function WorkDetails({ work, relatedPosts = [] }: WorkDetailsProp
                       >
                         {tech.icon}
                       </Box>
+                      {/* Không thêm nhãn phụ ở đây: "Stack item" trước đây lặp y
+                          hệt trên mọi thẻ nên không mang thông tin gì. Muốn thêm
+                          thì phải là dữ liệu thật của từng tech, không phải chữ
+                          lấp chỗ. */}
                       <Box sx={{ fontWeight: 600, fontSize: '14px', lineHeight: 1.2, color: ink }}>
                         {tech.name}
-                      </Box>
-                      <Box
-                        sx={{
-                          fontFamily: MONO,
-                          fontWeight: 500,
-                          fontSize: '10px',
-                          lineHeight: 1.3,
-                          color: inkFaint,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.1em',
-                        }}
-                      >
-                        Stack item
                       </Box>
                     </Box>
                   ))}
