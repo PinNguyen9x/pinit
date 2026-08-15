@@ -41,4 +41,13 @@ export const KNOWLEDGE_TRACKS: KnowledgeTrack[] = [
     tags: ['ReactJS', 'React', 'JavaScript', 'Micro Frontends', 'Module Federation', 'Scalable UI'],
     filterTag: 'ReactJS',
   },
+  {
+    // KHÔNG dùng Productivity / CLI / Workflow: ba tag đó dính 4 bài Claude Code,
+    // sẽ kéo nguyên cụm AI sang đây. Chỉ tag đặc trưng cho terminal và git.
+    key: 'terminal-git',
+    title: 'Terminal & Git',
+    blurb: 'tmux giữ phiên khi rớt SSH, git trong dự án thật với amend/rebase/cherry-pick, và chạy nhiều agent song song bằng worktree.',
+    tags: ['Git', 'Version Control', 'tmux', 'Terminal'],
+    filterTag: 'Git',
+  },
 ]
