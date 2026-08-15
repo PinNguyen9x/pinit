@@ -1,5 +1,5 @@
 import { Work } from '@/models'
-import { getWorkHref } from '@/utils'
+import { cardImageUrl, getWorkHref } from '@/utils'
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
 import Link from 'next/link'
 
@@ -11,7 +11,7 @@ export function WorkMiniCard({ work }: WorkMiniCardProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const line = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
-  const cover = work.thumbnailUrl
+  const cover = cardImageUrl(work.thumbnailUrl)
   const firstTag = work.tagList?.[0]
   const year = work.createdAt ? new Date(Number(work.createdAt)).getFullYear() : undefined
 

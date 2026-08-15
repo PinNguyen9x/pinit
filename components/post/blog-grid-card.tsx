@@ -1,4 +1,5 @@
 import { Post } from '@/models'
+import { cardImageUrl } from '@/utils'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
 import { format } from 'date-fns'
@@ -13,7 +14,7 @@ export function BlogGridCard({ post }: BlogGridCardProps) {
   const isDark = theme.palette.mode === 'dark'
   const accent = theme.palette.primary.main
   const line = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
-  const cover = post.thumbnailUrl
+  const cover = cardImageUrl(post.thumbnailUrl)
 
   return (
     <Link

@@ -1,5 +1,5 @@
 import { Work } from '@/models'
-import { getWorkHref } from '@/utils'
+import { cardImageUrl, getWorkHref } from '@/utils'
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward'
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
 import Image from 'next/image'
@@ -47,7 +47,7 @@ export function WorkItem({ work }: WorkItemProps) {
           }}
         >
           <Image
-            src={work.thumbnailUrl}
+            src={cardImageUrl(work.thumbnailUrl) ?? work.thumbnailUrl}
             alt={work.title}
             fill
             sizes="(max-width: 600px) 100vw, 200px"
