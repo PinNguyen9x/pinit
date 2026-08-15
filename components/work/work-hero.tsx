@@ -1,5 +1,5 @@
 import { Work } from '@/models'
-import { getWorkHref } from '@/utils'
+import { cardImageUrl, getWorkHref } from '@/utils'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import StarIcon from '@mui/icons-material/Star'
@@ -15,7 +15,7 @@ export function WorkHero({ work }: WorkHeroProps) {
   const isDark = theme.palette.mode === 'dark'
   const accent = theme.palette.primary.main
   const line = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
-  const cover = work.thumbnailUrl
+  const cover = cardImageUrl(work.thumbnailUrl)
   const year = work.createdAt ? new Date(Number(work.createdAt)).getFullYear() : undefined
 
   return (
