@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, DevTools, Advanced]
 date: '2026-04-30T12:00:00Z'
-image: https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/claude-code-advanced-features.png
 ---
 
 Module cuối cùng trong series Claude Code tổng hợp 22 advanced capabilities mở rộng core Claude Code: Planning Mode, Extended Thinking, Auto Mode, Background Tasks, Scheduled Tasks, Permission Modes, Headless Mode cho CI/CD, Voice Dictation, Chrome Integration, Remote Control, và nhiều hơn nữa. Đây là post khép lại 9-module series về toàn bộ ecosystem Claude Code.

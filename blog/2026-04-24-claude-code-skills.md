@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, DevTools, Skills]
 date: '2026-04-24T12:00:00Z'
-image: https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/claude-code-skills.png
 ---
 
 Skills là cơ chế đóng gói "kiến thức + hướng dẫn + tài nguyên" mà Claude tự động load khi context phù hợp. Khác với slash command phải user gõ `/cmd`, Skills có thể tự kích hoạt nhờ Progressive Disclosure 3 cấp giúp tiết kiệm context. Bài viết này tổng hợp đầy đủ cấu trúc Skill, frontmatter, invocation modes, và áp dụng thực tế cho blog cá nhân.

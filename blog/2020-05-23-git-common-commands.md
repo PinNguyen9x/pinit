@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Git, Workflow, Productivity, Version Control]
 date: '2024-07-29T12:00:00Z'
-image: https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/git-used-in-real-world-projects.png
 ---
 
 Git có rất nhiều lệnh, nhưng những lệnh nào mới thực sự hay dùng trong dự án thực tế? 🤔 Là công cụ version control không thể thiếu, Git giúp bạn theo dõi thay đổi, làm việc nhóm và giữ codebase ổn định. Nắm vững các lệnh quan trọng sẽ tăng năng suất, giảm conflict và giữ code sạch sẽ. Cùng đi qua các lệnh thường dùng nhất nhé! 😉

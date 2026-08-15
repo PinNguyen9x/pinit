@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, DevTools, Checkpoints]
 date: '2026-04-29T12:00:00Z'
-image: https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/claude-code-checkpoints.png
 ---
 
 Checkpoints cho phép bạn save conversation state và rewind về điểm trước đó trong session Claude Code — vô cùng hữu ích khi explore approaches, recover from mistakes, hoặc free context window. Đây là safety net built-in giúp bạn pursue ambitious tasks mà không sợ phá code. Bài viết này tổng hợp 5 rewind options, workflows điển hình, và limitations cần lưu ý.

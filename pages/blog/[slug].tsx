@@ -102,9 +102,9 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
         data={{
           title: `${post.title} | Pin Nguyen`,
           description: post.description,
-          thumbnailUrl:
-            post?.thumbnailUrl ||
-            'https://images.unsplash.com/photo-1549923746-c502d488b3ea?ixlib=rb-1.2.1&auto=format&fit=crop&w=1351&q=80',
+          // Bìa sinh sẵn trong repo, không trỏ ra ảnh stock ngoài mạng.
+          // Seo tự ghép tên miền vì og:image cần URL tuyệt đối.
+          thumbnailUrl: post?.thumbnailUrl || '/covers/default.png',
           url: `${process.env.HOST_URL}/blog/${post.slug}`,
         }}
       />

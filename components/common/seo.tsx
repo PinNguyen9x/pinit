@@ -6,8 +6,20 @@ export interface SeoProps {
   data: SeoData
 }
 
+// Ảnh bìa lưu dạng đường dẫn tương đối (/covers/...) để không phải nhúng tên
+// miền vào từng bài. Nhưng og:image và twitter:image bắt buộc URL tuyệt đối —
+// crawler của LinkedIn/Twitter/Facebook không có ngữ cảnh trang để tự ghép.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nipit.pro'
+
+function absoluteUrl(src?: string) {
+  if (!src) return src
+  if (/^https?:\/\//.test(src) || src.startsWith('data:')) return src
+  return `${SITE_URL}${src.startsWith('/') ? '' : '/'}${src}`
+}
+
 export function Seo({ data }: SeoProps) {
-  const { title, description, thumbnailUrl, url } = data
+  const { title, description, url } = data
+  const thumbnailUrl = absoluteUrl(data.thumbnailUrl)
   return (
     <Head>
       <title>{title}</title>

@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, DevTools, Subagents]
 date: '2026-04-25T12:00:00Z'
-image: https://images.unsplash.com/photo-1581090700227-1e37b190418e?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/claude-code-subagents.png
 ---
 
 Subagents là AI assistants chuyên biệt mà Claude Code có thể delegate task tới. Mỗi subagent có context window riêng, system prompt tùy chỉnh, và tools cấu hình được — giải quyết bài toán "context exhaustion" trong session dài. Bài viết này tổng hợp đầy đủ cách config, invoke, và áp dụng subagents thực tế cho project blog cá nhân.

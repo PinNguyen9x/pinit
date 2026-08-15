@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [ReactJS, JavaScript, TypeScript]
 date: '2024-07-29T12:00:00Z'
-image: https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/reactjs-basic-learning-path-2020.png
 ---
 
 Learning ReactJS can be overwhelming due to its vast ecosystem and many concepts to grasp, from components and state management to routing and forms. This guide is designed to simplify the process, offering a structured path with curated resources, practical tips, and personal insights to help you confidently start your ReactJS journey. 😉

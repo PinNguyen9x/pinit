@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [DevOps, CI/CD, Jenkins, Docker, Deployment]
 date: '2026-07-11T10:00:00Z'
-image: https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/cicd-deploy-vps-jenkins-ghcr.png
 ---
 
 Có một khoảng cách rất lớn giữa "app chạy được trên máy mình" và "app chạy ổn định trên production, tự động deploy mỗi khi push code". Bài này mình ghi lại toàn bộ hành trình dựng CI/CD cho chính project này — từ con số 0 (một VPS trắng, deploy thủ công) tới một pipeline hoàn chỉnh: **push code → tự build → tự deploy staging → duyệt → lên production**.

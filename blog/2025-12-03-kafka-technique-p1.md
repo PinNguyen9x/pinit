@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Kafka, Architecture, NodeJS, Docker, TypeScript]
 date: '2024-12-02T12:00:00Z'
-image: https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/kafka-techniques-p2.png
 ---
 
 Apache Kafka là một nền tảng streaming phân tán được thiết kế để xử lý dòng dữ liệu real-time với thропропut cao và khả năng chịu lỗi tốt. Kafka đặc biệt xuất sắc trong việc tách biệt (decouple) giữa producers và consumers, cho phép xây dựng kiến trúc có khả năng mở rộng cho big data và các pipeline machine learning.

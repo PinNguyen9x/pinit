@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Terminal, tmux, Productivity, CLI]
 date: '2026-06-14T12:00:00Z'
-image: https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/tmux-huong-dan-su-dung.png
 ---
 
 Nếu bạn làm việc nhiều trong terminal, sớm muộn gì cũng gặp cảnh: mở một đống tab cho server, log, editor, git... rồi đóng nhầm cửa sổ là mất sạch. Tệ hơn, đang chạy một lệnh dài trên server qua SSH thì mất mạng — và mọi thứ tan biến. **tmux** sinh ra để giải quyết đúng những nỗi đau đó.

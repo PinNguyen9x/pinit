@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Kafka, Architecture, Messaging, Distributed Systems, DevOps]
 date: '2026-07-19T10:00:00Z'
-image: https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/kafka-architecture-guide.png
 ---
 
 Kafka có mặt ở gần như mọi hệ thống backend quy mô lớn, nhưng nhiều người dùng nó như một hộp đen: cứ `produce` rồi `consume`, tới lúc lag tăng vọt hay mất message giữa production mới cuống. Bài này gom lại **toàn bộ kiến trúc Kafka** — từ topic/partition/offset tới Kafka Connect — kèm flow hoạt động end-to-end và các lỗi thực tế hay gặp, giải thích bằng ví von dễ hình dung.

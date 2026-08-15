@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Redis, Database, Cache, Backend, Performance]
 date: '2026-06-14T12:00:00Z'
-image: https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/redis-chuyen-sau.png
 ---
 
 Phần lớn người dùng Redis chỉ chạm tới `GET`/`SET` và coi nó như "một cái cache cho nhanh". Nhưng Redis là một **data structure server** chạy in-memory với một mô hình thực thi rất đặc biệt, và hiểu sâu mô hình đó là khác biệt giữa việc dùng Redis "đỡ tải DB" và việc làm sập cả cụm vì một con **hot key** hay một đợt **cache stampede**.

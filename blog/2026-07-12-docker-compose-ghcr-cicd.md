@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Docker, Docker Compose, ghcr, CI/CD, DevOps]
 date: '2026-07-12T09:00:00Z'
-image: https://images.unsplash.com/photo-1605745341112-85968b19335b?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/docker-compose-ghcr-cicd.png
 ---
 
 Trong bài trước mình kể tổng thể pipeline CI/CD. Bài này zoom vào hai mảnh ghép làm nên phần "chạy được trên VPS": **Docker Compose** (dựng container) và **ghcr.io** (kho chứa image). Mình sẽ giải thích thật chậm, từ khái niệm gốc, để ai chưa quen Docker cũng theo được.

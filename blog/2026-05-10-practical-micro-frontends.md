@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Micro Frontends, React, Module Federation, Architecture, Scalable UI]
 date: '2026-05-10T08:00:00Z'
-image: https://images.unsplash.com/photo-1551033406-611cf9a28f67?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/practical-micro-frontends-building-scalable-uis.png
 ---
 
 Khi codebase frontend càng lớn, càng nhiều team đụng nhau: deploy chậm, build lâu, ai merge cũng phải chờ. **Micro Frontends (MFE)** giải quyết bằng cách chia 1 app to thành nhiều app nhỏ — mỗi team owns 1 mảnh, tự build, tự deploy, ráp lại thành 1 UI thống nhất.

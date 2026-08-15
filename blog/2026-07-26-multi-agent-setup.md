@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, Agents, tmux, Git, DevTools]
 date: '2026-07-26T09:00:00Z'
-image: https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/multi-agent-claude-code-worktree-tmux.png
 ---
 
 Bài này mô tả một setup đã chạy thực tế: **nhiều agent AI làm việc đồng thời trên cùng một repo**, mỗi agent một nhánh, một thư mục, một phiên terminal riêng — không giẫm chân nhau, và **không mất context** khi bạn tắt máy đi ngủ.
