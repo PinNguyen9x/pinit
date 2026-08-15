@@ -779,7 +779,11 @@ export default function WorkDetails({ work, relatedPosts = [] }: WorkDetailsProp
                       key={layer.title}
                       sx={{
                         display: 'grid',
-                        gridTemplateColumns: { xs: '60px 1fr', md: '80px 1fr 220px' },
+                        // Trước đây có cột thứ 3 (220px) chứa tag, nhưng tag được
+                        // cắt theo VỊ TRÍ mảng (tagList.slice(i*2, i*2+2)) nên gán
+                        // sai layer — ReactJS/NextJS rơi vào "API / orchestration".
+                        // Bỏ cột đó, trả chỗ cho phần mô tả.
+                        gridTemplateColumns: { xs: '60px 1fr', md: '80px 1fr' },
                         gap: { xs: 2, md: '24px' },
                         alignItems: 'center',
                         p: { xs: '20px', md: '24px 28px' },
@@ -869,21 +873,14 @@ export default function WorkDetails({ work, relatedPosts = [] }: WorkDetailsProp
                                 },
                               }}
                             >
-                              <Box component="span" />
+                              {/* KHÔNG thêm phần tử nào ở đây: grid chỉ có 2 cột
+                                  (18px 1fr) và ::before đã chiếm cột 1. Thêm một
+                                  span rỗng nữa sẽ đẩy chữ xuống hàng 2 cột 1 —
+                                  rộng 18px, mỗi từ một dòng. */}
                               <Box component="span">{item}</Box>
                             </Box>
                           ))}
                         </Stack>
-                      </Box>
-                      <Box
-                        sx={{
-                          display: { xs: 'none', md: 'flex' },
-                          gap: '6px',
-                          flexWrap: 'wrap',
-                          justifyContent: 'flex-end',
-                        }}
-                      >
-                        {(work.tagList || []).slice(i * 2, i * 2 + 2).map((t) => renderTag(t, 'solid', `${layer.title}-${t}`))}
                       </Box>
                     </Box>
                   ))}
