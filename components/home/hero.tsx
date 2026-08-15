@@ -6,17 +6,13 @@ import { getErrorMessage } from '@/utils'
 import { Box, Button, CircularProgress, Container, keyframes, Stack, Typography, useTheme } from '@mui/material'
 import Image from 'next/image'
 import { useState } from 'react'
-import { FaGithub, FaLinkedin } from 'react-icons/fa'
 import { MdDownload, MdLock, MdVisibility } from 'react-icons/md'
 import { toast } from 'react-toastify'
 
 const techStack = ['TypeScript', 'React', 'Next.js', 'Node.js', 'Go', 'Java', 'Python']
 
-// Chỉ công khai GitHub + LinkedIn. URL trùng với components/common/footer.tsx.
-const SOCIAL_LINKS = [
-  { href: 'https://github.com/PinNguyen9x', label: 'GitHub', Icon: FaGithub },
-  { href: 'https://www.linkedin.com/in/pin-nguyen-69123b16a/', label: 'LinkedIn', Icon: FaLinkedin },
-]
+// Social link chỉ đặt ở footer (components/common/footer.tsx) — để ở cả hai chỗ
+// thì hiện trùng trên cùng một trang, và URL bị hardcode hai nơi nên dễ lệch.
 
 export interface HeroStat {
   value: string
@@ -451,42 +447,6 @@ export function HeroSection({ stats = [] }: HeroSectionProps) {
                   >
                     {stat.label}
                   </Typography>
-                </Box>
-              ))}
-            </Stack>
-
-            <Stack
-              direction="row"
-              spacing={2}
-              sx={{ mt: 3.5 }}
-              justifyContent={{ xs: 'center', md: 'flex-start' }}
-            >
-              {SOCIAL_LINKS.map(({ href, label, Icon }) => (
-                <Box
-                  key={label}
-                  component="a"
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 38,
-                    height: 38,
-                    borderRadius: '10px',
-                    color: 'text.secondary',
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      color: 'primary.main',
-                      borderColor: 'primary.main',
-                      transform: 'translateY(-2px)',
-                    },
-                  }}
-                >
-                  <Icon size={17} />
                 </Box>
               ))}
             </Stack>
