@@ -3,9 +3,9 @@ import { KnowledgeTrack } from '../constants/tracks'
 import { countPostsByTrack } from './tracks'
 
 const TRACKS: KnowledgeTrack[] = [
-  { key: 'a', title: 'A', blurb: '', tags: ['Kafka', 'Redis'], filterTag: 'Kafka' },
-  { key: 'b', title: 'B', blurb: '', tags: ['ReactJS'], filterTag: 'ReactJS' },
-  { key: 'c', title: 'C', blurb: '', tags: ['Rust'], filterTag: 'Rust' },
+  { key: 'a', title: 'A', blurb: '', tags: ['Kafka', 'Redis'] },
+  { key: 'b', title: 'B', blurb: '', tags: ['ReactJS'] },
+  { key: 'c', title: 'C', blurb: '', tags: ['Rust'] },
 ]
 
 describe('countPostsByTrack', () => {
