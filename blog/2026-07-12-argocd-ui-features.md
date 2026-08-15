@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [ArgoCD, GitOps, Kubernetes, DevOps, CI/CD]
 date: '2026-07-12T10:00:00Z'
-image: https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/argocd-ui-features.png
 ---
 
 ArgoCD là công cụ GitOps: nó theo dõi một repo chứa manifest Kubernetes và tự đồng bộ cụm cho khớp. Nhưng sức mạnh thật sự nằm ở **giao diện trực quan** — nơi bạn thấy được "Git nói gì" vs "cụm đang chạy gì", và can thiệp bằng vài cú click. Bài này mình đi qua từng khu vực trong UI để bạn không còn nhìn nó như một mớ hộp xanh đỏ khó hiểu.

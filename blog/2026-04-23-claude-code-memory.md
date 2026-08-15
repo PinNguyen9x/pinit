@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, DevTools, Memory]
 date: '2026-04-23T12:00:00Z'
-image: https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/claude-code-memory.png
 ---
 
 Memory cho phép Claude giữ context giữa các session thay vì quên sạch sau mỗi lần restart. Bài viết này tổng hợp đầy đủ memory hierarchy 8 cấp, cách dùng `CLAUDE.md`, modular rules, auto memory, và cách setup memory hiệu quả cho project blog cá nhân.

@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, DevTools, Hooks]
 date: '2026-04-27T12:00:00Z'
-image: https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/claude-code-hooks.png
 ---
 
 Hooks là automated scripts chạy tự động khi xảy ra event cụ thể trong Claude Code session — user submit prompt, trước/sau khi tool chạy, session start/end, config thay đổi. Hooks cho phép validation, auto-formatting, security scanning, logging, và custom workflows. Bài viết này tổng hợp 25 hook events, 4 hook types, và cách áp dụng cho project blog cá nhân.

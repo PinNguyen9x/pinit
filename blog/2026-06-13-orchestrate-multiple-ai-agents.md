@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [AI, Agents, Workflow, Productivity, Engineering]
 date: '2026-06-13T12:00:00Z'
-image: https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/orchestrate-multiple-ai-agents.png
 ---
 
 Hầu hết kỹ sư hiện nay vẫn đang học cách dùng **một** AI agent cho thật tốt. Nhưng mình tin kỹ năng đó sẽ sớm trở thành mặt bằng chung. Kỹ năng khó hơn — và sẽ tạo ra khoảng cách giữa các kỹ sư — là **điều phối nhiều agent cùng lúc mà không đánh mất quyền kiểm soát những gì chúng đang xây**.

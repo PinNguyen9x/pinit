@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, DevTools, Plugins]
 date: '2026-04-28T12:00:00Z'
-image: https://images.unsplash.com/photo-1607799279861-4dd421887fb3?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/claude-code-plugins.png
 ---
 
 Plugins là bộ sưu tập đóng gói các customization của Claude Code (slash commands + subagents + MCP servers + hooks + skills) cài đặt chỉ với 1 lệnh duy nhất. Đây là extension mechanism cao nhất — combine 6 module trước thành package shareable. Bài viết này tổng hợp Plugin structure, marketplace, LSP support, và cách build plugin cho project blog cá nhân.

@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, DevTools, MCP]
 date: '2026-04-26T12:00:00Z'
-image: https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/claude-code-mcp.png
 ---
 
 MCP (Model Context Protocol) là chuẩn mở để Claude truy cập tools, APIs, và real-time data bên ngoài. Khác với Memory (lưu data tĩnh), MCP cung cấp live access tới data đang thay đổi — GitHub issues, database queries, Slack messages, Notion docs. Bài viết này tổng hợp transport protocols, OAuth, scopes, và áp dụng MCP cho project blog cá nhân.

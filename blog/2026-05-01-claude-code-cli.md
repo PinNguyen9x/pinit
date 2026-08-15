@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, DevTools, CLI]
 date: '2026-05-01T12:00:00Z'
-image: https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/claude-code-cli.png
 ---
 
 Module thứ 10 — cũng là module cuối — trong series Claude Code tổng hợp đầy đủ CLI reference: commands, flags, environment variables, output formats, agent configuration via JSON, và high-value use cases. Đây là tài liệu tham khảo nhanh cho mọi developer sử dụng Claude Code daily.

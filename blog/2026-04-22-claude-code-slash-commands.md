@@ -6,7 +6,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Claude, AI, DevTools, Productivity]
 date: '2026-04-22T12:00:00Z'
-image: https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/claude-code-slash-commands.png
 ---
 
 Slash commands là cơ chế shortcut mạnh mẽ trong Claude Code, giúp bạn điều khiển hành vi của AI mà không cần gõ lại prompt dài. Bài viết này tổng hợp đầy đủ các loại slash commands, cách tạo command tùy chỉnh dạng Skills, và ứng dụng thực tế cho blog cá nhân.

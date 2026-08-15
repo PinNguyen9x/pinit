@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [LLM, AI, Chatbot, Prompt Engineering, RAG, Productivity]
 date: '2026-05-11T08:00:00Z'
-image: https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/large-language-model-llm-and-chatbox.png
 ---
 
 LLM không "thông minh" theo nghĩa con người — nó là 1 cỗ máy **đoán từ tiếp theo** dựa trên xác suất, được train trên hàng tỷ trang văn bản. Hiểu cách nó hoạt động giúp bạn viết prompt tốt hơn, build chatbox đỡ buggy hơn, và biết khi nào KHÔNG nên tin nó.

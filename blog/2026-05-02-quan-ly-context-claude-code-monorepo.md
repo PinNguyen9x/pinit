@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [claude-code, monorepo, workflow, productivity, vscode]
 date: '2026-05-02T08:00:00Z'
-image: https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/quan-ly-context-claude-code-monorepo.png
 ---
 
 Bài viết này tổng hợp những vấn đề thực tế tôi gặp khi dùng Claude Code làm việc trong monorepo công ty. Mỗi service một tech stack khác nhau (Java, Python, Go, React), nhiều integrations với DevOps/DataOps, và mỗi ngày phải nhận task từ PO/BA, vào đúng service, dùng Claude Code tổng hợp overview/detail thành README.md. Nếu bạn đang gặp tình huống tương tự — context lẫn lộn giữa các tasks, sợ mất content khi crash, không biết khi nào chat ở Extension Panel khi nào chat ở Terminal — bài này dành cho bạn.

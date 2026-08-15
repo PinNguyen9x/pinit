@@ -7,7 +7,7 @@ author_title: Software Developer
 author_image_url: https://avatars.githubusercontent.com/Pinnguyen
 tags: [Kafka, Kafka Connect, CDC, Debezium, DevOps]
 date: '2026-07-19T09:00:00Z'
-image: https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&auto=format&fit=crop&q=80
+image: /covers/blog/kafka-connector-source-sink-cdc.png
 ---
 
 Bạn đã có Kafka chạy, có topic, có producer/consumer. Nhưng rồi sếp bảo: "Đồng bộ toàn bộ bảng `orders` trong Postgres sang Elasticsearch để search real-time đi." Bạn định ngồi viết một service đọc database, bắt sự kiện thay đổi, rồi push vào Kafka, rồi viết thêm một service nữa đọc Kafka đẩy sang Elasticsearch... Dừng lại. Đó chính xác là việc **Kafka Connect** sinh ra để làm — và bạn gần như không phải viết dòng code nào.
