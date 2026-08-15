@@ -5,6 +5,7 @@ import {
   BlogHero,
   BlogMiniCard,
 } from '@/components/post'
+import { KNOWLEDGE_TRACKS, KnowledgeTrack } from '@/constants/tracks'
 import { Post } from '@/models'
 import { Box, Container, Grid, Stack, Typography, useTheme } from '@mui/material'
 import { GetStaticProps, GetStaticPropsContext } from 'next'
@@ -99,15 +100,31 @@ export default function BlogPage({ posts }: BlogPageProps) {
 
   const [query, setQuery] = useState('')
   const [activeTag, setActiveTag] = useState('All')
+  const [activeTrack, setActiveTrack] = useState<KnowledgeTrack | null>(null)
 
-  // Nhận ?tag= từ URL để card Knowledge Tracks ở trang chủ lọc được thật.
+  // Nhận ?track= và ?tag= từ URL. Card Knowledge Tracks ở trang chủ đếm theo
+  // CẢ CỤM tag của track, nên phải lọc bằng đúng cụm đó — lọc theo một tag lẻ
+  // sẽ ra ít bài hơn con số ghi trên card.
   // Chạy khi router sẵn sàng: với SSG, router.query rỗng ở lần render đầu.
   const router = useRouter()
+  // Rút ra chuỗi trước khi vào effect: phụ thuộc vào giá trị nguyên thuỷ thay vì
+  // object router.query, tránh effect chạy lại mỗi lần render.
+  const trackParam = typeof router.query.track === 'string' ? router.query.track : ''
+  const tagParam = typeof router.query.tag === 'string' ? router.query.tag : ''
   useEffect(() => {
     if (!router.isReady) return
-    const tag = router.query.tag
-    if (typeof tag === 'string' && tag) setActiveTag(tag)
-  }, [router.isReady, router.query.tag])
+    if (trackParam) {
+      setActiveTrack(KNOWLEDGE_TRACKS.find((t) => t.key === trackParam) ?? null)
+      return
+    }
+    if (tagParam) setActiveTag(tagParam)
+  }, [router.isReady, trackParam, tagParam])
+
+  // Bấm một tag bất kỳ thì thoát chế độ lọc theo track.
+  const handleTagChange = (tag: string) => {
+    setActiveTrack(null)
+    setActiveTag(tag)
+  }
 
   const tagBuckets = useMemo(() => {
     const counts = new Map<string, number>()
@@ -123,8 +140,11 @@ export default function BlogPage({ posts }: BlogPageProps) {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
+    const trackTags = activeTrack ? new Set(activeTrack.tags.map((t) => t.toLowerCase())) : null
     return posts.filter((p) => {
-      const matchesTag = activeTag === 'All' || (p.tagList ?? []).includes(activeTag)
+      const matchesTag = trackTags
+        ? (p.tagList ?? []).some((t) => trackTags.has(t.toLowerCase()))
+        : activeTag === 'All' || (p.tagList ?? []).includes(activeTag)
       const matchesQuery =
         !q ||
         p.title.toLowerCase().includes(q) ||
@@ -132,9 +152,9 @@ export default function BlogPage({ posts }: BlogPageProps) {
         (p.tagList ?? []).some((t) => t.toLowerCase().includes(q))
       return matchesTag && matchesQuery
     })
-  }, [posts, query, activeTag])
+  }, [posts, query, activeTag, activeTrack])
 
-  const isFiltering = query.trim() !== '' || activeTag !== 'All'
+  const isFiltering = query.trim() !== '' || activeTag !== 'All' || activeTrack !== null
 
   const featured = !isFiltering ? filtered[0] : undefined
   const editorsPicks = !isFiltering ? filtered.slice(1, 4) : []
@@ -150,7 +170,7 @@ export default function BlogPage({ posts }: BlogPageProps) {
           onQueryChange={setQuery}
           tags={tagBuckets}
           activeTag={activeTag}
-          onTagChange={setActiveTag}
+          onTagChange={handleTagChange}
           totalCount={posts.length}
         />
 

@@ -65,7 +65,7 @@ export function KnowledgeTracks({ tracks, totalPosts }: KnowledgeTracksProps) {
           {tracks.map((track) => (
             <Grid item xs={12} sm={6} key={track.key}>
               <Link
-                href={{ pathname: '/blog', query: { tag: track.filterTag } }}
+                href={{ pathname: '/blog', query: { track: track.key } }}
                 style={{ textDecoration: 'none' }}
               >
                 <Box
