@@ -3,7 +3,7 @@ import { MainLayout } from '@/components/layouts'
 import { WorkDetailSkeleton } from '@/components/work'
 import { useAuth, useRenderTagIcon } from '@/hooks'
 import { Work, WorkStatus } from '@/models'
-import { API_BASE, RelatedPost, findRelatedPosts, getWorkGameSlug, safeFetchJson } from '@/utils'
+import { API_BASE, RelatedPost, findRelatedPosts, getWorkGameSlug, plainText, safeFetchJson } from '@/utils'
 import { renderMarkdown } from '@/utils/markdown'
 import { getPostList } from '@/utils/posts'
 import { Box, Container, Stack, useTheme } from '@mui/material'
@@ -673,7 +673,7 @@ export default function WorkDetails({ work, relatedPosts = [] }: WorkDetailsProp
                     '& strong': { color: ink, fontWeight: 600 },
                   }}
                 >
-                  {work.shortDescription}
+                  {plainText(work.shortDescription)}
                 </Box>
               )}
               <HeroCover

@@ -1,5 +1,5 @@
 import { Work } from '@/models'
-import { cardImageUrl, getWorkHref } from '@/utils'
+import {cardImageUrl, getWorkHref, plainText } from '@/utils'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import StarIcon from '@mui/icons-material/Star'
@@ -136,10 +136,10 @@ export function WorkHero({ work }: WorkHeroProps) {
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
               m: 0,
-              '& span': { fontStyle: 'normal !important', fontWeight: 'inherit !important' },
             }}
-            dangerouslySetInnerHTML={{ __html: work.shortDescription }}
-          />
+          >
+            {plainText(work.shortDescription)}
+          </Typography>
         )}
 
         <Stack
