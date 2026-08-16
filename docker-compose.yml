@@ -5,7 +5,9 @@ services:
     restart: unless-stopped
     ports:
       # Prod: 3000, Staging: 3001 (map ra host); trong container luôn 3000
-      - "${HOST_PORT:-3000}:3000"
+      # BIND_ADDR mặc định 127.0.0.1 = ẩn khỏi internet (prod đi qua nginx :443).
+      # Staging cần truy cập trực tiếp IP:3001 -> deploy set BIND_ADDR=0.0.0.0
+      - "${BIND_ADDR:-127.0.0.1}:${HOST_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
       # Gọi backend qua tên container trên webnet (prod: json-server-blog, staging: json-server-blog-staging)
