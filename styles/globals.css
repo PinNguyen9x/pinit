@@ -104,8 +104,12 @@ a {
   opacity: 1;
 }
 
-/* Mermaid diagrams (git gitGraph, flowcharts, ...) rendered client-side */
-#article-body .mermaid {
+/* Mermaid diagrams (git gitGraph, flowcharts, ...) rendered client-side.
+   Áp cho CẢ hai thân bài: #article-body (blog) và #work-article-body (trang chi
+   tiết project). Trước đây chỉ khai cho blog nên trang project lộ nguyên mã
+   nguồn "flowchart LR Dev[git push] --> ..." cho tới khi mermaid chạy xong. */
+#article-body .mermaid,
+#work-article-body .mermaid {
   display: flex;
   justify-content: center;
   margin: 1.75em 0;
@@ -116,11 +120,13 @@ a {
   overflow-x: auto;
 }
 /* Hide the raw diagram source until mermaid finishes (avoids a flash of text) */
-#article-body .mermaid:not([data-processed='true']) {
+#article-body .mermaid:not([data-processed='true']),
+#work-article-body .mermaid:not([data-processed='true']) {
   color: transparent;
   min-height: 2rem;
 }
-#article-body .mermaid svg {
+#article-body .mermaid svg,
+#work-article-body .mermaid svg {
   max-width: 100%;
   height: auto;
 }
