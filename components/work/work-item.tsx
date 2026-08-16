@@ -1,5 +1,5 @@
 import { Work } from '@/models'
-import { cardImageUrl, getWorkHref } from '@/utils'
+import {cardImageUrl, getWorkHref, plainText } from '@/utils'
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward'
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material'
 import Image from 'next/image'
@@ -122,8 +122,9 @@ export function WorkItem({ work }: WorkItemProps) {
               overflow: 'hidden',
               fontSize: '0.825rem',
             }}
-            dangerouslySetInnerHTML={{ __html: work.shortDescription }}
-          />
+          >
+            {plainText(work.shortDescription)}
+          </Typography>
         </Box>
       </Box>
     </Link>
