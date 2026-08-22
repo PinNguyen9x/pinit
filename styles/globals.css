@@ -104,12 +104,34 @@ a {
   opacity: 1;
 }
 
-/* Mermaid diagrams (git gitGraph, flowcharts, ...) rendered client-side.
-   Áp cho CẢ hai thân bài: #article-body (blog) và #work-article-body (trang chi
-   tiết project). Trước đây chỉ khai cho blog nên trang project lộ nguyên mã
-   nguồn "flowchart LR Dev[git push] --> ..." cho tới khi mermaid chạy xong. */
-#article-body .mermaid,
-#work-article-body .mermaid {
+/* ===== Sơ đồ (mermaid) =====
+   SVG được dựng sẵn lúc build (utils/diagram.ts) và nhúng thẳng vào HTML, nên
+   không còn giai đoạn "chờ renderer chạy" để mà loé mã nguồn — luật ẩn chữ
+   trước đây không còn lý do tồn tại.
+
+   Màu nằm trong biến chứ không chốt cứng trong SVG: một file SVG phục vụ cả
+   hai theme, đổi sáng/tối chỉ đổi giá trị biến, trình duyệt tô lại ngay mà
+   không cần vẽ lại sơ đồ. `data-theme` do pages/_app.tsx gắn lên <html>. */
+:root {
+  --diagram-bg: #0a0a0a;
+  --diagram-fg: #ededed;
+  --diagram-line: rgba(237, 237, 237, 0.45);
+  --diagram-accent: #4ade80;
+  --diagram-muted: #888888;
+  --diagram-surface: #141414;
+  --diagram-border: rgba(237, 237, 237, 0.22);
+}
+:root[data-theme='light'] {
+  --diagram-bg: #fafafa;
+  --diagram-fg: #111111;
+  --diagram-line: rgba(17, 17, 17, 0.45);
+  --diagram-accent: #16a34a;
+  --diagram-muted: #666666;
+  --diagram-surface: #ffffff;
+  --diagram-border: rgba(17, 17, 17, 0.18);
+}
+
+.diagram {
   display: flex;
   justify-content: center;
   margin: 1.75em 0;
@@ -119,16 +141,15 @@ a {
   border-radius: 12px;
   overflow-x: auto;
 }
-/* Hide the raw diagram source until mermaid finishes (avoids a flash of text) */
-#article-body .mermaid:not([data-processed='true']),
-#work-article-body .mermaid:not([data-processed='true']) {
-  color: transparent;
-  min-height: 2rem;
-}
-#article-body .mermaid svg,
-#work-article-body .mermaid svg {
+.diagram svg {
   max-width: 100%;
   height: auto;
+}
+/* Nguồn hỏng: renderDiagram trả lại mã nguồn thay vì làm sập build. */
+.diagram--failed pre {
+  margin: 0;
+  font-size: 13px;
+  white-space: pre-wrap;
 }
 
 /* ===== Aurora background system (home page) =====

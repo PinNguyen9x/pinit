@@ -5,8 +5,11 @@ import { createEmotionCache } from '@/utils'
 
 export default class MyDocument extends Document {
   render() {
+    // data-theme lái bảng biến --diagram-* trong globals.css. Giá trị khởi tạo
+    // phải khớp mode mặc định của _app ('dark'); _app đồng bộ lại sau khi đọc
+    // localStorage.
     return (
-      <Html lang="en">
+      <Html lang="en" data-theme="dark">
         <Head>
           <meta name="theme-color" content="#16a34a" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />

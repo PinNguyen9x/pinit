@@ -1311,7 +1311,7 @@ export const LESSONS: Lesson[] = [
   CH -->|"Vượt ngưỡng — người nổi tiếng"| SKIP["Không đẩy, để kéo lúc đọc"]
   PUSH --> FC[("Bảng tin dựng sẵn")]
   R["Người dùng mở bảng tin"] --> FC
-  R --> PULL["Kéo bài của người nổi tiếng đang theo dõi"]
+  R --> PULL["Kéo bài người nổi tiếng đang theo dõi"]
   PULL --> MIX["Trộn và sắp xếp"]
   FC --> MIX`,
         table: {
@@ -1586,7 +1586,7 @@ export const LESSONS: Lesson[] = [
   R["Khách đặt xe tại một điểm"] --> G["Tính mã ô chứa điểm"]
   G --> N["Lấy ô đó và 8 ô lân cận"]
   N --> C["Danh sách ứng viên — vài chục tài xế"]
-  C --> F["Lọc theo khoảng cách thật và trạng thái rảnh"]
+  C --> F["Lọc theo khoảng cách thật và tài xế rảnh"]
   F --> RK["Xếp hạng theo thời gian tới nơi"]
   RK --> M["Gửi lời mời lần lượt"]`,
         table: {

@@ -69,33 +69,6 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
     })
   }, [post.htmlContent])
 
-  // Render mermaid diagrams (git gitGraph, ...) client-side. mermaid is browser-
-  // only and heavy, so it's dynamically imported (matching the ssr:false pattern).
-  useEffect(() => {
-    let cancelled = false
-    const articleBody = document.getElementById('article-body')
-    if (!articleBody) return
-    const nodes = articleBody.querySelectorAll<HTMLElement>('.mermaid')
-    if (nodes.length === 0) return
-
-    import('mermaid' as any).then((mod: any) => {
-      if (cancelled) return
-      const mermaid = mod.default
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: isDark ? 'dark' : 'default',
-        securityLevel: 'loose',
-      })
-      mermaid
-        .run({ nodes: Array.from(nodes) })
-        .catch((err: any) => console.error('Mermaid render error:', err))
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [post.htmlContent, isDark])
-
   return (
     <>
       <Seo

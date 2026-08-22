@@ -30,6 +30,13 @@ function MyApp({
     if (saved === 'light' || saved === 'dark') setMode(saved)
   }, [])
 
+  // Sơ đồ mermaid được dựng sẵn thành SVG lúc build và tô màu bằng biến CSS,
+  // nên chúng cần biết theme qua DOM chứ không qua React. Gắn lên <html> để
+  // bảng --diagram-* trong globals.css đổi theo, không phải vẽ lại sơ đồ.
+  useEffect(() => {
+    document.documentElement.dataset.theme = mode
+  }, [mode])
+
   const colorModeContext = useMemo(
     () => ({
       toggleColorMode: () => {

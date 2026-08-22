@@ -7,8 +7,9 @@ import {
   useSystemDesignTokens,
 } from '@/components/system-design'
 import { LESSONS } from '@/constants/system-design'
-import { useLessonProgress, useMermaid } from '@/hooks'
+import { useLessonProgress } from '@/hooks'
 import { Lesson } from '@/models/system-design'
+import { renderDiagram } from '@/utils/diagram'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
@@ -16,7 +17,6 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import { Box, Button, Chip, Container, Stack, Typography } from '@mui/material'
 import { GetStaticPaths, GetStaticProps } from 'next'
 import Link from 'next/link'
-import { useRef } from 'react'
 
 export interface LessonPageProps {
   lesson: Lesson
@@ -25,13 +25,8 @@ export interface LessonPageProps {
 }
 
 export default function LessonPage({ lesson, prev, next }: LessonPageProps) {
-  const bodyRef = useRef<HTMLDivElement>(null)
-  const { accent, line, chipBg, isDark } = useSystemDesignTokens()
+  const { accent, line, chipBg } = useSystemDesignTokens()
   const { isCompleted, toggle, hydrated } = useLessonProgress()
-
-  // Truyền slug làm khóa nội dung: điều hướng buổi trước/buổi sau không mount
-  // lại component nên thiếu khóa này thì sơ đồ của buổi mới sẽ không được vẽ.
-  useMermaid(bodyRef, isDark, lesson.slug)
 
   const completed = hydrated && isCompleted(lesson.slug)
 
@@ -91,7 +86,7 @@ export default function LessonPage({ lesson, prev, next }: LessonPageProps) {
           </Typography>
         </Box>
 
-        <Box ref={bodyRef} sx={{ mt: 6 }}>
+        <Box sx={{ mt: 6 }}>
           {lesson.sections.length === 0 ? (
             <Box
               sx={{
@@ -224,9 +219,20 @@ export const getStaticProps: GetStaticProps<LessonPageProps> = async ({ params }
 
   const toNav = (lesson?: Lesson) => (lesson ? { slug: lesson.slug, title: lesson.title } : null)
 
+  // Dựng sơ đồ ở đây chứ không trong constants/system-design.ts: file constants
+  // bị component phía client import, kéo renderer vào là kéo cả 575 KB gzip
+  // xuống trình duyệt.
+  const lesson = ordered[index]
+  const withDiagrams: Lesson = {
+    ...lesson,
+    sections: lesson.sections.map((section) =>
+      section.diagram ? { ...section, diagramSvg: renderDiagram(section.diagram) } : section,
+    ),
+  }
+
   return {
     props: {
-      lesson: ordered[index],
+      lesson: withDiagrams,
       prev: toNav(ordered[index - 1]),
       next: toNav(ordered[index + 1]),
     },
