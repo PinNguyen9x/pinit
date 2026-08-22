@@ -12,6 +12,7 @@ import remarkRehype from 'remark-rehype'
 import remarkToc from 'remark-toc'
 import { unified } from 'unified'
 import { visit } from 'unist-util-visit'
+import { renderDiagram } from './diagram'
 
 export interface TocHeading {
   level: number
@@ -51,17 +52,24 @@ function rehypeDecodePrismEntities() {
   }
 }
 
-// Convert ```mermaid fenced blocks into <div class="mermaid"> so the client-side
-// mermaid.run() can render them (e.g. flowcharts, gitGraph). Must run BEFORE
-// remark-prism so Prism doesn't tokenize/escape the diagram source.
-function remarkMermaid() {
-  const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+const DIAGRAM_SLOT = /<div data-diagram-slot="(\d+)"><\/div>/g
+
+// Render ```mermaid fenced blocks to inline SVG right here, at build time — the
+// reader gets finished markup and never downloads a diagram renderer. Must run
+// BEFORE remark-prism so Prism doesn't tokenize/escape the diagram source.
+//
+// The SVG is not injected into the tree: it goes into `svgs` and leaves an empty
+// placeholder behind, substituted after stringify. Routing it through rehype-raw
+// would re-parse the SVG as HTML and let rehype-format re-indent it — and
+// whitespace inside <text> is significant, so labels would drift.
+function remarkMermaid(svgs: string[]) {
   return (tree: any) => {
     visit(tree, 'code', (node: any, index: any, parent: any) => {
       if (node.lang !== 'mermaid' || !parent || index == null) return
+      const slot = svgs.push(renderDiagram(node.value)) - 1
       parent.children[index] = {
         type: 'html',
-        value: `<div class="mermaid">${escapeHtml(node.value)}</div>`,
+        value: `<div data-diagram-slot="${slot}"></div>`,
       }
     })
   }
@@ -116,13 +124,14 @@ function rehypeCollectToc(toc: TocHeading[]) {
  */
 export async function renderMarkdown(markdown: string): Promise<RenderedMarkdown> {
   const toc: TocHeading[] = []
+  const svgs: string[] = []
 
   const file = await unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkToc, { heading: 'agenda.*' })
     .use(remarkCustomHeadingIds)
-    .use(remarkMermaid)
+    .use(remarkMermaid, svgs)
     .use(require('remark-prism'))
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
@@ -134,5 +143,7 @@ export async function renderMarkdown(markdown: string): Promise<RenderedMarkdown
     .use(rehypeStringify)
     .process(markdown || '')
 
-  return { html: file.toString(), toc }
+  const html = file.toString().replace(DIAGRAM_SLOT, (_, slot) => svgs[Number(slot)] ?? '')
+
+  return { html, toc }
 }
