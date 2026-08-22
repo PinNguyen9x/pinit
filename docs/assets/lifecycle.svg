@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1263.342" height="181.8" viewBox="0 0 1263.342 181.8" style="--bg:#0d1117;--fg:#e6edf3;--line:#3d444d;--accent:#4493f8;--muted:#9198a1;--font:Inter;background:#0d1117">
+<style>
+  text { font-family: var(--font, 'Inter'), system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          #e6edf3;
+    --_text-sec:      #9198a1;
+    --_text-muted:    #9198a1;
+    --_text-faint:    #82888e;
+    --_line:          #3d444d;
+    --_arrow:         #4493f8;
+    --_node-fill:     #14181e;
+    --_node-stroke:   #383d43;
+    --_group-fill:    #0d1117;
+    --_group-hdr:     #181c22;
+    --_inner-stroke:  #272b31;
+    --_key-badge:     #23272d;
+  }
+</style>
+<rect width="1263.342" height="181.8" fill="#0d1117" data-backdrop="page" />
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="#4493f8" stroke="#4493f8" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto">
+    <polygon points="8 0, 0 2.5, 8 5" fill="#4493f8" stroke="#4493f8" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<polyline class="edge" data-from="A" data-to="B" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="179.02100000000002,90.9 227.02100000000002,90.9" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:A-&gt;B#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="A to B" />
+<polyline class="edge" data-from="B" data-to="C" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="349.74,90.9 385.74,90.9 385.74,58.45 397.74,58.45" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:B-&gt;C#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="B to C" />
+<polyline class="edge" data-from="C" data-to="D" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="499.711,58.45 544.9125,58.45" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:C-&gt;D#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="C to D" />
+<polyline class="edge" data-from="D" data-to="E" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="647.6245,58.45 698.423,58.45" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:D-&gt;E#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="D to E" />
+<polyline class="edge" data-from="E" data-to="F" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="811.509,58.45 859.509,58.45" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:E-&gt;F#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="E to F" />
+<polyline class="edge" data-from="F" data-to="G" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="1064.479,58.45 1112.479,58.45" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:F-&gt;G#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="F to G" />
+<polyline class="edge" data-from="B" data-to="M" data-style="dotted" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" data-label="tự chạy setup_mcp" points="349.74,97.05000000000001 532.9125,97.05000000000001 532.9125,123.35000000000001 544.9125,123.35000000000001" fill="none" stroke="#5a6169" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:B-&gt;M#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="B to M: tự chạy setup_mcp" />
+<g class="edge-label" data-from="B" data-to="M" data-label="tự chạy setup_mcp">
+  <rect class="edge-label-halo" x="385.13925" y="77.9" width="112.37400000000001" height="38.3" rx="4" ry="4" fill="#0d1117" stroke="none" />
+  <rect x="389.13925" y="81.9" width="104.37400000000001" height="30.3" rx="2" ry="2" fill="#0d1117" stroke="#272b31" stroke-width="1" />
+  <text x="441.32625" y="97.05000000000001" text-anchor="middle" font-size="11" font-weight="400" fill="#9198a1" dy="3.8499999999999996" textLength="88.374" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">tự chạy setup_mcp</text>
+</g>
+<g class="node" data-id="A" data-label="main: pull --ff-only" data-shape="rectangle" data-role="node">
+  <rect x="40" y="72.45" width="139.02100000000002" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:A" data-role="node" />
+  <text x="109.51050000000001" y="90.9" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="99.021" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">main: pull --ff-only</text>
+</g>
+<g class="node" data-id="B" data-label="agents create" data-shape="rectangle" data-role="node">
+  <rect x="227.02100000000002" y="72.45" width="122.71900000000001" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:B" data-role="node" />
+  <text x="288.38050000000004" y="90.9" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="82.719" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">agents create</text>
+</g>
+<g class="node" data-id="C" data-label="npm install" data-shape="rectangle" data-role="node">
+  <rect x="397.74" y="40" width="101.971" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:C" data-role="node" />
+  <text x="448.7255" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="61.971" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">npm install</text>
+</g>
+<g class="node" data-id="D" data-label="Code + PR" data-shape="rectangle" data-role="node">
+  <rect x="544.9125" y="40" width="102.71199999999999" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:D" data-role="node" />
+  <text x="596.2685" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="62.712" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">Code + PR</text>
+</g>
+<g class="node" data-id="E" data-label="merge --no-ff" data-shape="rectangle" data-role="node">
+  <rect x="698.423" y="40" width="113.086" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:E" data-role="node" />
+  <text x="754.966" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="73.086" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">merge --no-ff</text>
+</g>
+<g class="node" data-id="F" data-label="Lan toả sang worktree khác" data-shape="rectangle" data-role="node">
+  <rect x="859.509" y="40" width="204.97" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:F" data-role="node" />
+  <text x="961.994" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="164.97" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">Lan toả sang worktree khác</text>
+</g>
+<g class="node" data-id="G" data-label="Xoá branch" data-shape="rectangle" data-role="node">
+  <rect x="1112.479" y="40" width="110.863" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:G" data-role="node" />
+  <text x="1167.9105" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="70.863" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">Xoá branch</text>
+</g>
+<g class="node" data-id="M" data-label=".mcp.json bản node + cờ S" data-shape="rectangle" data-role="node">
+  <rect x="544.9125" y="104.9" width="190.891" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:M" data-role="node" />
+  <text x="640.3580000000001" y="123.35000000000001" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="150.891" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">.mcp.json bản node + cờ S</text>
+</g>
+</svg>
