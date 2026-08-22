@@ -25,6 +25,10 @@ const DIAGRAM_OPTIONS = {
   surface: 'var(--diagram-surface)',
   border: 'var(--diagram-border)',
   font: 'Inter, system-ui, sans-serif',
+  // Không tự tô nền: khung bao ngoài (figure.diagram ở bài viết, Box ở trang
+  // bài học) đã có nền riêng, để SVG tô thêm một lớp nữa là thành hai hình chữ
+  // nhật lệch màu chồng lên nhau.
+  transparent: true,
   // Trang đã tự nạp Inter trong _document; nhúng thêm @import Google Fonts vào
   // mỗi SVG chỉ tổ phình HTML và thêm một request chặn render.
   embedFontImport: false,

@@ -27,8 +27,14 @@ export interface LessonSection {
    */
   body: string[]
   table?: LessonTable
-  /** Mã mermaid; render client-side qua use-mermaid. */
+  /** Mã mermaid — nguồn gốc, giữ để sửa và verify. */
   diagram?: string
+  /**
+   * SVG dựng sẵn từ `diagram` trong getStaticProps của /system-design/[slug].
+   * Không tự sinh ở đây: renderer nặng ~575 KB gzip và file constants này bị
+   * component phía client import, nên phải dựng ở tầng getStaticProps.
+   */
+  diagramSvg?: string
   /** Ý cần nhớ, hiện dưới dạng callout. */
   callout?: string
 }

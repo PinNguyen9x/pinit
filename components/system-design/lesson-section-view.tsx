@@ -73,7 +73,7 @@ export function LessonSectionView({ section }: LessonSectionViewProps) {
         </Box>
       )}
 
-      {section.diagram && (
+      {section.diagramSvg && (
         <Box
           sx={{
             overflowX: 'auto',
@@ -82,13 +82,21 @@ export function LessonSectionView({ section }: LessonSectionViewProps) {
             border: '1px solid',
             borderColor: line,
             borderRadius: 2,
-            '& .mermaid': { display: 'flex', justifyContent: 'center' },
+            // Khung đã do Box này lo, figure bên trong chỉ cần canh giữa.
+            '& .diagram': {
+              display: 'flex',
+              justifyContent: 'center',
+              m: 0,
+              p: 0,
+              border: 0,
+              background: 'none',
+            },
             '& svg': { maxWidth: '100%', height: 'auto' },
           }}
-        >
-          {/* useMermaid tìm node .mermaid rồi thay bằng SVG ở phía client. */}
-          <Box className="mermaid">{section.diagram}</Box>
-        </Box>
+          // SVG dựng sẵn lúc build (getStaticProps của trang bài học), nội dung
+          // do repo kiểm soát chứ không phải input người dùng.
+          dangerouslySetInnerHTML={{ __html: section.diagramSvg }}
+        />
       )}
 
       {section.callout && (
