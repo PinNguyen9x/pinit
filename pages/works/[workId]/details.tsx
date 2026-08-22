@@ -142,33 +142,6 @@ export default function WorkDetails({ work, relatedPosts = [] }: WorkDetailsProp
     })
   }, [work?.fullDescription])
 
-  // Render mermaid diagrams (architecture flowcharts, ...) client-side. mermaid
-  // is browser-only and heavy, so it's dynamically imported.
-  useEffect(() => {
-    let cancelled = false
-    const body = document.getElementById('work-article-body')
-    if (!body) return
-    const nodes = body.querySelectorAll<HTMLElement>('.mermaid')
-    if (nodes.length === 0) return
-
-    import('mermaid' as any).then((mod: any) => {
-      if (cancelled) return
-      const mermaid = mod.default
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: isDark ? 'dark' : 'default',
-        securityLevel: 'loose',
-      })
-      mermaid
-        .run({ nodes: Array.from(nodes) })
-        .catch((err: any) => console.error('Mermaid render error:', err))
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [work?.fullDescription, isDark])
-
   if (router.isFallback) return <WorkDetailSkeleton />
   if (!work) return <NoDataFound />
 
@@ -744,7 +717,8 @@ export default function WorkDetails({ work, relatedPosts = [] }: WorkDetailsProp
                       p: '16px',
                       overflowX: 'auto',
                     },
-                    '& .mermaid': {
+                    // figure.diagram do utils/diagram.ts sinh ra lúc build.
+                    '& .diagram': {
                       display: 'flex',
                       justifyContent: 'center',
                       my: '24px',
