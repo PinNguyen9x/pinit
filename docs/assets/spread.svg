@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1268.981" height="116.9" viewBox="0 0 1268.981 116.9" style="--bg:#0d1117;--fg:#e6edf3;--line:#3d444d;--accent:#4493f8;--muted:#9198a1;--font:Inter;background:#0d1117">
+<style>
+  text { font-family: var(--font, 'Inter'), system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          #e6edf3;
+    --_text-sec:      #9198a1;
+    --_text-muted:    #9198a1;
+    --_text-faint:    #82888e;
+    --_line:          #3d444d;
+    --_arrow:         #4493f8;
+    --_node-fill:     #14181e;
+    --_node-stroke:   #383d43;
+    --_group-fill:    #0d1117;
+    --_group-hdr:     #181c22;
+    --_inner-stroke:  #272b31;
+    --_key-badge:     #23272d;
+  }
+</style>
+<rect width="1268.981" height="116.9" fill="#0d1117" data-backdrop="page" />
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="#4493f8" stroke="#4493f8" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto">
+    <polygon points="8 0, 0 2.5, 8 5" fill="#4493f8" stroke="#4493f8" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<polyline class="edge" data-from="A" data-to="B" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="198.287,58.45 246.287,58.45" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:A-&gt;B#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="A to B" />
+<polyline class="edge" data-from="B" data-to="C" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="409.76099999999997,58.45 457.76099999999997,58.45" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:B-&gt;C#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="B to C" />
+<polyline class="edge" data-from="C" data-to="D" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="630.127,58.45 678.127,58.45" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:C-&gt;D#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="C to D" />
+<polyline class="edge" data-from="D" data-to="E" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="803.069,58.45 851.069,58.45" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:D-&gt;E#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="D to E" />
+<polyline class="edge" data-from="E" data-to="F" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-marker-end="arrow" points="953.04,58.45 1001.04,58.45" fill="none" stroke="#5a6169" stroke-width="1" marker-end="url(#arrowhead)" data-relationship="flowchart-edge" data-direction="forward" data-id="edge:E-&gt;F#0" data-role="edge" role="graphics-symbol" aria-roledescription="relation" aria-label="E to F" />
+<g class="node" data-id="A" data-label="gỡ cờ skip-worktree" data-shape="rectangle" data-role="node">
+  <rect x="40" y="40" width="158.287" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:A" data-role="node" />
+  <text x="119.1435" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="118.287" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">gỡ cờ skip-worktree</text>
+</g>
+<g class="node" data-id="B" data-label="checkout -- .mcp.json" data-shape="rectangle" data-role="node">
+  <rect x="246.287" y="40" width="163.474" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:B" data-role="node" />
+  <text x="328.024" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="123.474" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">checkout -- .mcp.json</text>
+</g>
+<g class="node" data-id="C" data-label="pull --ff-only origin main" data-shape="rectangle" data-role="node">
+  <rect x="457.76099999999997" y="40" width="172.36599999999999" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:C" data-role="node" />
+  <text x="543.944" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="132.366" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">pull --ff-only origin main</text>
+</g>
+<g class="node" data-id="D" data-label="agents mcp-fix" data-shape="rectangle" data-role="node">
+  <rect x="678.127" y="40" width="124.94200000000001" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:D" data-role="node" />
+  <text x="740.598" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="84.942" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">agents mcp-fix</text>
+</g>
+<g class="node" data-id="E" data-label="npm install" data-shape="rectangle" data-role="node">
+  <rect x="851.069" y="40" width="101.971" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:E" data-role="node" />
+  <text x="902.0545" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="61.971" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">npm install</text>
+</g>
+<g class="node" data-id="F" data-label="verify: keys + cờ S + status sạch" data-shape="rectangle" data-role="node">
+  <rect x="1001.04" y="40" width="227.94099999999997" height="36.900000000000006" rx="0" ry="0" fill="#14181e" stroke="#383d43" stroke-width="0.75" data-id="node-shape:F" data-role="node" />
+  <text x="1115.0104999999999" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="#e6edf3" dy="4.55" textLength="187.941" lengthAdjust="spacingAndGlyphs" data-font-metrics="deterministic-fit">verify: keys + cờ S + status sạch</text>
+</g>
+</svg>
