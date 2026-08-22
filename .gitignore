@@ -32,5 +32,11 @@ yarn-error.log*
 
 # vercel
 .vercel
-.envMEMORY.md
+
+# thiếu newline nên hai pattern dưới từng dính thành ".envMEMORY.md"
+.env
+MEMORY.md
 .claude/memory/
+
+# typescript build cache — sinh lại mỗi lần build, không thuộc về repo
+tsconfig.tsbuildinfo
