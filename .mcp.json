@@ -6,6 +6,10 @@
         "-y",
         "@ai-devkit/memory"
       ]
+    },
+    "agentic-mermaid": {
+      "command": "node",
+      "args": ["./node_modules/agentic-mermaid/dist/agentic-mermaid-mcp.js"]
     }
   }
 }
