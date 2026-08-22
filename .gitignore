@@ -34,3 +34,6 @@ yarn-error.log*
 .vercel
 .envMEMORY.md
 .claude/memory/
+
+# typescript build cache — sinh lại mỗi lần build, không thuộc về repo
+tsconfig.tsbuildinfo
