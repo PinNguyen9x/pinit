@@ -2,6 +2,7 @@ import { Seo } from '@/components/common'
 import { ReadingProgressBar } from '@/components/blog/reading-progress'
 import { TableOfContents, TocItem } from '@/components/blog/table-of-contents'
 import { MainLayout } from '@/components/layouts'
+import { useCodeCopyButtons } from '@/hooks'
 import { Post } from '@/models'
 import { getPostList } from '@/utils/posts'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
@@ -12,7 +13,6 @@ import { renderMarkdown } from '@/utils/markdown'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect } from 'react'
 
 export interface BlogDetailPageProps {
   post: Post
@@ -29,45 +29,7 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
     ? format(new Date(post.publishedDate), 'MMMM dd, yyyy')
     : ''
 
-  useEffect(() => {
-    const articleBody = document.getElementById('article-body')
-    if (!articleBody) return
-    const preBlocks = articleBody.querySelectorAll<HTMLPreElement>('pre[class*="language-"]')
-    preBlocks.forEach((pre) => {
-      if (pre.parentElement?.dataset.codeWrapper === 'true') return
-      const wrapper = document.createElement('div')
-      wrapper.dataset.codeWrapper = 'true'
-      wrapper.className = 'code-block-wrapper'
-      pre.parentNode?.insertBefore(wrapper, pre)
-      wrapper.appendChild(pre)
-
-      const langMatch = pre.className.match(/language-(\w+)/)
-      if (langMatch && langMatch[1] !== 'none') {
-        const label = document.createElement('span')
-        label.className = 'code-lang-label'
-        label.textContent = langMatch[1]
-        wrapper.appendChild(label)
-      }
-
-      const btn = document.createElement('button')
-      btn.className = 'code-copy-btn'
-      btn.textContent = 'Copy'
-      wrapper.appendChild(btn)
-
-      btn.addEventListener('click', () => {
-        const code = pre.querySelector('code')
-        if (!code) return
-        navigator.clipboard.writeText(code.innerText).then(() => {
-          btn.textContent = 'Copied!'
-          btn.classList.add('copied')
-          setTimeout(() => {
-            btn.textContent = 'Copy'
-            btn.classList.remove('copied')
-          }, 2000)
-        })
-      })
-    })
-  }, [post.htmlContent])
+  useCodeCopyButtons('article-body', post.slug)
 
   return (
     <>
