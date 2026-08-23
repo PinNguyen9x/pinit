@@ -1,4 +1,4 @@
-import { NoDataFound } from '@/components/common'
+import { NoDataFound } from '@/components/common/no-data-found'
 import { GameColorMatching, GameSkeleton, GomeTicTacToe } from '@/components/games'
 import { MainLayout } from '@/components/layouts/main'
 import { SlUG } from '@/constants/common'

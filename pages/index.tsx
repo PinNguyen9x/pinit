@@ -1,4 +1,5 @@
-import { BackgroundFx, Seo } from '@/components/common'
+import { BackgroundFx } from '@/components/common/background-fx'
+import { Seo } from '@/components/common/seo'
 import { HeroSection, KnowledgeTracks } from '@/components/home'
 import { MainLayout } from '@/components/layouts/main'
 import { FeatureWork } from '@/components/work'

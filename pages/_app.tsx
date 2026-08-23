@@ -10,7 +10,6 @@ import CssBaseline from '@mui/material/CssBaseline'
 import { ThemeProvider } from '@mui/material/styles'
 import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState } from 'react'
-import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { SWRConfig } from 'swr'
 import { AppPropsWithLayout } from '../models'
@@ -24,6 +23,17 @@ import '../styles/prism.css'
  * một trang. Tải động, và chỉ bọc khi trang thật sự khai báo requireLogin.
  */
 const Auth = dynamic(() => import('@/components/common/auth').then((m) => m.Auth))
+
+/**
+ * Container của toast nằm ngoài first-load: `ssr: false` đẩy react-toastify ra
+ * một chunk tải sau hydrate. Vẫn mount trên mọi trang — cố tình như vậy. Chỉ 3
+ * trang gọi `toast.*` hôm nay, nhưng gắn cờ thủ công cho từng trang thì lần sau
+ * thêm một lời gọi toast ở trang mới sẽ hỏng im lặng: không báo lỗi, chỉ là
+ * thông báo không bao giờ hiện.
+ */
+const ToastContainer = dynamic(() => import('react-toastify').then((m) => m.ToastContainer), {
+  ssr: false,
+})
 
 /**
  * Chỉ `use-auth` (key '/profile') và demo StudentDetail dựa vào fetcher chung —

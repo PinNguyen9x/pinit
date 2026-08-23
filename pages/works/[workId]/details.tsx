@@ -1,4 +1,4 @@
-import { NoDataFound } from '@/components/common'
+import { NoDataFound } from '@/components/common/no-data-found'
 import { MainLayout } from '@/components/layouts/main'
 import { WorkDetailSkeleton } from '@/components/work'
 import { useAuth } from '@/hooks/use-auth'

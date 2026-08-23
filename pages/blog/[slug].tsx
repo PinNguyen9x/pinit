@@ -1,4 +1,4 @@
-import { Seo } from '@/components/common'
+import { Seo } from '@/components/common/seo'
 import { ReadingProgressBar } from '@/components/blog/reading-progress'
 import { TableOfContents, TocItem } from '@/components/blog/table-of-contents'
 import { MainLayout } from '@/components/layouts/main'

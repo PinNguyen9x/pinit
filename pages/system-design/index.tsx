@@ -1,4 +1,5 @@
-import { BackgroundFx, Seo } from '@/components/common'
+import { BackgroundFx } from '@/components/common/background-fx'
+import { Seo } from '@/components/common/seo'
 import { MainLayout } from '@/components/layouts/main'
 import { LessonCard, RoadmapProgress, useSystemDesignTokens } from '@/components/system-design'
 import { LESSONS } from '@/constants/system-design'

@@ -78,7 +78,12 @@ describe('barrel constants không kéo dữ liệu lớn vào bundle dùng chung
   it('không import qua các barrel nằm trên đường dẫn của mọi trang', () => {
     const root = join(__dirname, '..')
     const SEARCH_DIRS = ['components', 'hooks', 'pages', 'utils', 'models', 'api-client']
-    const FORBIDDEN = ["from '@/hooks'", "from '@/components/layouts'"]
+    const FORBIDDEN = [
+      "from '@/hooks'",
+      "from '@/components/layouts'",
+      "from '@/components/common'",
+      "from '../common'",
+    ]
 
     const offenders: string[] = []
     const walk = (dir: string) => {
