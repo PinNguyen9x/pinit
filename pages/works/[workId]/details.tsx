@@ -1,7 +1,7 @@
 import { NoDataFound } from '@/components/common'
 import { MainLayout } from '@/components/layouts'
 import { WorkDetailSkeleton } from '@/components/work'
-import { useAuth, useRenderTagIcon } from '@/hooks'
+import { useAuth, useCodeCopyButtons, useRenderTagIcon } from '@/hooks'
 import { Work, WorkStatus } from '@/models'
 import { API_BASE, RelatedPost, findRelatedPosts, getWorkGameSlug, plainText, safeFetchJson } from '@/utils'
 import { renderMarkdown } from '@/utils/markdown'
@@ -100,47 +100,7 @@ export default function WorkDetails({ work, relatedPosts = [] }: WorkDetailsProp
     return () => window.removeEventListener('scroll', updateActive)
   }, [updateActive])
 
-  // Decorate code blocks in the markdown narrative with a language label + copy
-  // button (mirrors the blog article body).
-  useEffect(() => {
-    const body = document.getElementById('work-article-body')
-    if (!body) return
-    const preBlocks = body.querySelectorAll<HTMLPreElement>('pre[class*="language-"]')
-    preBlocks.forEach((pre) => {
-      if (pre.parentElement?.dataset.codeWrapper === 'true') return
-      const wrapper = document.createElement('div')
-      wrapper.dataset.codeWrapper = 'true'
-      wrapper.className = 'code-block-wrapper'
-      pre.parentNode?.insertBefore(wrapper, pre)
-      wrapper.appendChild(pre)
-
-      const langMatch = pre.className.match(/language-(\w+)/)
-      if (langMatch && langMatch[1] !== 'none') {
-        const label = document.createElement('span')
-        label.className = 'code-lang-label'
-        label.textContent = langMatch[1]
-        wrapper.appendChild(label)
-      }
-
-      const btn = document.createElement('button')
-      btn.className = 'code-copy-btn'
-      btn.textContent = 'Copy'
-      wrapper.appendChild(btn)
-
-      btn.addEventListener('click', () => {
-        const code = pre.querySelector('code')
-        if (!code) return
-        navigator.clipboard.writeText(code.innerText).then(() => {
-          btn.textContent = 'Copied!'
-          btn.classList.add('copied')
-          setTimeout(() => {
-            btn.textContent = 'Copy'
-            btn.classList.remove('copied')
-          }, 2000)
-        })
-      })
-    })
-  }, [work?.fullDescription])
+  useCodeCopyButtons('work-article-body', work?.id)
 
   if (router.isFallback) return <WorkDetailSkeleton />
   if (!work) return <NoDataFound />
