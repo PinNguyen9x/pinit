@@ -124,20 +124,15 @@ Partition 2:  [msg2, msg5, msg8, msg11...]  → Consumer C
 
 ### Sơ đồ Topic và Partition
 
-```
-Topic: customer-events
-┌─────────────────────────────────────────┐
-│                                         │
-│  Partition 0 (Leader: Broker 1)         │
-│  [offset 0][offset 1][offset 2]...      │
-│                                         │
-│  Partition 1 (Leader: Broker 2)         │
-│  [offset 0][offset 1][offset 2]...      │
-│                                         │
-│  Partition 2 (Leader: Broker 3)         │
-│  [offset 0][offset 1][offset 2]...      │
-│                                         │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TB
+  subgraph T["Topic: customer-events"]
+    P0["Partition 0 (Leader: Broker 1)<br/>offset 0, 1, 2 ..."]
+    P1["Partition 1 (Leader: Broker 2)<br/>offset 0, 1, 2 ..."]
+    P2["Partition 2 (Leader: Broker 3)<br/>offset 0, 1, 2 ..."]
+    P0 ~~~ P1
+    P1 ~~~ P2
+  end
 ```
 
 ### Làm rõ mối quan hệ Broker - Partition - Offset
@@ -166,41 +161,24 @@ Broker 1:
 
 **Chi tiết hơn:**
 
+Kafka Cluster (3 brokers) — `L = Leader`, `F = Follower`:
+
+```mermaid
+flowchart TB
+  subgraph B1["Broker 1"]
+    N1["orders-p0 (L)<br/>orders-p2 (F)<br/>payments-p1 (L)<br/>logs-p0 (F)"]
+  end
+  subgraph B2["Broker 2"]
+    N2["orders-p1 (L)<br/>orders-p0 (F)<br/>payments-p0 (L)<br/>logs-p1 (L)"]
+  end
+  subgraph B3["Broker 3"]
+    N3["orders-p2 (L)<br/>orders-p1 (F)<br/>payments-p1 (F)<br/>logs-p0 (L)"]
+  end
+  N1 ~~~ N2
+  N2 ~~~ N3
 ```
-Kafka Cluster (3 brokers)
 
-┌─────────────────────────┐
-│      Broker 1           │
-│  ┌──────────────────┐   │
-│  │ orders-p0 (L)    │   │ ← Leader cho partition 0 của topic "orders"
-│  │ orders-p2 (F)    │   │ ← Follower cho partition 2 của topic "orders"
-│  │ payments-p1 (L)  │   │ ← Leader cho partition 1 của topic "payments"
-│  │ logs-p0 (F)      │   │ ← Follower cho partition 0 của topic "logs"
-│  └──────────────────┘   │
-└─────────────────────────┘
-
-┌─────────────────────────┐
-│      Broker 2           │
-│  ┌──────────────────┐   │
-│  │ orders-p1 (L)    │   │
-│  │ orders-p0 (F)    │   │ ← Backup của orders-p0 từ Broker 1
-│  │ payments-p0 (L)  │   │
-│  │ logs-p1 (L)      │   │
-│  └──────────────────┘   │
-└─────────────────────────┘
-
-┌─────────────────────────┐
-│      Broker 3           │
-│  ┌──────────────────┐   │
-│  │ orders-p2 (L)    │   │
-│  │ orders-p1 (F)    │   │
-│  │ payments-p1 (F)  │   │
-│  │ logs-p0 (L)      │   │
-│  └──────────────────┘   │
-└─────────────────────────┘
-
-L = Leader, F = Follower
-```
+Đọc Broker 1 làm ví dụ: nó là **Leader** cho partition 0 của topic `orders` và partition 1 của `payments`, đồng thời giữ bản **Follower** cho partition 2 của `orders` và partition 0 của `logs`. Còn `orders-p0 (F)` trên Broker 2 chính là bản backup của `orders-p0 (L)` nằm ở Broker 1.
 
 **Tại sao một Broker chứa nhiều Partitions?**
 
@@ -428,28 +406,22 @@ CLUSTER
 
 **Sơ đồ Kafka Cluster:**
 
+```mermaid
+flowchart TB
+  subgraph C["Kafka Cluster"]
+    B1["Broker 1 (ID: 1)<br/>Part 0-L<br/>Part 1-F<br/>Part 2-F"]
+    B2["Broker 2 (ID: 2)<br/>Part 1-L<br/>Part 2-F<br/>Part 0-F"]
+    B3["Broker 3 (ID: 3)<br/>Part 2-L<br/>Part 0-F<br/>Part 1-F"]
+    ZK["ZooKeeper (hoặc KRaft)<br/>Cluster metadata"]
+    %% Thứ tự cạnh (không phải thứ tự khai báo node) quyết định thứ tự cột.
+    %% Thứ tự 2-3-1 dưới đây cho ra Broker 1-2-3 từ trái sang phải; đổi lại là lệch.
+    ZK --> B2
+    ZK --> B3
+    ZK --> B1
+  end
 ```
-                    Kafka Cluster
-┌────────────────────────────────────────────┐
-│                                            │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐ │
-│  │ Broker 1 │  │ Broker 2 │  │ Broker 3 │ │
-│  │  (ID: 1) │  │  (ID: 2) │  │  (ID: 3) │ │
-│  │          │  │          │  │          │ │
-│  │ Part 0-L │  │ Part 1-L │  │ Part 2-L │ │
-│  │ Part 1-F │  │ Part 2-F │  │ Part 0-F │ │
-│  │ Part 2-F │  │ Part 0-F │  │ Part 1-F │ │
-│  └──────────┘  └──────────┘  └──────────┘ │
-│                                            │
-│  L = Leader, F = Follower                  │
-│                                            │
-│       ┌──────────────────┐                 │
-│       │   ZooKeeper      │                 │
-│       │ (hoặc KRaft)     │                 │
-│       │ Cluster metadata │                 │
-│       └──────────────────┘                 │
-└────────────────────────────────────────────┘
-```
+
+`L = Leader`, `F = Follower`.
 
 ### ZooKeeper và KRaft
 
@@ -587,29 +559,17 @@ Nhưng khi có nhiều bản sao, ai sẽ quyết định dữ liệu nào là "
 
 **Ví dụ:**
 
-```
-Topic: orders, Partition 0, Replication Factor = 3
+Topic `orders`, Partition 0, Replication Factor = 3:
 
-         ┌─────────────────────────┐
-         │   Broker 1 (LEADER)     │
-         │   Partition 0           │
-         │                         │
-Producer │   [msg0][msg1][msg2]    │
-  ════>  │         ↓               │
-Ghi vào │   Writes đến đây TRƯỚC  │
-Leader  │                         │
-         └─────────────────────────┘
-                    │
-          ┌─────────┴─────────┐
-          │                   │
-          ↓                   ↓
-┌──────────────────┐  ┌──────────────────┐
-│ Broker 2 (FOL)   │  │ Broker 3 (FOL)   │
-│ Partition 0      │  │ Partition 0      │
-│                  │  │                  │
-│ [msg0][msg1][msg2]  │ [msg0][msg1][msg2]
-│ ↑ Sync từ Leader│  │ ↑ Sync từ Leader │
-└──────────────────┘  └──────────────────┘
+```mermaid
+flowchart TB
+  PR["Producer"]
+  L["Broker 1 (LEADER)<br/>Partition 0<br/>msg0, msg1, msg2"]
+  F2["Broker 2 (FOLLOWER)<br/>Partition 0<br/>msg0, msg1, msg2"]
+  F3["Broker 3 (FOLLOWER)<br/>Partition 0<br/>msg0, msg1, msg2"]
+  PR -- "ghi vào Leader TRƯỚC" --> L
+  L -- sync --> F2
+  L -- sync --> F3
 ```
 
 **Quy tắc quan trọng:**
@@ -669,68 +629,38 @@ Khi Leader chết, một Follower sẽ được chọn làm Leader mới.
 
 **Quá trình chi tiết:**
 
+**Trạng thái ban đầu** — Broker 1 là Leader và xử lý toàn bộ traffic, hai broker còn lại chỉ sync:
+
+```mermaid
+flowchart TB
+  L["Broker 1 ★ LEADER<br/>Part 0: offset 0–100"]
+  F2["Broker 2 FOLLOWER<br/>Part 0: offset 0–100"]
+  F3["Broker 3 FOLLOWER<br/>Part 0: offset 0–100"]
+  L -- sync --> F2
+  L -- sync --> F3
 ```
-TRẠNG THÁI BAN ĐẦU:
 
-┌─────────────────┐
-│ Broker 1 ★      │ ← LEADER (xử lý tất cả traffic)
-│ Part 0: [0..100]│
-└─────────────────┘
-        │
-    ┌───┴───┐
-    │       │
-    ↓       ↓
-┌─────────┐ ┌─────────┐
-│Broker 2 │ │Broker 3 │ ← FOLLOWERS (chỉ sync)
-│Part 0   │ │Part 0   │
-│[0..100] │ │[0..100] │
-└─────────┘ └─────────┘
+**Broker 1 bị crash** ⚠️ — partition 0 trên broker này offline.
 
-═══════════════════════════════════
+- **Bước 1**: ZooKeeper/KRaft phát hiện Leader chết (3–5 giây).
+- **Bước 2**: Controller chọn một Follower trong ISR làm Leader mới (thường là replica có offset cao nhất).
+- **Bước 3**: Broker 2 được thăng chức, bắt đầu nhận traffic:
 
-⚠️  Broker 1 BỊ CRASH ⚠️
+```mermaid
+flowchart TB
+  X["Broker 1 ✗ OFFLINE"]
+  L2["Broker 2 ★ LEADER MỚI<br/>Part 0: offset 0–100"]
+  F3["Broker 3 FOLLOWER<br/>Part 0: offset 0–100"]
+  L2 -- sync --> F3
+```
 
-┌─────────────────┐
-│ Broker 1 ✗      │ ← OFFLINE
-│ Part 0: [...]   │
-└─────────────────┘
+- **Bước 4**: Broker 1 quay lại online nhưng **không** đòi lại ghế Leader — nó trở thành Follower và sync từ Broker 2:
 
-═══════════════════════════════════
-
-BƯỚC 1: ZooKeeper/KRaft phát hiện Leader chết (3-5 giây)
-
-BƯỚC 2: Controller chọn Follower trong ISR làm Leader mới
-        (thường chọn replica có offset cao nhất)
-
-BƯỚC 3: Broker 2 được thăng chức
-
-┌─────────────────┐
-│ Broker 2 ★      │ ← LEADER MỚI (bắt đầu nhận traffic)
-│ Part 0: [0..100]│
-└─────────────────┘
-        │
-        │
-        ↓
-┌─────────────────┐
-│ Broker 3        │ ← Vẫn là FOLLOWER (sync từ Leader mới)
-│ Part 0: [0..100]│
-└─────────────────┘
-
-═══════════════════════════════════
-
-BƯỚC 4: Broker 1 quay lại online
-
-┌─────────────────┐
-│ Broker 1        │ ← Trở thành FOLLOWER (không còn là Leader)
-│ Part 0: [0..100]│ ← Sync từ Broker 2
-└─────────────────┘
-        ↑
-        │ Sync
-        │
-┌─────────────────┐
-│ Broker 2 ★      │ ← VẪN LÀ LEADER
-│ Part 0: [0..105]│
-└─────────────────┘
+```mermaid
+flowchart TB
+  L2["Broker 2 ★ VẪN LÀ LEADER<br/>Part 0: offset 0–105"]
+  F1["Broker 1 FOLLOWER<br/>Part 0: offset 0–100"]
+  L2 -- sync --> F1
 ```
 
 **Các điều kiện để trở thành Leader:**
@@ -764,20 +694,15 @@ def is_in_sync(follower, leader):
 
 **Ví dụ cụ thể:**
 
-```
-Cấu hình: replica.lag.max.messages = 10
+Cấu hình: `replica.lag.max.messages = 10`
 
-Leader (Broker 1):  Offset 1000
-Follower A (Broker 2): Offset 998 → Lag = 2 → IN ISR ✅
-Follower B (Broker 3): Offset 985 → Lag = 15 → OUT OF ISR ❌
+| Replica | Offset | Lag | Trạng thái |
+|---|---|---|---|
+| Leader (Broker 1) | 1000 | — | — |
+| Follower A (Broker 2) | 998 | 2 | IN ISR ✅ |
+| Follower B (Broker 3) | 985 | 15 | OUT OF ISR ❌ |
 
-┌──────────────────────────────────┐
-│ ISR = [Broker 1, Broker 2]       │
-│                                  │
-│ Chỉ Broker 1 và 2 mới có thể    │
-│ trở thành Leader                 │
-└──────────────────────────────────┘
-```
+> **ISR = [Broker 1, Broker 2]** — chỉ Broker 1 và 2 mới có thể trở thành Leader.
 
 **Tại sao ISR quan trọng?**
 
@@ -825,20 +750,17 @@ Từ Kafka 2.4, **consumers có thể đọc từ Followers** trong một số t
 
 **Use case:**
 
-```
-Cluster phân bố địa lý:
-
-┌──────────────────────┐       ┌──────────────────────┐
-│   US Data Center     │       │   EU Data Center     │
-│                      │       │                      │
-│  Broker 1 (Leader) ★ │       │  Broker 2 (Follower) │
-│  Partition 0         │═══════│  Partition 0         │
-│                      │ Sync  │                      │
-└──────────────────────┘       └──────────────────────┘
-                                         ↑
-                                    EU Consumer
-                                 (đọc từ Follower gần hơn
-                                  để giảm latency)
+```mermaid
+flowchart LR
+  subgraph US["US Data Center"]
+    B1["Broker 1 (Leader) ★<br/>Partition 0"]
+  end
+  subgraph EU["EU Data Center"]
+    B2["Broker 2 (Follower)<br/>Partition 0"]
+  end
+  C["EU Consumer<br/>(đọc từ Follower gần hơn<br/>để giảm latency)"]
+  B1 -- sync --> B2
+  B2 --> C
 ```
 
 **Lợi ích:**
@@ -867,20 +789,15 @@ replica.selector.class = org.apache.kafka.common.replica.RackAwareReplicaSelecto
 
 **Ví dụ với Replication Factor = 3:**
 
-```
-Partition 0 của Topic "orders"
+Partition 0 của Topic `orders`:
 
-┌─────────────┐
-│  Broker 1   │ ← Leader (nhận writes, xử lý reads)
-│  [P0-Leader]│
-└─────────────┘
-      │
-      │ Sync dữ liệu
-      ↓
-┌─────────────┐   ┌─────────────┐
-│  Broker 2   │   │  Broker 3   │
-│ [P0-Follower]   │ [P0-Follower]│ ← Followers (backup)
-└─────────────┘   └─────────────┘
+```mermaid
+flowchart TB
+  L["Broker 1 — P0-Leader<br/>(nhận writes, xử lý reads)"]
+  F2["Broker 2 — P0-Follower<br/>(backup)"]
+  F3["Broker 3 — P0-Follower<br/>(backup)"]
+  L -- "sync dữ liệu" --> F2
+  L -- "sync dữ liệu" --> F3
 ```
 
 ### In-Sync Replicas (ISR)
@@ -911,31 +828,21 @@ Producers có thể cấu hình mức độ đảm bảo khi ghi dữ liệu:
 
 Khi leader của một partition bị lỗi:
 
+- **Bước 1**: Leader (Broker 1) bị crash.
+- **Bước 2**: ZooKeeper/KRaft phát hiện leader chết.
+- **Bước 3**: Bầu một follower trong ISR làm leader mới.
+- **Bước 4**: Broker 1 khởi động lại → trở thành follower.
+
+Sau khi bầu xong, Broker 1 đã offline và cụm còn lại như sau:
+
+```mermaid
+flowchart TB
+  L["Broker 2 — P0-Leader<br/>(NEW LEADER)"]
+  F["Broker 3 — P0-Follower<br/>(vẫn là follower)"]
+  L -- sync --> F
 ```
-BƯỚC 1: Leader (Broker 1) bị crash
-┌─────────────┐
-│  Broker 1   │ ✗ CRASHED
-│  [P0-Leader]│
-└─────────────┘
-
-BƯỚC 2: ZooKeeper/KRaft phát hiện leader chết
-
-BƯỚC 3: Bầu follower trong ISR làm leader mới
-┌─────────────┐
-│  Broker 2   │ ← NEW LEADER
-│ [P0-Leader] │
-└─────────────┘
-      │
-      ↓
-┌─────────────┐
-│  Broker 3   │ ← Vẫn là follower
-│ [P0-Follower]│
-└─────────────┘
-
-BƯỚC 4: Broker 1 khởi động lại → trở thành follower
 
 → Zero downtime, không mất dữ liệu!
-```
 
 ### Fault Tolerance trong thực tế
 
@@ -1068,43 +975,23 @@ for msg in consumer:
 
 ### Sơ đồ ML Pipeline hoàn chỉnh
 
-```
-┌─────────────────┐
-│  Data Sources   │
-│ (Apps, IoT, DB) │
-└────────┬────────┘
-         │
-         ↓
-┌─────────────────────────────────┐
-│     Kafka Topic: raw-events     │
-│  Partitions: 10, RF: 3          │
-└────────┬────────────────────────┘
-         │
-         ↓
-┌─────────────────────────────────┐
-│  Consumer Group: preprocessors  │
-│  (5 instances, auto-scaling)    │
-└────────┬────────────────────────┘
-         │
-         ↓
-┌─────────────────────────────────┐
-│  Kafka Topic: features          │
-│  (Feature Store)                │
-└────────┬────────────────────────┘
-         │
-         ├──→ Model Training (Batch)
-         │
-         └──→ Model Inference (Stream)
-                    ↓
-         ┌──────────────────────┐
-         │ Topic: predictions   │
-         └──────────┬───────────┘
-                    │
-                    ↓
-         ┌──────────────────────┐
-         │  API Services        │
-         │  (Serve to users)    │
-         └──────────────────────┘
+```mermaid
+flowchart TB
+  DS["Data Sources<br/>(Apps, IoT, DB)"]
+  RAW["Kafka Topic: raw-events<br/>Partitions: 10, RF: 3"]
+  PRE["Consumer Group: preprocessors<br/>(5 instances, auto-scaling)"]
+  FEAT["Kafka Topic: features<br/>(Feature Store)"]
+  TRAIN["Model Training (Batch)"]
+  INFER["Model Inference (Stream)"]
+  PRED["Topic: predictions"]
+  API["API Services<br/>(Serve to users)"]
+  DS --> RAW
+  RAW --> PRE
+  PRE --> FEAT
+  FEAT --> TRAIN
+  FEAT --> INFER
+  INFER --> PRED
+  PRED --> API
 ```
 
 ## 7. Setup và Thực hành
