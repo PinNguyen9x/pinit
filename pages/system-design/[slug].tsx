@@ -1,5 +1,5 @@
 import { BackgroundFx, Seo } from '@/components/common'
-import { MainLayout } from '@/components/layouts'
+import { MainLayout } from '@/components/layouts/main'
 import {
   FlashcardDeck,
   LessonSectionView,
@@ -7,7 +7,7 @@ import {
   useSystemDesignTokens,
 } from '@/components/system-design'
 import { LESSONS } from '@/constants/system-design'
-import { useLessonProgress } from '@/hooks'
+import { useLessonProgress } from '@/hooks/use-lesson-progress'
 import { Lesson } from '@/models/system-design'
 import { renderDiagram } from '@/utils/diagram'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'

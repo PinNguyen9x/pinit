@@ -1,5 +1,5 @@
 import { BackgroundFx, Seo } from '@/components/common'
-import { MainLayout } from '@/components/layouts'
+import { MainLayout } from '@/components/layouts/main'
 import { useSystemDesignTokens } from '@/components/system-design'
 import { CHEAT_SHEET_TABLES, INTERVIEW_STEPS, LESSONS } from '@/constants/system-design'
 import { NextPageWithLayout } from '@/models'

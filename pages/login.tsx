@@ -1,6 +1,6 @@
 import { LoginForm } from '@/components/auth'
-import { MainLayout } from '@/components/layouts'
-import { useAuth } from '@/hooks'
+import { MainLayout } from '@/components/layouts/main'
+import { useAuth } from '@/hooks/use-auth'
 import { LoginPayload } from '@/models'
 import { decodeUrl, getErrorMessage } from '@/utils'
 import { Box, Container, Stack, Typography, useTheme } from '@mui/material'

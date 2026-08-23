@@ -1,5 +1,5 @@
 import { BackgroundFx, Seo } from '@/components/common'
-import { MainLayout } from '@/components/layouts'
+import { MainLayout } from '@/components/layouts/main'
 import { GLOSSARY, GlossaryTerm } from '@/constants'
 import { NextPageWithLayout } from '@/models'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'

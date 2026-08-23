@@ -64,4 +64,40 @@ describe('barrel constants không kéo dữ liệu lớn vào bundle dùng chung
 
     expect(offenders).toEqual([])
   })
+
+  /**
+   * Cùng cơ chế, barrel khác. `hooks/index.ts` gom 11 hook, trong đó
+   * useLoginFormShema kéo yup (43,9 kB gzip) và nhóm hook works kéo api-client →
+   * axios (19,6 kB). Header gọi useAuth trên mọi trang, nên chỉ cần một import
+   * `from '@/hooks'` ở đó là cả hai thứ nằm trong first-load của /blog,
+   * /glossary, /system-design — những trang không hề gọi API.
+   *
+   * Cùng lý do với '@/components/layouts' (barrel kéo AdminLayout → useAuth) và
+   * '@/components/common' (kéo header + auth).
+   */
+  it('không import qua các barrel nằm trên đường dẫn của mọi trang', () => {
+    const root = join(__dirname, '..')
+    const SEARCH_DIRS = ['components', 'hooks', 'pages', 'utils', 'models', 'api-client']
+    const FORBIDDEN = ["from '@/hooks'", "from '@/components/layouts'"]
+
+    const offenders: string[] = []
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry)
+        if (statSync(full).isDirectory()) {
+          walk(full)
+          continue
+        }
+        if (!/\.tsx?$/.test(entry) || /\.test\.tsx?$/.test(entry)) continue
+        const source = readFileSync(full, 'utf8')
+        const rel = relative(root, full).split('\\').join('/')
+        for (const pattern of FORBIDDEN) {
+          if (source.includes(pattern)) offenders.push(`${rel} → ${pattern}`)
+        }
+      }
+    }
+    for (const dir of SEARCH_DIRS) walk(join(root, dir))
+
+    expect(offenders).toEqual([])
+  })
 })

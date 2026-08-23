@@ -1,6 +1,6 @@
 import { NoDataFound } from '@/components/common'
 import { GameColorMatching, GameSkeleton, GomeTicTacToe } from '@/components/games'
-import { MainLayout } from '@/components/layouts'
+import { MainLayout } from '@/components/layouts/main'
 import { SlUG } from '@/constants/common'
 import { Work } from '@/models'
 import { API_BASE, getWorkGameSlug, safeFetchJson } from '@/utils'

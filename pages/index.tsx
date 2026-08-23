@@ -1,6 +1,6 @@
 import { BackgroundFx, Seo } from '@/components/common'
 import { HeroSection, KnowledgeTracks } from '@/components/home'
-import { MainLayout } from '@/components/layouts'
+import { MainLayout } from '@/components/layouts/main'
 import { FeatureWork } from '@/components/work'
 import { KNOWLEDGE_TRACKS } from '@/constants/tracks'
 import { API_BASE, safeFetchJson } from '@/utils'
