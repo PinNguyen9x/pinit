@@ -43,6 +43,8 @@ flowchart LR
     B1["Broker 1"]
     B2["Broker 2"]
     B3["Broker 3"]
+    %% Thứ tự cạnh (không phải thứ tự khai báo node) quyết định thứ tự cột.
+    %% Thứ tự 2-3-1 dưới đây cho ra Broker 1-2-3 từ trái sang phải; đổi lại là lệch.
     KR --> B2
     KR --> B3
     KR --> B1

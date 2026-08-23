@@ -413,6 +413,8 @@ flowchart TB
     B2["Broker 2 (ID: 2)<br/>Part 1-L<br/>Part 2-F<br/>Part 0-F"]
     B3["Broker 3 (ID: 3)<br/>Part 2-L<br/>Part 0-F<br/>Part 1-F"]
     ZK["ZooKeeper (hoặc KRaft)<br/>Cluster metadata"]
+    %% Thứ tự cạnh (không phải thứ tự khai báo node) quyết định thứ tự cột.
+    %% Thứ tự 2-3-1 dưới đây cho ra Broker 1-2-3 từ trái sang phải; đổi lại là lệch.
     ZK --> B2
     ZK --> B3
     ZK --> B1
