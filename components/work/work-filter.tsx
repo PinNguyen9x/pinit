@@ -1,4 +1,4 @@
-import { useTagList } from '@/hooks'
+import { useTagList } from '@/hooks/use-tag-list'
 import { WorkFilterPayload } from '@/models'
 import { Search } from '@mui/icons-material'
 import { Box, debounce, InputAdornment } from '@mui/material'

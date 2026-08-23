@@ -1,4 +1,4 @@
-import { MainLayout } from '@/components/layouts'
+import { MainLayout } from '@/components/layouts/main'
 import {
   BlogFilters,
   BlogGridCard,

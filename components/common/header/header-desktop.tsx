@@ -1,4 +1,4 @@
-import { useAuth } from '@/hooks'
+import { useAuth } from '@/hooks/use-auth'
 import { encodeUrl } from '@/utils'
 import { Box, Container, Link as MuiLink, Stack } from '@mui/material'
 import clsx from 'clsx'

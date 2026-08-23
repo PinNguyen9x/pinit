@@ -1,4 +1,4 @@
-import { MainLayout } from '@/components/layouts'
+import { MainLayout } from '@/components/layouts/main'
 import {
   WorkFilters,
   WorkGridCard,
@@ -6,7 +6,8 @@ import {
   WorkMiniCard,
   WorkSkeleton,
 } from '@/components/work'
-import { useAuth, useWorkList } from '@/hooks'
+import { useAuth } from '@/hooks/use-auth'
+import { useWorkList } from '@/hooks/use-work-list'
 import { Work, WorkStatus } from '@/models'
 import { getWorkGameSlug } from '@/utils'
 import AddIcon from '@mui/icons-material/Add'

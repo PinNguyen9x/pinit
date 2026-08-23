@@ -1,4 +1,4 @@
-import { useCvDownload } from '@/hooks'
+import { useCvDownload } from '@/hooks/use-cv-download'
 import { getErrorMessage } from '@/utils'
 import CloseIcon from '@mui/icons-material/Close'
 import {

@@ -2,7 +2,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { LayoutProps } from '@/models/common'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { Auth } from '../common'
+import { Auth } from '../common/auth'
 
 export function AdminLayout({ children }: LayoutProps) {
   const { profile, logout } = useAuth()
