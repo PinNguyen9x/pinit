@@ -31,7 +31,6 @@ export function useAuth(options?: Partial<SWRConfiguration>) {
       logout()
     },
   })
-  console.log({ profile, error })
 
   const firstLoading = profile === undefined && error === undefined
   // khong su dung try catch o day de cho cho nao su dung thi handle
