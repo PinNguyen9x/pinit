@@ -12,11 +12,10 @@
 
 ```mermaid
 flowchart LR
-  A["main: pull --ff-only"] --> B["agents create"]
-  B --> C["npm install"]
+  B["agents create (tự fetch origin)"] --> C["npm install"]
   C --> D["Code + PR"]
   D --> E["merge --no-ff"]
-  E --> F["Lan toả sang worktree khác"]
+  E --> F["agents sync"]
   F --> G["Xoá branch"]
   B -.->|"tự chạy setup_mcp"| M[".mcp.json bản node + cờ S"]
 ```
@@ -43,17 +42,21 @@ Tầng *shareable* (skill, entry MCP mới, devDependency) đi vào git. Tầng 
 ## A. Tạo worktree cho feature
 
 ```bash
-cd ~/Desktop/pinit/pinit
-git pull --ff-only origin main        # main mới nhất TRƯỚC khi tách nhánh
-
-agents create <ten-feature>           # tạo worktree từ origin/main + bật agent
-cd ../pinit-<ten-feature>
+agents create <ten-feature>           # tạo worktree + bật agent
+cd ~/Desktop/pinit/pinit-<ten-feature>
 npm install                           # node_modules KHÔNG đi theo worktree
+agents open <ten-feature>
 ```
 
-> **Không phải `agents new`.** `agents new` chỉ *tái tạo agent* cho worktree **đã tồn tại** — chạy với tên chưa có nó báo `✗ không có worktree tên '<name>'`. Lệnh tạo worktree là `agents create <name> [branch]`, mặc định branch là `feat/<name>`.
+> **Không cần pull `main` trước.** `cmd_create` tự chạy `git fetch origin` rồi `git worktree add -b <branch> <path> origin/main` — tách thẳng từ `origin/main`, không phụ thuộc HEAD của worktree `main`. Pull `main` vẫn nên làm định kỳ để worktree đó khỏi tụt hậu, nhưng đó là việc riêng, không phải điều kiện của `create`.
 
-> **Không cần `agents mcp-fix` ở bước này.** `cmd_create` đã gọi `setup_mcp` ngay sau `git worktree add` (`pinit-agents.sh:211`) — `.mcp.json` đã là bản node và đã mang cờ `S` trước khi agent chạy.
+> **Không phải `agents new`.** `agents new` chỉ *tái tạo agent* cho worktree **đã tồn tại** — chạy với tên chưa có nó báo `✗ không có worktree tên '<name>'`. Lệnh tạo worktree là `agents create <name> [branch]`, mặc định branch là `feat/<name>`; muốn prefix khác thì truyền tham số thứ hai (`agents create sua-toc fix/sua-toc`).
+>
+> Chiều ngược lại cũng đúng: worktree đã tồn tại thì `create` từ chối ngay (`✗ đã tồn tại: <path> (dùng: agents new <name>)`). Dùng `agents new` khi cần **nạp lại config** — ví dụ vừa thêm server vào `.mcp.json`, vì Claude Code chỉ đọc file đó lúc khởi động. Ngữ cảnh không mất: `start_one` bật lại bằng `claude --continue`.
+
+> **Không cần `agents mcp-fix` ở bước này.** `cmd_create` đã gọi `setup_mcp` ngay sau `git worktree add` — `.mcp.json` đã là bản node và đã mang cờ `S` trước khi agent chạy.
+
+> **`npm install` thì `create` KHÔNG làm hộ.** Bỏ bước này là dính bẫy #5: MCP server nào trỏ vào `./node_modules/...` sẽ chết im lặng.
 
 ---
 
