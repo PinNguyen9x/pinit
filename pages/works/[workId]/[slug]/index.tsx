@@ -1,7 +1,7 @@
 import { NoDataFound } from '@/components/common'
 import { GameColorMatching, GameSkeleton, GomeTicTacToe } from '@/components/games'
 import { MainLayout } from '@/components/layouts'
-import { SlUG } from '@/constants'
+import { SlUG } from '@/constants/common'
 import { Work } from '@/models'
 import { API_BASE, getWorkGameSlug, safeFetchJson } from '@/utils'
 import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from 'next'
