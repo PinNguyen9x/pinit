@@ -12,7 +12,8 @@ export function AdminLayout({ children }: LayoutProps) {
       await logout()
       router.push('/login')
     } catch (error) {
-      console.log('fail to logout', error)
+      // Giữ lại log: logout hỏng là sự cố thật, và catch rỗng sẽ nuốt lỗi.
+      console.error('fail to logout', error)
     }
   }
   return (

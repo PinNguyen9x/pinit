@@ -12,8 +12,12 @@ axiosClient.interceptors.response.use(
     return response.data
   },
   (error: AxiosError) => {
-    // Do some thing with response error
-    console.log('interceptor: ', error.response?.data)
+    // Chỉ in khi chạy dev: body lỗi từ API có thể chứa thông tin không nên để
+    // lộ trong console của người dùng cuối. Nơi gọi vẫn nhận nguyên body qua
+    // reject nên không mất khả năng xử lý.
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[api] request failed', error.response?.data)
+    }
     return Promise.reject(error.response?.data)
   },
 )
