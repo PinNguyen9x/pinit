@@ -14,8 +14,19 @@
   trả rỗng im lặng, agent tưởng hết việc mà thật ra đang nhìn nhầm chỗ.
 
 ## Task workflow (Plane)
-Plane giữ **trạng thái công việc**; memory (`saveKnowledge`) giữ **kiến thức tích luỹ**.
-Không trộn hai lớp: status task KHÔNG lưu vào memory, learnings KHÔNG ghi vào Plane.
+Ba lớp lưu trữ, mỗi thứ một chỗ — không trộn:
+- **Plane work item + comment** — *trạng thái công việc*: đang làm gì, xong chưa, kẹt ở đâu.
+- **Plane Wiki** — *runbook & cheatsheet dùng chung*: quy trình lặp lại, cách chẩn lỗi hạ tầng,
+  bảng lệnh. Thứ mà agent khác hoặc tôi cần tra lại sau nhiều tháng.
+- **memory (`saveKnowledge`)** — *learnings riêng của agent*: kinh nghiệm rút ra trong phiên,
+  chưa đủ chín hoặc quá riêng để thành runbook chung.
+
+Đặt nhầm chỗ thì hỏng theo kiểu khó thấy: status task nằm trong memory thì board sai mà không ai
+biết; runbook nằm trong comment work item thì chôn theo task đã đóng, tra không ra.
+
+Runbook đã có (Wiki workspace `pin`):
+- *Runbook — MCP Plane 403 & env của tmux server* — `be9ed9c9-967b-4db2-bc9d-4b62b2c1dacc`
+  (chẩn lỗi MCP `plane`, cheatsheet `agents`/tmux, worktree thiếu `node_modules`)
 
 Config MCP `plane` nằm ở **scope user** (`~/.claude.json`), cố tình KHÔNG để trong `.mcp.json`
 của repo: token đọc qua `${PLANE_API_KEY}` là biến môi trường của máy, không phải thứ commit được.
@@ -69,6 +80,9 @@ Giới hạn:
 - Không xoá work item, không sửa/xoá comment của người khác.
 - Không tạo/xoá project, module, cycle.
 - Gán work item vào module là việc của tôi trên UI — agent chỉ đọc.
+- Wiki: được tạo page mới và cập nhật page do chính mình tạo. Sửa page của người khác thì
+  hỏi trước; không archive, không xoá page của ai. Xếp page vào collection là việc của tôi
+  trên UI.
 
 ## Quy ước commit
 Conventional Commits: `<type>(<scope>): <mô tả>`
@@ -118,4 +132,7 @@ Ranh giới cứng giữa hai nơi, không được viết trùng:
 - `HANDOFF.md` KHÔNG lặp lại tóm tắt đã có trên Plane
 - Khi mọi thứ đã commit sạch, `HANDOFF.md` được phép chỉ ghi `clean, xem Plane`
 
-Learnings rút ra trong phiên → `saveKnowledge` (memory), KHÔNG ghi vào Plane.
+Learnings rút ra trong phiên → `saveKnowledge` (memory), KHÔNG ghi vào work item/comment.
+Nếu learning đó là quy trình lặp lại hoặc cách chẩn một lỗi hạ tầng — thứ agent khác sẽ cần —
+thì viết thành page trên **Wiki** thay vì chôn trong comment (xem "Task workflow (Plane)").
+Comment work item chỉ trỏ tới page, không chép lại nội dung.
