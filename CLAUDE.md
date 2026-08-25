@@ -7,7 +7,7 @@
 - Work state (task/board): Plane Cloud — workspace `pin`, project `pinit`.
   Mỗi agent ứng với một module, map theo **tên thư mục worktree** (`git worktree list`):
   - `pinit-research-plane` → module `research-planed`
-  - module `glossary` chưa có worktree; tạo xong thì thêm một dòng vào đây
+  - `pinit-glossary` → module `glossary`
 
   Worktree không có tên trong bảng trên (ví dụ `pinit-fix-content-blog`, hay `pinit` gốc)
   thì KHÔNG tự suy ra module từ tên gần giống — hỏi tôi. Đoán sai module id thì query
