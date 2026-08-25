@@ -80,12 +80,11 @@ export function EditorField<T extends FieldValues>({ name, label, control }: Edi
       // check and retry if cloudinary not ready
       // @ts-ignore
       if (!window.cloudinary) {
-        console.log('cloudinary not ready, trigger retry in 500ms')
+        // Vòng lặp 500ms: log ở đây sẽ spam console cho tới khi script sẵn sàng.
         setTimeout(initCloudinaryWidget, 500)
         return
       }
 
-      console.log('cloudinary is ready')
       // @ts-ignore no type def support yet
       const widget = window.cloudinary.createUploadWidget(
         {

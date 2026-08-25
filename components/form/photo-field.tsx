@@ -26,7 +26,6 @@ export function PhotoField<T extends FieldValues>({ name, label, control }: Phot
     if (!file) return
 
     const url = URL.createObjectURL(file)
-    console.log({ url, file })
     onChange({
       file,
       previewUrl: url,

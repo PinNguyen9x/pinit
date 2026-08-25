@@ -25,9 +25,10 @@ export function useAuth(options?: Partial<SWRConfiguration>) {
       // save user info to local storage
       localStorage.setItem(StorageKeys.USER_INFO, JSON.stringify(data))
     },
-    onError: (error) => {
-      // failt to getProfile -> logout
-      console.log('fetch profile error', error)
+    onError: () => {
+      // Không log ở đây: khách chưa đăng nhập thì '/profile' trả 401 và nhánh
+      // này chạy trên mọi trang (Header gọi useAuth) — đó là luồng bình thường
+      // chứ không phải sự cố.
       logout()
     },
   })
