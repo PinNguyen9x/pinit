@@ -27,9 +27,21 @@ Khi tool `plane` trục trặc, đọc triệu chứng theo bảng này — đ�
   vì server chỉ kiểm tra biến rỗng hay không, chuỗi literal thì không rỗng nên lọt.
   Muốn test tầng auth thì gọi một tool đọc bất kỳ, đừng nhìn health check.
 
-Gốc rễ của hai lỗi sau: `PLANE_API_KEY` khai trong `~/.zshrc`, mà pane tmux tạo *trước* dòng
-khai báo đó thì không có biến. Restart mỗi `claude` không đủ — nó kế thừa env của pane cũ.
-Phải mở pane mới, kiểm tra `echo ${#PLANE_API_KEY}` ra 42 rồi mới chạy `claude`.
+Gốc rễ của hai lỗi sau: `PLANE_API_KEY` khai trong `~/.zshrc`, nhưng `pinit-agents.sh` phóng
+agent bằng `tmux new-session ... "$CLAUDE_CONT"` — truyền `claude` làm *command của pane*.
+tmux chạy command đó qua `sh -c`, không qua zsh, nên `~/.zshrc` không bao giờ được đọc và
+`claude` thừa kế env của **tmux server**. Server chạy từ lâu thì thiếu mọi biến khai sau đó.
+
+Vì env hỏng nằm ở server chứ không ở pane, **mở pane mới không cứu được** — kiểm chứng bằng
+`tmux show-environment -g | grep PLANE_API_KEY` (rỗng). Đã vá ở `~/bin/pinit-agents.sh`: helper
+`login_cmd()` bọc lệnh thành `zsh -ic '<cmd>'` để pane tự đọc `~/.zshrc` lúc khởi động.
+Phải là `-i`: export nằm trong `~/.zshrc`, mà zsh chỉ source file này khi interactive —
+`zsh -lc` là login nhưng không interactive nên vẫn rỗng (đo trong pane: `-ic` → 42, `sh -c` → 0).
+
+Nếu gặp lại 403 sau khi đã vá: chạy `agents new <name>` **từ session tmux khác** (`cmd_new`
+kill session cùng tên trước khi tạo lại, chạy trong chính nó thì tự giết giữa chừng).
+Chữa tạm không cần restart agent thì `tmux set-environment -g PLANE_API_KEY "$PLANE_API_KEY"`
+từ một pane có biến, nhưng chỉ áp cho session tạo *sau* đó.
 
 ID cố định — dùng thẳng, không cần tra (tool `module` và `project` đã bị deny):
 - project `pinit` — `3471d6c1-0c05-417e-8211-03f47ad5f648`
