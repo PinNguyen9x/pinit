@@ -14,8 +14,17 @@ Không trộn hai lớp: status task KHÔNG lưu vào memory, learnings KHÔNG g
 
 Config MCP `plane` nằm ở **scope user** (`~/.claude.json`), cố tình KHÔNG để trong `.mcp.json`
 của repo: token đọc qua `${PLANE_API_KEY}` là biến môi trường của máy, không phải thứ commit được.
-Nếu tool `plane` không thấy đâu — chạy `claude mcp list`; báo lỗi `PLANE_API_KEY is not set`
-nghĩa là shell khởi động Claude Code chưa source `~/.zshrc`, phải mở lại session.
+Khi tool `plane` trục trặc, đọc triệu chứng theo bảng này — đừng tin `claude mcp list`:
+- Không thấy tool `plane` đâu → session chưa nạp config, mở lại Claude Code.
+- Lỗi `PLANE_API_KEY is not set` → biến rỗng hẳn.
+- **HTTP 403 `Given API token is not valid`** → biến chưa expand: server nhận nguyên chuỗi
+  `${PLANE_API_KEY}`. Đây là ca hay gặp nhất và `claude mcp list` vẫn báo ✔ Connected,
+  vì server chỉ kiểm tra biến rỗng hay không, chuỗi literal thì không rỗng nên lọt.
+  Muốn test tầng auth thì gọi một tool đọc bất kỳ, đừng nhìn health check.
+
+Gốc rễ của hai lỗi sau: `PLANE_API_KEY` khai trong `~/.zshrc`, mà pane tmux tạo *trước* dòng
+khai báo đó thì không có biến. Restart mỗi `claude` không đủ — nó kế thừa env của pane cũ.
+Phải mở pane mới, kiểm tra `echo ${#PLANE_API_KEY}` ra 42 rồi mới chạy `claude`.
 
 ID cố định — dùng thẳng, không cần tra (tool `module` và `project` đã bị deny):
 - project `pinit` — `3471d6c1-0c05-417e-8211-03f47ad5f648`
