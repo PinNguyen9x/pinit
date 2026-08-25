@@ -762,6 +762,22 @@ export const GLOSSARY: GlossaryTerm[] = [
       'Push Notification là cơ chế server gửi thông báo tới thiết bị di động qua dịch vụ trung gian của hệ điều hành — FCM (Firebase Cloud Messaging) cho Android và APNs (Apple Push Notification service) cho iOS. App đăng ký nhận một device token, server dùng token đó gọi FCM/APNs, dịch vụ này đẩy thông báo xuống máy ngay cả khi app không chạy. Khác với in-app notification (chỉ thấy khi app đang mở). 💡 Dễ nhớ: server không gọi thẳng máy người dùng — nó nhờ "bưu tá" FCM/APNs đem thông báo tới hộp thư của từng thiết bị.',
     related: ['API', 'Webhook', 'WebSocket', 'Token / JWT'],
   },
+  {
+    term: 'Deep Link',
+    cat: 'Mobile',
+    short: 'Link mở thẳng đúng màn hình trong app, không dừng ở trang chủ.',
+    detail:
+      'Deep Link là URL trỏ tới một vị trí cụ thể bên trong ứng dụng — hoặc scheme riêng (`myapp://product/42`), hoặc link https thật (`https://shop.com/product/42`) mở thẳng app nếu đã cài và đã verify domain; iOS gọi cách sau là Universal Link, Android gọi là App Links. App phải khai báo scheme/domain và tự phân giải đường dẫn đó thành màn hình tương ứng. Hai việc hay quên: xử lý trường hợp máy chưa cài app (phải rơi về web), và giữ nguyên deep link qua bước đăng nhập để sau khi login người dùng về đúng chỗ định tới chứ không văng ra trang chủ. 💡 Dễ nhớ: như số phòng chứ không phải địa chỉ toà nhà — khách tới thẳng cửa phòng thay vì đứng ở sảnh tự dò.',
+    related: ['React Native', 'Push Notification', 'Endpoint', 'APK'],
+  },
+  {
+    term: 'OTA Update',
+    cat: 'Mobile',
+    short: 'Đẩy bản cập nhật thẳng vào app đang cài, không qua chợ ứng dụng.',
+    detail:
+      'OTA (over-the-air) update cho phép app tải bundle JavaScript/asset mới lúc khởi động và áp dụng ngay, bỏ qua vòng duyệt của App Store/Google Play. Với React Native hiện nay lựa chọn phổ biến là expo-updates/EAS Update; CodePush — cái tên quen thuộc một thời — đã ngừng dịch vụ từ 31/3/2025, muốn dùng tiếp thì phải tự host bản server mã nguồn mở. Chỉ sửa được phần JS: đổi native code vẫn phải phát hành bản mới qua chợ. Vì bỏ qua vòng duyệt nên phải tự lo phần an toàn — phát hành theo tỷ lệ phần trăm và luôn giữ đường rollback về bundle cũ. 💡 Dễ nhớ: như thay nội thất trong nhà thì cứ thế làm, nhưng động tới móng thì vẫn phải nộp hồ sơ xin phép.',
+    related: ['React Native', 'APK', 'Rollback', 'Promotion', 'Staging'],
+  },
   // ─────────────────────────── Blockchain ───────────────────────────
   {
     term: 'Smart Contract',
@@ -786,6 +802,14 @@ export const GLOSSARY: GlossaryTerm[] = [
     detail:
       'Gas Fee là khoản phí (tính bằng coin gốc của mạng, vd ETH) người dùng trả để miner/validator xử lý giao dịch hoặc chạy smart contract. Mỗi thao tác tiêu tốn một lượng gas nhất định; tổng phí = gas × gas price. Khi mạng đông, gas price tăng — giao dịch trả thấp bị bỏ lại chờ hoặc thất bại. Tối ưu gas là kỹ năng quan trọng khi viết smart contract để tránh đốt tiền người dùng. 💡 Dễ nhớ: gas như xăng cho xe — đi xa hay xe ngốn xăng (contract phức tạp) thì tốn nhiều; giờ cao điểm (mạng nghẽn) giá xăng còn đội lên.',
     related: ['Smart Contract', 'Wallet', 'Throughput', 'Latency'],
+  },
+  {
+    term: 'Private Key',
+    cat: 'Blockchain',
+    short: 'Chuỗi bí mật chứng minh bạn sở hữu ví — lộ là mất, quên là mất.',
+    detail:
+      'Private Key là số bí mật dùng để ký giao dịch; từ nó suy ra được public key và địa chỉ ví, nhưng không có chiều ngược lại. Mạng chỉ kiểm chữ ký chứ không kiểm danh tính — ai giữ khoá thì người đó là chủ, không có tổng đài nào cấp lại. Mất seed phrase là mất tài sản vĩnh viễn; lộ ra thì người khác rút sạch ngay và giao dịch đã lên chain thì không huỷ được. Vì vậy khoá thật nên nằm trong ví cứng hoặc secure enclave, không bao giờ nằm trong ảnh chụp màn hình hay repo. 💡 Dễ nhớ: không phải mật khẩu (quên thì đặt lại) mà là chìa khoá két duy nhất trên đời — không thợ nào làm lại được.',
+    related: ['Wallet', 'Smart Contract', 'Authentication', 'Hashing'],
   },
 
   // ─────────────────────────── DevOps / CI-CD ───────────────────────────
@@ -908,5 +932,67 @@ export const GLOSSARY: GlossaryTerm[] = [
     detail:
       'Promotion là việc đưa một thay đổi/artifact đã kiểm thử ở môi trường thấp (staging) lên môi trường cao (production). Cách chuẩn là promote đúng artifact đã test (retag/deploy cùng digest) để đảm bảo prod chạy y hệt cái đã kiểm; cách đơn giản hơn là build lại từ nhánh main. Thường đi kèm approval gate. 💡 Dễ nhớ: như thí sinh qua vòng loại (staging) mới được vào chung kết (prod) — vẫn là người đó, không thay người.',
     related: ['Staging', 'Artifact', 'GitOps', 'Rollback'],
+  },
+
+  // ─────────────────────────── Database ───────────────────────────
+  {
+    term: 'Index',
+    cat: 'Database',
+    short: 'Mục lục của bảng — tìm đúng dòng mà không phải đọc hết bảng.',
+    detail:
+      'Index là cấu trúc phụ (thường là B-tree) giúp database định vị nhanh những dòng khớp điều kiện, thay vì quét toàn bộ bảng (full table scan). Đánh index đúng cột hay dùng để lọc, join hoặc sắp xếp có thể kéo truy vấn từ giây xuống mili-giây. Đổi lại, mỗi index tốn thêm dung lượng và làm INSERT/UPDATE chậm đi vì phải cập nhật cả index — nên đánh thừa cũng hại như đánh thiếu. Muốn biết truy vấn có dùng index không thì xem `EXPLAIN`. 💡 Dễ nhớ: index là mục lục cuối sách — tra một cái ra ngay trang cần, nhưng sách dày thêm và mỗi lần sửa nội dung phải sửa lại mục lục.',
+    related: ['Database', 'SQL', 'ORM', 'Latency', 'Cache'],
+  },
+  {
+    term: 'Transaction',
+    cat: 'Database',
+    short: 'Nhóm thao tác được ăn cả ngã về không — hoặc xong hết, hoặc như chưa chạy.',
+    detail:
+      'Transaction gói nhiều câu lệnh thành một đơn vị nguyên tử: COMMIT thì mọi thay đổi có hiệu lực cùng lúc, ROLLBACK thì database quay lại y như trước. Bốn tính chất hay nhắc là ACID — Atomicity (trọn gói), Consistency (dữ liệu luôn hợp lệ), Isolation (transaction song song được che khỏi ảnh hưởng của nhau — che tới đâu là tuỳ isolation level, và mặc định của hầu hết database chưa phải mức chặt nhất), Durability (đã commit thì mất điện vẫn còn). Ví dụ kinh điển là chuyển tiền: trừ tài khoản A và cộng tài khoản B phải cùng thành công hoặc cùng huỷ. 💡 Dễ nhớ: trừ tiền xong mới báo lỗi thì tiền bốc hơi — transaction đảm bảo không tồn tại trạng thái nửa vời.',
+    related: ['Database', 'SQL', 'CRUD', 'Idempotency', 'Rollback'],
+  },
+  {
+    term: 'NoSQL',
+    cat: 'Database',
+    short: 'Nhóm database bỏ bảng-hàng-cột cứng để đổi lấy linh hoạt và scale ngang.',
+    detail:
+      'NoSQL ("not only SQL") gọi chung các database không theo mô hình quan hệ: document (MongoDB), key-value (Redis), column-family (Cassandra), graph (Neo4j). Điểm chung là schema linh hoạt và dễ scale ngang bằng cách chia dữ liệu ra nhiều máy; đổi lại thường yếu ở join và ở ràng buộc toàn vẹn, nhiều hệ chỉ hứa eventual consistency (đọc ngay sau khi ghi có thể ra dữ liệu cũ). Chọn NoSQL vì hình dạng dữ liệu và kiểu truy vấn của bài toán, không phải vì nó mới hơn. 💡 Dễ nhớ: SQL là tủ hồ sơ kẻ sẵn ô, NoSQL là thùng đựng đồ — nhét gì cũng vừa, nhưng muốn đối chiếu chéo thì tự lo.',
+    related: ['SQL', 'Database', 'CRUD', 'Cache', 'Microservices'],
+  },
+
+  // ─────────────────────────── Cloud ───────────────────────────
+  {
+    term: 'Auto Scaling',
+    cat: 'Cloud',
+    short: 'Tự tăng giảm số máy chạy theo tải — đông khách thì mở thêm quầy.',
+    detail:
+      'Auto Scaling theo dõi một chỉ số (CPU, RAM, số request, độ dài hàng đợi) rồi tự thêm hoặc bớt instance trong khoảng min–max đã đặt. Scale ngang (thêm máy) phổ biến hơn scale dọc (đổi máy to hơn) vì không phải restart. Hai cái bẫy thường gặp: app phải stateless thì thêm máy mới có ích, và scale luôn trễ vài phút vì máy mới cần thời gian khởi động — nên đặt ngưỡng sớm hơn lúc thật sự nghẽn, đừng đợi CPU chạm 100%. 💡 Dễ nhớ: siêu thị mở thêm quầy khi thấy hàng bắt đầu dài, chứ đợi khách xếp kín lối đi mới gọi thì đã muộn.',
+    related: ['Kubernetes', 'Load Balancer', 'Serverless', 'Latency', 'Microservices'],
+  },
+  {
+    term: 'Object Storage',
+    cat: 'Cloud',
+    short: 'Kho chứa file phẳng theo key — không thư mục thật, không sửa tại chỗ.',
+    detail:
+      'Object Storage (S3, GCS, R2, MinIO) lưu dữ liệu thành object gồm nội dung, metadata và một key, đặt trong bucket. Nhìn thì có vẻ có thư mục nhưng dấu `/` chỉ là một phần của key chứ không có cây thư mục thật. Muốn đổi thì ghi đè cả object, không sửa một khúc giữa file như trên đĩa. Rẻ, gần như vô hạn, bền — nên hợp cho ảnh, video, backup, build artifact và log; thường đặt CDN phía trước để phục vụ người dùng cuối. 💡 Dễ nhớ: như gửi đồ ở tủ khoá — đưa nguyên kiện rồi cầm mã lấy, muốn đổi thì mang kiện mới ra thay chứ không mở ra sửa bên trong.',
+    related: ['CDN', 'Artifact', 'Cache', 'Serverless'],
+  },
+
+  // ─────────────────────────── Security ───────────────────────────
+  {
+    term: 'HTTPS / TLS',
+    cat: 'Security',
+    short: 'Lớp mã hoá bọc ngoài HTTP — dán kín phong bì và kiểm tra đúng người nhận.',
+    detail:
+      'TLS mã hoá kênh truyền giữa client và server; HTTP chạy trên TLS thì gọi là HTTPS. Nó làm ba việc: mã hoá (kẻ nghe trộm chỉ thấy chuỗi vô nghĩa), xác thực server qua certificate do CA ký (chống mạo danh), và toàn vẹn (phát hiện gói bị sửa giữa đường). Bắt tay TLS xảy ra trước khi request được gửi nên cả đường dẫn lẫn body đều được che; thứ còn lộ ra ngoài là tên miền (qua SNI, trừ khi bật Encrypted Client Hello) cùng ít metadata mạng như IP, kích thước và thời điểm gói tin — đủ để suy đoán, nên TLS không đồng nghĩa với ẩn danh. Certificate có hạn và hết hạn là cả site đỏ lỗi, nên gần như luôn để tự động gia hạn (Let’s Encrypt). 💡 Dễ nhớ: HTTP là bưu thiếp ai cầm cũng đọc được, HTTPS là thư dán kín có dấu niêm phong xác nhận người gửi.',
+    related: ['Authentication', 'Token / JWT', 'DNS', 'Reverse Proxy', 'CDN'],
+  },
+  {
+    term: 'Hashing',
+    cat: 'Security',
+    short: 'Băm dữ liệu thành chuỗi cố định, một chiều — không dịch ngược lại được.',
+    detail:
+      'Hash function biến input bất kỳ thành chuỗi có độ dài cố định (digest). Cùng input luôn ra cùng digest, đổi một ký tự thì digest khác hẳn, và không có đường tính ngược từ digest ra input. Khác mã hoá ở chỗ mã hoá có khoá để giải, còn hash thì không giải được — đó là điểm mạnh chứ không phải thiếu sót. Dùng để kiểm tra toàn vẹn (checksum, digest của Docker image) và để lưu mật khẩu, nhưng mật khẩu phải dùng hàm chậm có salt (bcrypt, argon2) chứ không dùng MD5/SHA-1. 💡 Dễ nhớ: như xay sinh tố — cùng công thức thì ra đúng ly đó, nhưng không ai ghép ngược lại thành quả ban đầu.',
+    related: ['Authentication', 'Token / JWT', 'OAuth', 'Artifact'],
   },
 ]
