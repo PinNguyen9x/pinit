@@ -5,8 +5,13 @@
 - API: `json-server-blog` (repo riêng)
 - Branch tích hợp: `main`. Mỗi agent làm trên một worktree tách từ `main`.
 - Work state (task/board): Plane Cloud — workspace `pin`, project `pinit`.
-  Mỗi agent ứng với một module: worktree `glossary` → module `glossary`;
-  worktree `blog-scp` → module `research-planed`.
+  Mỗi agent ứng với một module, map theo **tên thư mục worktree** (`git worktree list`):
+  - `pinit-research-plane` → module `research-planed`
+  - module `glossary` chưa có worktree; tạo xong thì thêm một dòng vào đây
+
+  Worktree không có tên trong bảng trên (ví dụ `pinit-fix-content-blog`, hay `pinit` gốc)
+  thì KHÔNG tự suy ra module từ tên gần giống — hỏi tôi. Đoán sai module id thì query
+  trả rỗng im lặng, agent tưởng hết việc mà thật ra đang nhìn nhầm chỗ.
 
 ## Task workflow (Plane)
 Plane giữ **trạng thái công việc**; memory (`saveKnowledge`) giữ **kiến thức tích luỹ**.
