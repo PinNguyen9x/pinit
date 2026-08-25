@@ -12,6 +12,11 @@
 Plane giữ **trạng thái công việc**; memory (`saveKnowledge`) giữ **kiến thức tích luỹ**.
 Không trộn hai lớp: status task KHÔNG lưu vào memory, learnings KHÔNG ghi vào Plane.
 
+Config MCP `plane` nằm ở **scope user** (`~/.claude.json`), cố tình KHÔNG để trong `.mcp.json`
+của repo: token đọc qua `${PLANE_API_KEY}` là biến môi trường của máy, không phải thứ commit được.
+Nếu tool `plane` không thấy đâu — chạy `claude mcp list`; báo lỗi `PLANE_API_KEY is not set`
+nghĩa là shell khởi động Claude Code chưa source `~/.zshrc`, phải mở lại session.
+
 ID cố định — dùng thẳng, không cần tra (tool `module` và `project` đã bị deny):
 - project `pinit` — `3471d6c1-0c05-417e-8211-03f47ad5f648`
 - module `glossary` — `9e2260db-6d52-4ded-8b94-52a18758106b`
