@@ -29,14 +29,20 @@
       "Edit(blog/**)",
       "Edit(pages/**)",
       "Edit(components/**)",
-      "Edit(public/**)"
+      "Edit(public/**)",
+      "mcp__plane__workitem",
+      "mcp__plane__workitem_comment",
+      "mcp__plane__state"
     ],
     "deny": [
       "Bash(git push:*)",
       "Bash(git reset --hard:*)",
       "Bash(rm -rf:*)",
       "Read(.env*)",
-      "Read(~/.ai-devkit/config.json)"
+      "Read(~/.ai-devkit/config.json)",
+      "mcp__plane__project",
+      "mcp__plane__module",
+      "mcp__plane__cycle"
     ]
   }
 }
