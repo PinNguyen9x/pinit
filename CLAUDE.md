@@ -8,6 +8,7 @@
   Mỗi agent ứng với một module, map theo **tên thư mục worktree** (`git worktree list`):
   - `pinit-research-plane` → module `research-planed`
   - `pinit-glossary` → module `glossary`
+  - `pinit-tmux-terminal-git` → module `tmux-terminal-git`
 
   Worktree không có tên trong bảng trên (ví dụ `pinit-fix-content-blog`, hay `pinit` gốc)
   thì KHÔNG tự suy ra module từ tên gần giống — hỏi tôi. Đoán sai module id thì query
@@ -24,9 +25,16 @@ Ba lớp lưu trữ, mỗi thứ một chỗ — không trộn:
 Đặt nhầm chỗ thì hỏng theo kiểu khó thấy: status task nằm trong memory thì board sai mà không ai
 biết; runbook nằm trong comment work item thì chôn theo task đã đóng, tra không ra.
 
-Runbook đã có (Wiki workspace `pin`):
+Runbook đã có (Wiki workspace `pin`, collection *Runbook & Cheatsheet*) — **đọc trước khi tự
+mò lại**, nhất là khi task yêu cầu viết tài liệu về quy trình:
 - *Runbook — MCP Plane 403 & env của tmux server* — `be9ed9c9-967b-4db2-bc9d-4b62b2c1dacc`
   (chẩn lỗi MCP `plane`, cheatsheet `agents`/tmux, worktree thiếu `node_modules`)
+- *Runbook — Vòng đời một task với `agents`* — `3cf1c6d3-6cc6-4bf0-848e-6952a2214b5f`
+  (14 lệnh `agents`, vòng đời 9 bước worktree → PR → merge → sync, 12 ca lỗi kèm nguyên nhân)
+
+Plane không giữ `id` trên heading nên **link neo trong page không hoạt động** — đừng phí công
+viết `<a href="#...">`, nó còn tự thành `target="_blank"` trỏ vào hư không. Điều hướng bằng
+panel outline hoặc `Cmd + F`.
 
 Config MCP `plane` nằm ở **scope user** (`~/.claude.json`), cố tình KHÔNG để trong `.mcp.json`
 của repo: token đọc qua `${PLANE_API_KEY}` là biến môi trường của máy, không phải thứ commit được.
@@ -58,10 +66,15 @@ ID cố định — dùng thẳng, không cần tra (tool `module` và `project`
 - project `pinit` — `3471d6c1-0c05-417e-8211-03f47ad5f648`
 - module `glossary` — `9e2260db-6d52-4ded-8b94-52a18758106b`
 - module `research-planed` — `4d198c44-ed66-4606-b8cf-76d5ce86e7ba`
+- module `tmux-terminal-git` — `4135fd88-de22-4a9a-a431-add12a5ed40e`
 - state `Todo` — `d6f14d6c-c832-4003-8c26-4d94f14330ba`
 - state `In Progress` — `632c35fa-4945-4e2e-8723-2f3b58c8bff0`
 - state `In Review` — `6f9b66cb-d44a-4f33-8af3-69581d8d90f0`
 - state `Blocked` — `c94c0d6a-039e-418d-bff9-a4227de07135`
+
+Có module mới chưa có trong bảng thì lấy id thế này (tool `module` bị deny nên không tra thẳng
+được): `workitem_activity` action `list` trên một item thuộc module đó — dòng
+`"comment": "added module <tên>"` mang `new_identifier` chính là module id.
 
 Vòng đời một task:
 1. **Đầu session** — `workitem` action `list`, pql `module = "<module-id>"`, lọc state `Todo`
