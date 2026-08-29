@@ -73,7 +73,7 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
 
         <Grid container spacing={{ md: 6 }}>
           {/* ── Article ── */}
-          <Grid item xs={12} md={8}>
+          <Grid item xs={12} md={9}>
             {/* Tags */}
             {post.tagList?.length > 0 && (
               <Stack direction="row" spacing={0.75} mb={2.5} flexWrap="wrap" useFlexGap>
@@ -409,7 +409,7 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
           </Grid>
 
           {/* ── TOC sidebar (desktop only) ── */}
-          <Grid item md={4} sx={{ display: { xs: 'none', md: 'block' } }}>
+          <Grid item md={3} sx={{ display: { xs: 'none', md: 'block' } }}>
             <TableOfContents items={toc} />
           </Grid>
         </Grid>
