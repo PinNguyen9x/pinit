@@ -9,6 +9,7 @@
   - `pinit-research-plane` → module `research-planed`
   - `pinit-glossary` → module `glossary`
   - `pinit-tmux-terminal-git` → module `tmux-terminal-git`
+  - `pinit-research-archify` → module `tmux-terminal-git`
 
   Worktree không có tên trong bảng trên (ví dụ `pinit-fix-content-blog`, hay `pinit` gốc)
   thì KHÔNG tự suy ra module từ tên gần giống — hỏi tôi. Đoán sai module id thì query
@@ -97,6 +98,43 @@ Giới hạn:
 - Wiki: được tạo page mới và cập nhật page do chính mình tạo. Sửa page của người khác thì
   hỏi trước; không archive, không xoá page của ai. Xếp page vào collection là việc của tôi
   trên UI.
+
+## Diagram
+
+Hai skill cùng nhận yêu cầu "vẽ diagram", chọn theo **output cần gì**, không theo thói quen:
+
+- **`archify` — mặc định.** Dùng cho mọi diagram để người đọc xem: kiến trúc, workflow,
+  sequence, data-flow, lifecycle. Ra một file HTML tự chứa có animation, search node, trace
+  upstream/downstream, export PNG/SVG/WebM. Nhúng thẳng vào bài blog Next.js được.
+- **`agentic-mermaid-diagram-workflow` — khi cần diagram ở dạng *text* sống trong file.**
+  Tức là khi hình phải nằm trong Markdown/Wiki và được sửa bằng diff về sau: README, page
+  Plane Wiki, comment PR. Mermaid là source text nên review được qua git; HTML của archify
+  thì không.
+
+Archify **nhận cả Mermaid làm input** — có sẵn `flowchart`/`sequenceDiagram`/`stateDiagram`
+thì đưa thẳng cho archify, đừng vẽ lại từ đầu.
+
+Kiểm tra trước khi tin: `archify check <output.html>` đo hình học đường nối thật (số lần gấp
+khúc, độ kéo giãn, đoạn ngắn nhất) và trả `issues`. Render xong mà không chạy `check` thì
+không có cơ sở nói bố cục đạt — đây là điểm khác biệt chính so với Mermaid, đừng bỏ.
+
+## Bootstrap worktree mới
+
+`.agents/` bị gitignore (renderer archify 6.7MB), nên **worktree mới clone về là thiếu skill**.
+Dựng lại bằng:
+
+    npx skills experimental_install    # đọc skills-lock.json, khôi phục đúng hash
+
+`agents create` đã tự chạy bước này sau `npm install`. Worktree tạo trước khi có bước đó thì
+chạy tay một lần.
+
+Triệu chứng khi quên: skill `archify` không xuất hiện trong danh sách skill, hoặc symlink
+`.claude/skills/archify` dangling. Renderer chạy được (`archify doctor` xanh) mà Claude Code
+vẫn không thấy skill thì ngược lại — thiếu symlink chứ không thiếu `.agents/`.
+
+Bản thân symlink `.claude/skills/archify` **có commit** (git lưu 28 byte, mode `120000`), cố ý:
+`experimental_install` chỉ wire cho Codex/Cline/Amp/Antigravity và bỏ sót Claude Code, nên nếu
+để nó tự sinh thì clone mới sẽ có renderer mà agent không thấy skill.
 
 ## Quy ước commit
 Conventional Commits: `<type>(<scope>): <mô tả>`
