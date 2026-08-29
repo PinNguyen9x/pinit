@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "workflow",
   "meta": {
-    "title": "Vòng đời một task với agents",
+    "title": "Vòng đời một task",
     "animation": "trace",
     "quality_profile": "showcase",
     "views": [

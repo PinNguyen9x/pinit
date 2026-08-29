@@ -141,7 +141,7 @@ PINIT_AGENT_CMD='sleep 999'        # override lệnh phóng — tiện để tes
     src="/diagrams/vong-doi-task.html"
     title="Sơ đồ vòng đời một task với agents"
     loading="lazy"
-    style="display: block; width: 100%; max-width: 860px; height: 1780px; margin: 0 auto; border: 1px solid rgba(127,127,127,0.28); border-radius: 12px;"
+    style="display: block; width: 100%; max-width: 820px; height: 1790px; margin: 0 auto; border: 1px solid rgba(127,127,127,0.28); border-radius: 12px;"
   ></iframe>
   <figcaption style="margin-top: 0.9em; font-size: 0.9em; line-height: 1.6; opacity: 0.78;">
     Sơ đồ tương tác. Mỗi hàng là một người/thứ chịu trách nhiệm, nên đọc theo hàng sẽ thấy ngay
