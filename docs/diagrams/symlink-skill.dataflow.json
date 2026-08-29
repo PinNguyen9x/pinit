@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Symlink skill archify: từ git object tới worktree mới",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      760
+    ],
+    "legend": {
+      "mode": "all",
+      "entries": {
+        "emphasis": {
+          "label": "dòng chính"
+        },
+        "security": {
+          "label": "chỗ gãy"
+        },
+        "dashed": {
+          "label": "cần bootstrap"
+        },
+        "default": {
+          "label": "installer lo"
+        },
+        "database": {
+          "label": "được commit"
+        }
+      }
+    }
+  },
+  "stages": [
+    {
+      "label": "Trong git"
+    },
+    {
+      "label": "Worktree mới"
+    },
+    {
+      "label": "Bootstrap"
+    },
+    {
+      "label": "Trên đĩa"
+    },
+    {
+      "label": "Agent đọc"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "blob",
+      "type": "database",
+      "label": "Git blob 120000",
+      "sublabel": "28 byte đường dẫn",
+      "stage": 0,
+      "row": 0,
+      "width": 130,
+      "tag": "commit"
+    },
+    {
+      "id": "ignore",
+      "type": "security",
+      "label": ".gitignore",
+      "sublabel": "loại .agents/ ra",
+      "stage": 0,
+      "row": 2,
+      "width": 130,
+      "tag": "6.7MB"
+    },
+    {
+      "id": "lock",
+      "type": "database",
+      "label": "skills-lock.json",
+      "sublabel": "source + hash",
+      "stage": 0,
+      "row": 4,
+      "width": 130,
+      "tag": "commit"
+    },
+    {
+      "id": "link",
+      "type": "external",
+      "label": ".claude/skills/archify",
+      "sublabel": "symlink tương đối",
+      "stage": 1,
+      "row": 0,
+      "width": 160,
+      "tag": "có sẵn"
+    },
+    {
+      "id": "miss",
+      "type": "security",
+      "label": "Thiếu .agents/",
+      "sublabel": "trỏ vào khoảng không",
+      "stage": 1,
+      "row": 2,
+      "width": 160,
+      "tag": "dangling"
+    },
+    {
+      "id": "install",
+      "type": "backend",
+      "label": "experimental_install",
+      "sublabel": "npx skills · khôi phục",
+      "stage": 2,
+      "row": 4,
+      "width": 160,
+      "tag": "best-effort"
+    },
+    {
+      "id": "real",
+      "type": "cloud",
+      "label": ".agents/skills/archify",
+      "sublabel": "renderer thật",
+      "stage": 3,
+      "row": 2,
+      "width": 160,
+      "tag": "gitignored"
+    },
+    {
+      "id": "cc",
+      "type": "frontend",
+      "label": "Claude Code",
+      "sublabel": "chỉ quét .claude/skills/",
+      "stage": 4,
+      "row": 0,
+      "width": 160,
+      "tag": "thấy skill"
+    },
+    {
+      "id": "other",
+      "type": "frontend",
+      "label": "Codex · Cline · Amp",
+      "sublabel": "installer tự lo",
+      "stage": 4,
+      "row": 4,
+      "width": 160,
+      "tag": "được wire"
+    }
+  ],
+  "flows": [
+    {
+      "id": "checkout-link",
+      "from": "blob",
+      "to": "link",
+      "label": "checkout",
+      "classification": "dựng lại symlink",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelDy": 53
+    },
+    {
+      "id": "exclude",
+      "from": "ignore",
+      "to": "miss",
+      "label": "loại khỏi git",
+      "classification": "cố ý",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelDy": 53
+    },
+    {
+      "id": "resolve",
+      "from": "link",
+      "to": "real",
+      "label": "resolve ../../",
+      "classification": "đường dẫn tương đối",
+      "variant": "emphasis"
+    },
+    {
+      "id": "read-lock",
+      "from": "lock",
+      "to": "install",
+      "label": "source + hash",
+      "classification": "tt-a1i/archify",
+      "variant": "default",
+      "route": "straight"
+    },
+    {
+      "id": "need-bootstrap",
+      "from": "miss",
+      "to": "install",
+      "label": "cần bootstrap",
+      "classification": "chạy một lần",
+      "variant": "dashed",
+      "channelX": 435
+    },
+    {
+      "id": "restore",
+      "from": "install",
+      "to": "real",
+      "label": "khôi phục",
+      "classification": "renderer 6.7MB",
+      "variant": "emphasis",
+      "channelX": 630
+    },
+    {
+      "id": "visible",
+      "from": "real",
+      "to": "cc",
+      "label": "agent thấy skill",
+      "classification": "qua symlink",
+      "variant": "emphasis",
+      "channelX": 845
+    },
+    {
+      "id": "wired",
+      "from": "install",
+      "to": "other",
+      "label": "tự wire",
+      "classification": "bỏ sót Claude Code",
+      "variant": "default",
+      "route": "straight"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Thứ được commit",
+      "items": [
+        "Git lưu symlink thành blob mode 120000 chứa đúng chuỗi đường dẫn, không chứa file đích",
+        "Repo commit hai đầu nhẹ: symlink 28 byte và skills-lock.json, bỏ lại renderer 6.7MB",
+        "Đường dẫn tương đối ../../ nên clone và worktree nào cũng resolve đúng"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Cú gãy im lặng",
+      "items": [
+        "Worktree mới có symlink nhưng chưa có .agents/ nên con trỏ dangling",
+        "experimental_install wire cho Codex, Cline, Amp mà bỏ sót .claude/skills/",
+        "Renderer chạy được và archify doctor vẫn xanh trong khi agent không thấy skill"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Cách kiểm chứng",
+      "items": [
+        "git ls-files -s .claude/skills/archify đọc ra mode và blob id",
+        "readlink cho biết symlink trỏ đi đâu, test -e cho biết đích còn sống không",
+        "Bootstrap ghi vào CLAUDE.md và agents create, không dựa vào trí nhớ"
+      ]
+    }
+  ]
+}
