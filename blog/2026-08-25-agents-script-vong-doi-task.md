@@ -145,12 +145,16 @@ PINIT_AGENT_CMD='sleep 999'        # override lệnh phóng — tiện để tes
   ></iframe>
   <figcaption style="margin-top: 0.9em; font-size: 0.9em; line-height: 1.6; opacity: 0.78;">
     Sơ đồ tương tác. Mỗi hàng là một người/thứ chịu trách nhiệm, nên đọc theo hàng sẽ thấy ngay
-    <strong>chỗ agent dừng lại và người tiếp quản</strong>. Bấm một ô để soi đường đi lên/xuống của
-    nó, <em>Play story</em> chạy lần lượt ba góc nhìn, <em>Export</em> lấy PNG/SVG.
-    Hàng cuối màu đỏ là hai lý do <code>agents sync</code> bỏ dở một worktree — phần mà sơ đồ chuỗi
-    thẳng không diễn đạt được.
-    Sơ đồ có nút Light/Dark riêng, không ăn theo theme của bài.
-    <a href="/diagrams/vong-doi-task.html" target="_blank" rel="noopener">Mở riêng ↗</a>
+    <strong>chỗ agent dừng lại và người tiếp quản</strong>. Hàng cuối màu đỏ là hai lý do
+    <code>agents sync</code> bỏ dở một worktree.
+    <br><br>
+    <strong>Xem chuyển động:</strong> hiệu ứng chạy dọc các đường nối chỉ kéo dài 6 giây rồi dừng —
+    bấm <em>Live</em> để chạy lại, hoặc <em>Play story</em> để đi lần lượt ba góc nhìn có camera bám
+    theo. Bấm một ô bất kỳ để soi đường đi lên/xuống của riêng nó. <em>Export</em> lấy PNG/SVG/WebM.
+    <br><br>
+    Sơ đồ có nút Light/Dark riêng, không ăn theo theme của bài. Muốn trình chiếu thì
+    <a href="/diagrams/vong-doi-task.html" target="_blank" rel="noopener">mở riêng ↗</a> —
+    nút <em>Present</em> cần bề ngang rộng hơn khung bài viết.
   </figcaption>
 </figure>
 
