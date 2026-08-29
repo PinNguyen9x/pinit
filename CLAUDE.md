@@ -71,6 +71,7 @@ ID cố định — dùng thẳng, không cần tra (tool `module` và `project`
 - state `In Progress` — `632c35fa-4945-4e2e-8723-2f3b58c8bff0`
 - state `In Review` — `6f9b66cb-d44a-4f33-8af3-69581d8d90f0`
 - state `Blocked` — `c94c0d6a-039e-418d-bff9-a4227de07135`
+- state `Done` — `4aa41fc6-5879-45c9-a3ef-cd0163d4ce88`
 
 Có module mới chưa có trong bảng thì lấy id thế này (tool `module` bị deny nên không tra thẳng
 được): `workitem_activity` action `list` trên một item thuộc module đó — dòng
