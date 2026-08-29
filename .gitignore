@@ -40,3 +40,9 @@ MEMORY.md
 
 # typescript build cache — sinh lại mỗi lần build, không thuộc về repo
 tsconfig.tsbuildinfo
+
+# archify skill (6.7MB renderer) — không commit binary, khôi phục từ skills-lock.json:
+#   npx skills experimental_install
+# .claude/skills/archify chỉ là symlink trỏ vào .agents/
+.agents/
+.claude/skills/archify
