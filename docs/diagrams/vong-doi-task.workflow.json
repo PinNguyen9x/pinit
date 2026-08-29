@@ -1,0 +1,328 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Vòng đời một task với agents",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "duong-chinh",
+        "label": "Đường đi thuận",
+        "focus": [
+          "create",
+          "lam",
+          "commit",
+          "push",
+          "pr",
+          "merge",
+          "sync",
+          "don"
+        ],
+        "note": "Tám chặng từ dựng worktree tới dọn branch khi mọi thứ trôi chảy."
+      },
+      {
+        "id": "ranh-gioi",
+        "label": "Ranh giới agent và người",
+        "focus": [
+          "commit",
+          "inreview",
+          "push"
+        ],
+        "note": "Agent dừng lại sau commit local; push và merge là việc của người."
+      },
+      {
+        "id": "nhanh-dung",
+        "label": "Khi sync không chạy tiếp",
+        "focus": [
+          "sync",
+          "conflict",
+          "boqua"
+        ],
+        "note": "Hai lý do agents sync bỏ dở một worktree, và cách xử lý từng cái."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "plane",
+      "label": "Plane (board)"
+    },
+    {
+      "id": "worktree",
+      "label": "Worktree (dựng & dọn)"
+    },
+    {
+      "id": "agent",
+      "label": "Agent trong worktree"
+    },
+    {
+      "id": "nguoi",
+      "label": "Người"
+    },
+    {
+      "id": "github",
+      "label": "GitHub"
+    },
+    {
+      "id": "dongbo",
+      "label": "Đồng bộ"
+    },
+    {
+      "id": "dung",
+      "label": "Nhánh dừng",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "p-lam",
+      "label": "Dựng & làm",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "p-bangiao",
+      "label": "Bàn giao & push",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "p-dongbo",
+      "label": "Merge, đồng bộ, dọn",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "create",
+    "lam",
+    "commit",
+    "push",
+    "pr",
+    "merge",
+    "sync",
+    "don"
+  ],
+  "nodes": [
+    {
+      "id": "inreview",
+      "lane": "plane",
+      "col": 2,
+      "type": "cloud",
+      "label": "Plane → In Review",
+      "sublabel": "comment kèm link commit",
+      "width": 150
+    },
+    {
+      "id": "create",
+      "lane": "worktree",
+      "col": 0,
+      "type": "backend",
+      "label": "agents create",
+      "sublabel": "worktree + branch mới",
+      "tag": "gỡ upstream",
+      "width": 96
+    },
+    {
+      "id": "lam",
+      "lane": "agent",
+      "col": 0,
+      "type": "backend",
+      "label": "Agent làm task",
+      "sublabel": "agents open · send",
+      "width": 96
+    },
+    {
+      "id": "commit",
+      "lane": "agent",
+      "col": 2,
+      "type": "backend",
+      "label": "lint + commit local",
+      "sublabel": "npm run lint phải xanh",
+      "width": 150
+    },
+    {
+      "id": "push",
+      "lane": "nguoi",
+      "col": 2,
+      "type": "external",
+      "label": "git push -u origin",
+      "sublabel": "lần đầu bắt buộc có -u",
+      "width": 150
+    },
+    {
+      "id": "merge",
+      "lane": "nguoi",
+      "col": 4,
+      "type": "external",
+      "label": "Create a merge commit",
+      "sublabel": "tương đương --no-ff",
+      "tag": "đừng Squash",
+      "width": 150
+    },
+    {
+      "id": "pr",
+      "lane": "github",
+      "col": 2,
+      "type": "cloud",
+      "label": "gh pr create",
+      "sublabel": "--base main --head <branch>",
+      "width": 120
+    },
+    {
+      "id": "sync",
+      "lane": "dongbo",
+      "col": 4,
+      "type": "backend",
+      "label": "agents sync",
+      "sublabel": "rebase mọi worktree",
+      "width": 150
+    },
+    {
+      "id": "don",
+      "lane": "worktree",
+      "col": 5,
+      "type": "backend",
+      "label": "agents rm",
+      "sublabel": "branch xoá tay",
+      "width": 110
+    },
+    {
+      "id": "boqua",
+      "lane": "dung",
+      "col": 4,
+      "type": "security",
+      "label": "Bỏ qua worktree",
+      "sublabel": "branch đã push",
+      "width": 120
+    },
+    {
+      "id": "conflict",
+      "lane": "dung",
+      "col": 5,
+      "type": "security",
+      "label": "Conflict → DỪNG",
+      "sublabel": "resolve tay rồi sync lại",
+      "width": 110
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-create-lam",
+      "from": "create",
+      "to": "lam",
+      "variant": "default"
+    },
+    {
+      "id": "e-lam-commit",
+      "from": "lam",
+      "to": "commit",
+      "variant": "default"
+    },
+    {
+      "id": "e-commit-plane",
+      "from": "commit",
+      "to": "inreview",
+      "label": "state + comment",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e-commit-push",
+      "from": "commit",
+      "to": "push",
+      "label": "agent dừng, người push",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-push-pr",
+      "from": "push",
+      "to": "pr",
+      "variant": "default"
+    },
+    {
+      "id": "e-pr-merge",
+      "from": "pr",
+      "to": "merge",
+      "variant": "default",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          395,
+          615
+        ],
+        [
+          395,
+          491
+        ]
+      ]
+    },
+    {
+      "id": "e-merge-sync",
+      "from": "merge",
+      "to": "sync",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e-sync-don",
+      "from": "sync",
+      "to": "don",
+      "label": "đã merge vào main",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-sync-boqua",
+      "from": "sync",
+      "to": "boqua",
+      "label": "không rebase",
+      "variant": "security",
+      "role": "branch"
+    },
+    {
+      "id": "e-sync-conflict",
+      "from": "sync",
+      "to": "conflict",
+      "label": "conflict",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Bốn lằn ranh không được vượt",
+      "items": [
+        "Agent commit local rồi dừng — push là việc của người",
+        "agents sync không tự resolve conflict, nó dừng và báo",
+        "Merge trên GitHub chọn merge commit, không Squash",
+        "agents rm giữ lại branch, phải tự branch -d"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Vì sao script làm vậy",
+      "items": [
+        "Gỡ upstream lúc tạo worktree: git push trần từng bắn vào main",
+        "npm install lúc tạo: worktree mới không có node_modules, lint chết",
+        "Trả .mcp.json về bản git trước rebase: cờ skip-worktree chặn rebase",
+        "Branch đã push thì bỏ qua: rebase branch đã push là viết lại lịch sử"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Khi sync bỏ dở một worktree",
+      "items": [
+        "đã merge vào origin/main → dọn được, sang bước cuối",
+        "đã push lên origin/<branch> → merge PR trước rồi sync lại",
+        "conflict → vào worktree chạy rebase --continue hoặc --abort",
+        "Trong lúc chờ, .mcp.json cố ý ở bản git và chưa có cờ"
+      ]
+    }
+  ]
+}
