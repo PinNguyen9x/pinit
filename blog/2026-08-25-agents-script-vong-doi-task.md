@@ -136,23 +136,45 @@ PINIT_AGENT_CMD='sleep 999'        # override lệnh phóng — tiện để tes
 
 Đây là đường đi đầy đủ của một task, từ lúc chưa có thư mục nào tới lúc branch bị xoá khỏi remote.
 
+<style>
+/* embed=1 ẩn toolbar/header/cards và đặt overflow:hidden, nên chiều cao phải đủ —
+   thiếu là cắt mất hình chứ không cuộn được. Tỉ lệ đo thật: ~1.37 lần bề rộng khi
+   cột ≥ 700px, nhưng mobile lệch hẳn (380px cần 643px) nên tách media query. */
+.archify-embed {
+  display: block;
+  width: 100%;
+  aspect-ratio: 852 / 1180;
+  border: 1px solid rgba(127, 127, 127, 0.28);
+  border-radius: 12px;
+}
+@media (max-width: 600px) {
+  .archify-embed { aspect-ratio: auto; height: 760px; }
+}
+</style>
+
 <figure style="margin: 2em 0;">
   <iframe
-    src="/diagrams/vong-doi-task.html"
-    title="Sơ đồ vòng đời một task với agents"
+    class="archify-embed"
+    src="/diagrams/vong-doi-task.html?embed=1"
+    title="Sơ đồ vòng đời một task"
     loading="lazy"
-    style="display: block; width: 100%; max-width: 860px; height: 1780px; margin: 0 auto; border: 1px solid rgba(127,127,127,0.28); border-radius: 12px;"
   ></iframe>
   <figcaption style="margin-top: 0.9em; font-size: 0.9em; line-height: 1.6; opacity: 0.78;">
-    Sơ đồ tương tác. Mỗi hàng là một người/thứ chịu trách nhiệm, nên đọc theo hàng sẽ thấy ngay
-    <strong>chỗ agent dừng lại và người tiếp quản</strong>. Bấm một ô để soi đường đi lên/xuống của
-    nó, <em>Play story</em> chạy lần lượt ba góc nhìn, <em>Export</em> lấy PNG/SVG.
-    Hàng cuối màu đỏ là hai lý do <code>agents sync</code> bỏ dở một worktree — phần mà sơ đồ chuỗi
-    thẳng không diễn đạt được.
-    Sơ đồ có nút Light/Dark riêng, không ăn theo theme của bài.
-    <a href="/diagrams/vong-doi-task.html" target="_blank" rel="noopener">Mở riêng ↗</a>
+    Mỗi hàng là một người/thứ chịu trách nhiệm, nên đọc theo hàng sẽ thấy ngay
+    <strong>chỗ agent dừng lại và người tiếp quản</strong>. Hàng cuối màu đỏ là hai lý do
+    <code>agents sync</code> bỏ dở một worktree.
+    Muốn bản tương tác — bấm từng ô để soi đường đi lên/xuống, chạy lại hiệu ứng, hay export
+    PNG/SVG/WebM — thì
+    <a href="/diagrams/vong-doi-task.html" target="_blank" rel="noopener">mở riêng ↗</a>.
   </figcaption>
 </figure>
+
+Bốn lằn ranh trong sơ đồ, gom lại cho dễ nhớ — mỗi cái đều là chỗ từng có người (hoặc agent) bước hụt:
+
+- **Agent commit local rồi dừng.** Push là việc của người, không phải của agent.
+- **`agents sync` không tự resolve conflict.** Nó dừng và báo, chờ bạn vào xử lý tay.
+- **Merge trên GitHub chọn merge commit, không Squash.** Squash gộp mất các commit đã tách bạch.
+- **`agents rm` giữ lại branch.** Phải tự `branch -d` và `push origin --delete`.
 
 ### Bước 1 — tạo worktree + agent
 
