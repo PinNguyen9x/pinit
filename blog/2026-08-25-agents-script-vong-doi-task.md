@@ -136,17 +136,23 @@ PINIT_AGENT_CMD='sleep 999'        # override lệnh phóng — tiện để tes
 
 Đây là đường đi đầy đủ của một task, từ lúc chưa có thư mục nào tới lúc branch bị xoá khỏi remote.
 
-```mermaid
-flowchart TD
-    B1["1 · agents create glossary<br/>worktree + branch + npm install"] --> B2["2 · agents open glossary<br/>giao việc"]
-    B2 --> B3["3 · agents ls / console / send<br/>theo dõi"]
-    B3 --> B4["4 · agent: lint + commit local<br/>KHÔNG push"]
-    B4 --> B5["5 · git push -u origin feat/glossary"]
-    B5 --> B6["6 · gh pr create"]
-    B6 --> B7["7 · merge commit trên GitHub"]
-    B7 --> B8["8 · agents sync<br/>mọi worktree khớp origin/main"]
-    B8 --> B9["9 · agents rm + xoá branch"]
-```
+<figure style="margin: 2em 0;">
+  <iframe
+    src="/diagrams/vong-doi-task.html"
+    title="Sơ đồ vòng đời một task với agents"
+    loading="lazy"
+    style="display: block; width: 100%; max-width: 860px; height: 1780px; margin: 0 auto; border: 1px solid rgba(127,127,127,0.28); border-radius: 12px;"
+  ></iframe>
+  <figcaption style="margin-top: 0.9em; font-size: 0.9em; line-height: 1.6; opacity: 0.78;">
+    Sơ đồ tương tác. Mỗi hàng là một người/thứ chịu trách nhiệm, nên đọc theo hàng sẽ thấy ngay
+    <strong>chỗ agent dừng lại và người tiếp quản</strong>. Bấm một ô để soi đường đi lên/xuống của
+    nó, <em>Play story</em> chạy lần lượt ba góc nhìn, <em>Export</em> lấy PNG/SVG.
+    Hàng cuối màu đỏ là hai lý do <code>agents sync</code> bỏ dở một worktree — phần mà sơ đồ chuỗi
+    thẳng không diễn đạt được.
+    Sơ đồ có nút Light/Dark riêng, không ăn theo theme của bài.
+    <a href="/diagrams/vong-doi-task.html" target="_blank" rel="noopener">Mở riêng ↗</a>
+  </figcaption>
+</figure>
 
 ### Bước 1 — tạo worktree + agent
 
