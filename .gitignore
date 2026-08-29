@@ -43,6 +43,7 @@ tsconfig.tsbuildinfo
 
 # archify skill (6.7MB renderer) — không commit binary, khôi phục từ skills-lock.json:
 #   npx skills experimental_install
-# .claude/skills/archify chỉ là symlink trỏ vào .agents/
+# Symlink .claude/skills/archify thì CÓ commit (28 byte): experimental_install chỉ
+# dựng lại .agents/ và wire cho Codex/Cline/Amp..., bỏ sót Claude Code — clone mới
+# mà thiếu symlink thì Claude Code không thấy skill dù renderer đã có.
 .agents/
-.claude/skills/archify
