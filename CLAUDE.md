@@ -161,11 +161,20 @@ Ví dụ:
 - Không xoá work item trên Plane; không tạo/xoá project, module, cycle
 
 ## Git workflow
-- Đồng bộ với main: dùng `git rebase origin/main`, KHÔNG `git merge main`
+- Đồng bộ với main: dùng `git rebase origin/main`, KHÔNG `git merge main`.
+  **Chỉ áp dụng cho branch chưa push.**
+- **Branch đã push lên remote thì không sync nữa.** Không rebase (làm sai lịch sử người
+  khác đã fetch, chữa lệch thì chỉ còn `--force` — cũng bị cấm), cũng không merge (đẻ
+  merge commit vào nhánh feature). Cần main mới thì **merge PR hiện tại rồi tạo branch
+  mới từ `origin/main`**, đừng dùng lại branch cũ.
+  Kiểm branch đã push chưa: `git rev-parse --verify origin/$(git branch --show-current)`
 - Nếu rebase có conflict: chuyển work item → `Blocked` + comment lý do, rồi dừng và báo tôi.
   Không tự resolve. "Dừng và báo tôi" luôn kèm bước đổi state — dừng im lặng thì board sai.
-- Không rebase branch đã push lên remote
 - Merge feature về `main`: dùng `git merge --no-ff` (việc này do tôi hoặc agent integrator làm)
+
+Hệ quả cần nhớ khi đọc `git branch --merged main`: một branch từng bị `agents sync` rebase
+lên main tip sẽ hiện là "merged" **vì bị rebase, không phải vì việc của nó nằm trong main**.
+Muốn biết thật thì tra lịch sử PR, đừng tin cờ merged.
 
 ## Bàn giao khi kết thúc phiên
 Khi tôi nói "handoff", hoặc khi làm xong một task, chạy đúng thứ tự này:
