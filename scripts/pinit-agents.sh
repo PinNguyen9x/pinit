@@ -420,6 +420,14 @@ cmd_create() {   # tạo worktree feature MỚI từ origin/main rồi bật age
   echo "▶ ai-devkit install (khôi phục skill dev-* từ .ai-devkit.json)..."
   adk_install_at "$path" || echo "  ! ai-devkit install lỗi — chạy tay: npx ai-devkit install"
 
+  # Hook chặn secret nằm ở .githooks/ (thư mục ĐƯỢC track) nên clone mới có sẵn file,
+  # chỉ thiếu mỗi config trỏ tới. Config này là cấp repo, mọi worktree dùng chung —
+  # đặt lại nhiều lần vô hại, nhưng quên một lần là repo public mất lớp chặn.
+  if [ "$(git -C "$path" config core.hooksPath 2>/dev/null)" != ".githooks" ]; then
+    git -C "$path" config core.hooksPath .githooks \
+      && echo "▶ bật hook chặn secret (core.hooksPath=.githooks)"
+  fi
+
   load_agents          # nạp lại để path_for thấy worktree mới
   start_one "$name"    # bật agent luôn
   echo

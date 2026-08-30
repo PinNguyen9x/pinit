@@ -128,6 +128,18 @@ Worktree mới clone về **thiếu skill ở hai nguồn khác nhau**, phải c
 `agents create` tự chạy cả hai sau `npm install`. Worktree tạo trước khi có bước đó thì chạy
 tay một lần.
 
+**Clone mới còn phải bật hook chặn secret** (một lần cho cả repo, mọi worktree dùng chung):
+
+    git config core.hooksPath .githooks
+
+Repo này **public**, và `pre-commit` chặn commit khi phần vừa stage có chuỗi giống API key,
+GitHub token, AWS key, private key hoặc IPv4 public. Nó chỉ quét **dòng được thêm**, bỏ qua
+dải IP nội bộ, và tự loại trừ chính `.githooks/`. Báo nhầm thì `git commit --no-verify`.
+
+Hook nằm ở `.githooks/` chứ không phải `.git/hooks/` là cố ý: thư mục sau **không commit
+được**, nên đặt ở đó thì clone mới không có gì bảo vệ — đúng loại lỗi đã xử lý ở phần skill
+phía trên. Đổi lại phải trả giá bằng một lệnh `git config` thủ công cho mỗi clone.
+
 ⚠️ **`experimental_install` KHÔNG ghim theo `computedHash` trong `skills-lock.json`** — bất kể
 tên gọi, nó kéo bản mới nhất từ `tt-a1i/archify` rồi **ghi đè `computedHash`** bằng hash của bản
 vừa tải. Đo 30/08/2026 trên một clone sạch: renderer về 7.7MB (máy cũ 6.7MB) và `git status`
