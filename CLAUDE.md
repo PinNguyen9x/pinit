@@ -134,11 +134,26 @@ tay một lần.
 
 Repo này **public**, và `pre-commit` chặn commit khi phần vừa stage có chuỗi giống API key,
 GitHub token, AWS key, private key hoặc IPv4 public. Nó chỉ quét **dòng được thêm**, bỏ qua
-dải IP nội bộ, và tự loại trừ chính `.githooks/`. Báo nhầm thì `git commit --no-verify`.
+dải IP nội bộ. Báo nhầm thì `git commit --no-verify`.
 
 Hook nằm ở `.githooks/` chứ không phải `.git/hooks/` là cố ý: thư mục sau **không commit
 được**, nên đặt ở đó thì clone mới không có gì bảo vệ — đúng loại lỗi đã xử lý ở phần skill
 phía trên. Đổi lại phải trả giá bằng một lệnh `git config` thủ công cho mỗi clone.
+
+### Ba lớp chặn secret, đừng nhầm vai
+
+| Lớp | Ai chạy | Bắt gì | Qua mặt được không |
+|---|---|---|---|
+| GitHub secret scanning + push protection | GitHub, đã bật sẵn | token của các nhà cung cấp lớn | không |
+| `.github/workflows/secret-scan.yml` | CI, trên mỗi `pull_request` | IPv4 public + `plane_api_*` | không |
+| `.githooks/pre-commit` | máy đã `git config core.hooksPath` | như CI | **có**, bằng `--no-verify` |
+
+Hook là lưới cho lúc lỡ tay, **không phải rào cưỡng chế** — lớp cưỡng chế là hai lớp trên.
+
+**Danh sách mẫu chỉ nằm ở đúng một chỗ: `scripts/scan-secrets.sh`.** Hook và CI đều gọi nó,
+chỉ khác nguồn diff (`--cached` với `origin/<base>...HEAD`). Thêm mẫu mới thì sửa file đó,
+**đừng chép sang workflow hay hook** — hai bản sẽ lệch, đúng thứ đã xảy ra hai lần giữa file
+này và `pinit-agents.sh`.
 
 ⚠️ **`experimental_install` KHÔNG ghim theo `computedHash` trong `skills-lock.json`** — bất kể
 tên gọi, nó kéo bản mới nhất từ `tt-a1i/archify` rồi **ghi đè `computedHash`** bằng hash của bản
