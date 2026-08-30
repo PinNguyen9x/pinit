@@ -120,13 +120,35 @@ không có cơ sở nói bố cục đạt — đây là điểm khác biệt ch
 
 ## Bootstrap worktree mới
 
-`.agents/` bị gitignore (renderer archify 6.7MB), nên **worktree mới clone về là thiếu skill**.
-Dựng lại bằng:
+Worktree mới clone về **thiếu skill ở hai nguồn khác nhau**, phải chạy cả hai lệnh:
 
-    npx skills experimental_install    # đọc skills-lock.json, khôi phục đúng hash
+    npx ai-devkit install              # đọc .ai-devkit.json, dựng 19 skill dev-*/task/tdd/...
+    npx skills experimental_install    # kéo archify về .agents/
 
-`agents create` đã tự chạy bước này sau `npm install`. Worktree tạo trước khi có bước đó thì
-chạy tay một lần.
+`agents create` tự chạy cả hai sau `npm install`. Worktree tạo trước khi có bước đó thì chạy
+tay một lần.
+
+⚠️ **`experimental_install` KHÔNG ghim theo `computedHash` trong `skills-lock.json`** — bất kể
+tên gọi, nó kéo bản mới nhất từ `tt-a1i/archify` rồi **ghi đè `computedHash`** bằng hash của bản
+vừa tải. Đo 30/08/2026 trên một clone sạch: renderer về 7.7MB (máy cũ 6.7MB) và `git status`
+bẩn ngay với một dòng sửa `skills-lock.json`.
+
+Hệ quả: sau bootstrap, **kiểm `git status` trước khi commit**. Dòng `skills-lock.json` đó là
+sản phẩm phụ của lệnh cài, không phải việc bạn làm — đừng gộp vào commit của task. Muốn nâng
+archify thì commit riêng, có chủ đích.
+
+Vì sao hai nguồn, và vì sao chỉ một cái được commit:
+
+| | ai-devkit (19 skill) | archify |
+|---|---|---|
+| Lockfile trong git | `.ai-devkit.json` | `skills-lock.json` |
+| Bản thật nằm ở | `~/.ai-devkit/skills/` — **ngoài repo** | `.agents/skills/` — trong repo |
+| Symlink | tuyệt đối, **không commit** | tương đối, **có commit** |
+| Lý do | path neo vào `$HOME` từng máy, viết tương đối không được | `../../` nên clone nào cũng đúng |
+
+`ai-devkit install` **có** wire `.claude/skills/` (đã đo: log in ra `→ .claude/skills/<tên>
+(symlinked)`), khác với `skills experimental_install` vốn bỏ sót Claude Code — đó là toàn bộ
+lý do archify phải commit symlink còn 19 cái kia thì không.
 
 Triệu chứng khi quên: skill `archify` không xuất hiện trong danh sách skill, hoặc symlink
 `.claude/skills/archify` dangling. Renderer chạy được (`archify doctor` xanh) mà Claude Code
