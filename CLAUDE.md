@@ -158,6 +158,30 @@ Bản thân symlink `.claude/skills/archify` **có commit** (git lưu 28 byte, m
 `experimental_install` chỉ wire cho Codex/Cline/Amp/Antigravity và bỏ sót Claude Code, nên nếu
 để nó tự sinh thì clone mới sẽ có renderer mà agent không thấy skill.
 
+## Script điều phối agent
+
+Bản **chuẩn** của script `agents` là `scripts/pinit-agents.sh` **trong repo này**, và alias trỏ
+vào bản ở worktree `main`:
+
+    alias agents="$HOME/Desktop/pinit/pinit/scripts/pinit-agents.sh"
+
+Sửa script thì sửa ở đây rồi commit + PR như mọi thay đổi khác. Lý do đặt trong repo thay vì
+`~/bin`: script và chính file `CLAUDE.md` này phải khớp nhau, mà đã hai lần chúng lệch —
+script từng in gợi ý `git merge origin/main` đúng lúc luật ở đây đang cấm. Nằm cùng repo thì
+một PR sửa được cả hai và review bắt được lúc lệch.
+
+Ba điều dễ vấp:
+
+- **Đừng sửa bản ở `~/bin/pinit-agents.sh`** — bản đó chỉ còn là dự phòng, không ai chạy nó
+  nữa. Sửa nhầm vào đó thì thay đổi biến mất im lặng.
+- **Toàn bộ thân script bị bọc trong khối `{ ... }`** (mở ở dòng 2, đóng cuối file). Cố ý:
+  file nằm trong chính worktree nó quản lý nên `agents sync` có thể ghi đè nó giữa lúc đang
+  chạy; bash đọc theo offset chứ không nạp hết vào RAM. Khối `{ }` buộc bash parse trọn vẹn
+  trước khi chạy. **Thêm code mới phải nằm trong khối đó.**
+- **`usage()` quét `sed -n '2,/^set /p' | grep '^#'`** để in help. Nên mọi dòng bắt đầu bằng
+  `#` đặt giữa dòng 2 và `set -euo pipefail` sẽ **hiện ra trong `agents --help`**. Ghi chú kỹ
+  thuật phải đặt *sau* dòng `set`.
+
 ## Quy ước commit
 Conventional Commits: `<type>(<scope>): <mô tả>`
 
