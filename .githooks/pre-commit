@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# pre-commit — chặn secret lọt vào repo public.
+#
+# Bật (mỗi clone chạy một lần, xem CLAUDE.md mục "Bootstrap worktree mới"):
+#   git config core.hooksPath .githooks
+#
+# Chỉ quét DÒNG ĐƯỢC THÊM trong staged diff, không quét toàn repo — quét cả repo thì
+# mỗi commit đều chậm và báo nhầm vào nội dung cũ vốn đã review rồi.
+#
+# Bỏ qua khi báo nhầm:  git commit --no-verify
+set -euo pipefail
+
+# Tự loại trừ chính thư mục này: file hook chứa các mẫu regex nên sẽ tự khớp.
+# Dùng file tạm thay `mapfile` vì macOS mặc định là bash 3.2 (cùng lý do với
+# scripts/pinit-agents.sh — xem dòng đầu file đó).
+FILELIST="$(mktemp)"
+trap 'rm -f "$FILELIST"' EXIT
+git diff --cached --name-only --diff-filter=ACM | grep -v '^\.githooks/' > "$FILELIST" || true
+[ -s "$FILELIST" ] || exit 0
+
+# Mẫu secret có cấu trúc rõ ràng. Cố ý KHÔNG chặn thứ mơ hồ như "password" hay
+# "/Users/<tên>" — báo nhầm nhiều thì người ta quen tay --no-verify, hook thành vô dụng.
+SECRET_RE='plane_api_[0-9a-f]{16,}'
+SECRET_RE+='|gh[pousr]_[A-Za-z0-9]{20,}'
+SECRET_RE+='|sk-ant-[A-Za-z0-9_-]{20,}'
+SECRET_RE+='|sk-[A-Za-z0-9]{32,}'
+SECRET_RE+='|AKIA[0-9A-Z]{16}'
+SECRET_RE+='|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+
+# IPv4 public. Dải nội bộ được phép: bài blog có 192.168.1.104 hợp lệ, chặn là báo nhầm.
+IP_RE='(^|[^0-9.])((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])([^0-9.]|$)'
+IP_SKIP='(^|[^0-9.])(0\.|10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|255\.255\.255\.255)'
+
+hits=0
+
+report() {   # <file> <dòng> <loại> <nội dung>
+  printf '  %s:%s\n    %s: %s\n' "$1" "$2" "$3" "$4" >&2
+  hits=$((hits + 1))
+}
+
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  # -U0: chỉ lấy dòng đổi, không lấy context (context là dòng cũ, không phải việc của commit này).
+  # awk bám @@ để suy ra số dòng thật trong file mới; không có nó thì chỉ báo được nội dung.
+  while IFS=$'\t' read -r lineno content; do
+    [ -z "${content:-}" ] && continue
+    if printf '%s' "$content" | grep -qE "$SECRET_RE"; then
+      report "$f" "$lineno" "secret" "$(printf '%s' "$content" | cut -c1-100)"
+      continue
+    fi
+    if printf '%s' "$content" | grep -qE "$IP_RE" && ! printf '%s' "$content" | grep -qE "$IP_SKIP"; then
+      report "$f" "$lineno" "IP public" "$(printf '%s' "$content" | cut -c1-100)"
+    fi
+  done < <(git diff --cached -U0 -- "$f" | awk '
+    /^@@/ {
+      # @@ -a,b +c,d @@  -> lấy c
+      match($0, /\+[0-9]+/); n = substr($0, RSTART + 1, RLENGTH - 1) + 0; next
+    }
+    /^\+\+\+/ { next }
+    /^\+/ { print n "\t" substr($0, 2); n++ }
+  ')
+done < "$FILELIST"
+
+if [ "$hits" -gt 0 ]; then
+  cat >&2 <<'MSG'
+
+✗ pre-commit: phát hiện chuỗi giống secret trong phần vừa stage (xem trên).
+
+Repo này là PUBLIC. Đã push lên là coi như lộ — xoá commit sau đó không cứu được,
+vì GitHub vẫn giữ object và người khác có thể đã fetch. Phải revoke/xoay key.
+
+Nếu là báo nhầm:
+  git commit --no-verify
+
+Nếu là secret thật:
+  1. Bỏ nó ra khỏi file, dùng biến môi trường hoặc file đã gitignore
+  2. Nếu key đã từng bị push ở đâu đó -> revoke ngay, đừng chỉ xoá dòng
+MSG
+  exit 1
+fi
+
+exit 0
