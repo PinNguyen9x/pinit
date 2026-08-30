@@ -27,8 +27,9 @@ Và hoá ra thứ đáng viết không phải cách sửa — sửa chỉ mất 
 3. [Tuyệt đối là đúng — commit nó mới sai](#s3)
 4. [Công thức và kết quả](#s4)
 5. [Bước kiểm quyết định](#s5)
-6. [Trả nợ](#s6)
-7. [Lần đầu cơ chế chạy thật](#s7)
+6. [Nếu cứ để nguyên thì sao?](#s6)
+7. [Trả nợ](#s7)
+8. [Lần đầu cơ chế chạy thật](#s8)
 
 ---
 
@@ -283,7 +284,68 @@ Hai dòng cuối liên quan nhân quả với nhau. Đọc bảng này mà bỏ 
 
 ---
 
-## 6. Trả nợ {#s6}
+## 6. Nếu cứ để nguyên thì sao? {#s6}
+
+Câu hỏi hợp lý: symlink hỏng thì cứ chạy `ai-devkit install` là nó ghi đè lại thành đường dẫn của máy mình, cần gì phải gỡ khỏi git?
+
+Tôi dựng đúng tình huống đó để thử. Một thư mục chỉ có `.ai-devkit.json`, và một symlink giả lập do máy khác tạo ra:
+
+```bash
+ln -sfn /Users/nguoikhac/.ai-devkit/skills/codeaholicguy/ai-devkit/skills/dev-commit \
+        .claude/skills/dev-commit
+
+test -e .claude/skills/dev-commit && echo "sống" || echo "DANGLING"
+#  DANGLING
+```
+
+Rồi chạy lệnh khôi phục:
+
+```bash
+npx ai-devkit install
+readlink .claude/skills/dev-commit
+#  /Users/nguoikhac/.ai-devkit/skills/codeaholicguy/ai-devkit/skills/dev-commit
+```
+
+**Không đổi.** 18 skill khác được tạo mới bình thường, riêng cái đã tồn tại thì giữ nguyên chuỗi của máy người khác — vĩnh viễn hỏng.
+
+Và phần tệ hơn nằm ở bản tổng kết:
+
+```
+Install Summary:
+  ✓ 18 skill(s) installed
+```
+
+Exit code **0**. Không cảnh báo, không lỗi, không nhắc gì tới `dev-commit`. Con số tụt từ 19 xuống 18 — dấu hiệu duy nhất, mà chẳng ai ngồi đếm.
+
+### Vì sao nó lọt
+
+Quay lại đoạn code ở mục 2:
+
+```js
+if (await fs.pathExists(targetPath)) { /* skipped */ continue; }
+await fs.symlink(skillPath, targetPath, 'dir');
+```
+
+`fs.pathExists` **đi theo** symlink. Với một symlink dangling, nó trả về `false` — nên không vào nhánh "already exists, skipped". Xuống dưới, `fs.symlink` gặp đường dẫn đã bị chiếm chỗ và ném `EEXIST`; khối `catch` thử `fs.copy` thì cũng hỏng vì lý do y hệt. Lỗi bị nuốt ở tầng trên.
+
+Nói cách khác: hàm này phân biệt được "chưa có" và "đã có", nhưng **không phân biệt được "có mà hỏng"**. Symlink dangling rơi đúng vào khe giữa hai trạng thái đó.
+
+### Hệ quả
+
+Nếu tôi cứ để 19 symlink trong git, người clone về **không tự chữa được** bằng `init` hay `install`. Họ phải biết cách dọn tay trước:
+
+```bash
+find .claude/skills -maxdepth 1 -type l ! -exec test -e {} \; -print -delete
+npx ai-devkit install
+```
+
+Ai biết gõ câu lệnh đó thì đã tự chẩn ra vấn đề rồi. Người không biết chỉ thấy skill biến mất và một bản tổng kết toàn dấu ✓.
+
+Đây là lý do gỡ khỏi git là cách sửa **đúng**, chứ không phải cách sửa cho tiện.
+
+---
+
+## 7. Trả nợ {#s7}
 
 Bốn bước, không có bước nào phức tạp:
 
@@ -332,7 +394,7 @@ Và `git status` phần `.claude/skills` sạch tuyệt đối: symlink mới si
 
 ---
 
-## 7. Lần đầu cơ chế chạy thật {#s7}
+## 8. Lần đầu cơ chế chạy thật {#s8}
 
 Phần này không nằm trong kế hoạch, nhưng nó là bằng chứng tốt nhất nên tôi giữ lại.
 
@@ -360,6 +422,36 @@ Worktree chính vừa mất 19 skill. Đây không phải sự cố — đây l�
 Về lại 21/21, `git status` không bẩn thêm dòng nào.
 
 Nếu chưa từng kiểm bước khôi phục, đúng khoảnh khắc đó sẽ rất giống một cú hỏng. Đó là lý do trong task tôi đặt điều kiện "xong" là **clone sạch dựng lại được**, chứ không phải "lệnh chạy không báo lỗi".
+
+---
+
+## Phụ lục: không chỉ Claude Code
+
+Cơ chế trên áp cho **15 môi trường**, khai trong `dist/util/env.js`. Vài cái đáng chú ý:
+
+| code | Công cụ | Thư mục trong project |
+|---|---|---|
+| `claude` | Claude Code | `.claude/skills` |
+| `codex` | OpenAI Codex | `.agents/skills` |
+| `amp` | AMP | `.agents/skills` |
+| `cursor` | Cursor | `.cursor/skills` |
+| `github` | GitHub Copilot | `.github/skills` |
+| `antigravity` | Antigravity | `.agent/skills` |
+
+Còn `gemini`, `grok`, `opencode`, `cline`, `roo`, `junie`, `kilocode`, `devin`, `pi`.
+
+Repo pinit chỉ bật một:
+
+```json
+"environments": ["claude"]
+```
+
+Bật thêm `codex` thì cùng một skill sẽ có **hai** symlink trỏ về **một** bản thật — đúng tinh thần thiết kế.
+
+Hai chỗ dễ vấp nếu định mở rộng:
+
+- **`codex` và `amp` dùng chung `.agents/skills`.** Mà trong repo này `.agents/` đang bị gitignore cho renderer archify. Vô tình lại đúng về mặt "không commit", nhưng hai công cụ khác nhau cùng ghi một thư mục mà chỉ một cái được `skills-lock.json` quản lý — nên ghi rõ ranh giới vào `CLAUDE.md` trước khi bật.
+- **`antigravity` là `.agent/skills`, số ít.** Khác một ký tự với `.agents/`. Đủ để `ls` nhầm.
 
 ---
 
