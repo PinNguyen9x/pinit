@@ -123,10 +123,19 @@ không có cơ sở nói bố cục đạt — đây là điểm khác biệt ch
 Worktree mới clone về **thiếu skill ở hai nguồn khác nhau**, phải chạy cả hai lệnh:
 
     npx ai-devkit install              # đọc .ai-devkit.json, dựng 19 skill dev-*/task/tdd/...
-    npx skills experimental_install    # đọc skills-lock.json, khôi phục archify đúng hash
+    npx skills experimental_install    # kéo archify về .agents/
 
 `agents create` tự chạy cả hai sau `npm install`. Worktree tạo trước khi có bước đó thì chạy
 tay một lần.
+
+⚠️ **`experimental_install` KHÔNG ghim theo `computedHash` trong `skills-lock.json`** — bất kể
+tên gọi, nó kéo bản mới nhất từ `tt-a1i/archify` rồi **ghi đè `computedHash`** bằng hash của bản
+vừa tải. Đo 30/08/2026 trên một clone sạch: renderer về 7.7MB (máy cũ 6.7MB) và `git status`
+bẩn ngay với một dòng sửa `skills-lock.json`.
+
+Hệ quả: sau bootstrap, **kiểm `git status` trước khi commit**. Dòng `skills-lock.json` đó là
+sản phẩm phụ của lệnh cài, không phải việc bạn làm — đừng gộp vào commit của task. Muốn nâng
+archify thì commit riêng, có chủ đích.
 
 Vì sao hai nguồn, và vì sao chỉ một cái được commit:
 
