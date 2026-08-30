@@ -47,3 +47,13 @@ tsconfig.tsbuildinfo
 # dựng lại .agents/ và wire cho Codex/Cline/Amp..., bỏ sót Claude Code — clone mới
 # mà thiếu symlink thì Claude Code không thấy skill dù renderer đã có.
 .agents/
+
+# Skill của ai-devkit: symlink TUYỆT ĐỐI vào ~/.ai-devkit/skills/... nên chỉ đúng trên
+# máy đã sinh ra chúng. Không commit — mỗi máy tự dựng lại theo .ai-devkit.json (file
+# ĐƯỢC commit, đóng vai lockfile) bằng:
+#   npx ai-devkit install
+# Ngược lại với archify ở trên: archify trỏ tương đối vào trong repo nên commit được,
+# còn mấy cái này trỏ ra ngoài $HOME nên không có cách nào viết tương đối.
+.claude/skills/*
+!.claude/skills/archify
+!.claude/skills/agentic-mermaid-diagram-workflow
