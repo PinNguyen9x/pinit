@@ -1,0 +1,7 @@
+# Mẫu cho .denylist — bản thật đặt ở PRIVATE_CONTENT_DIR/.denylist (đã gitignore).
+#   cp private-content.example/denylist.example private-content.example/.denylist
+#
+# Mỗi dòng một từ khóa, so chuỗi thuần không phân biệt hoa thường (không regex).
+# Dòng trống và dòng bắt đầu bằng # bị bỏ qua. Từ khóa ≤ 3 ký tự chỉ bị cảnh báo.
+Acme Internal
+Project Falcon
