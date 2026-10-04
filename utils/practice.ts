@@ -10,6 +10,7 @@ import { access, appendFile, readFile } from 'fs/promises'
 import { dirname, join } from 'path'
 import { contentDir, loadNote, loadTopic } from './private-content'
 import type { Note } from './private-content-schema'
+import { vnDay } from './practice-insights'
 import { createRateLimiter } from './rate-limit'
 
 export const NOTES_CHAR_LIMIT = 12_000
@@ -235,6 +236,7 @@ export async function appendLog(entries: PracticeLogEntry[], path = practiceLogP
 export interface PracticeStats {
   recent: PracticeLogEntry[] // 20 lần chấm gần nhất, mới nhất trước
   byTopic: { topic: string; count: number; average: number }[]
+  activeDays: string[] // ngày (giờ VN) có ít nhất một lần chấm, tăng dần
   corruptLines: number
 }
 
@@ -267,7 +269,10 @@ export async function readPracticeStats(path = practiceLogPath()): Promise<Pract
     totals.set(e.topic, t)
   }
 
+  const activeDays = Array.from(new Set(graded.map((e) => vnDay(e.ts)))).sort()
+
   return {
+    activeDays,
     recent: graded.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 20),
     byTopic: Array.from(totals, ([topic, t]) => ({
       topic,
