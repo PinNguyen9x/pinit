@@ -12,6 +12,7 @@
     "check:denylist": "tsx scripts/check-denylist.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
     "@emotion/cache": "^11.13.0",
     "@emotion/react": "^11.13.0",
     "@emotion/server": "^11.11.0",

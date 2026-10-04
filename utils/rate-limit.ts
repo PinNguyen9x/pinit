@@ -17,6 +17,14 @@ export function createRateLimiter({ max, windowMs }: { max: number; windowMs: nu
     })
   }
 
+  function count(key: string, now = Date.now()) {
+    // Chặn Map phình vô hạn khi bị dò từ nhiều IP.
+    if (hits.size > 1000) sweep(now)
+    const e = hits.get(key)
+    if (!e || e.resetAt <= now) hits.set(key, { count: 1, resetAt: now + windowMs })
+    else e.count++
+  }
+
   return {
     /** Số giây phải chờ nếu đang bị chặn, ngược lại 0. */
     retryAfter(key: string, now = Date.now()): number {
@@ -24,13 +32,9 @@ export function createRateLimiter({ max, windowMs }: { max: number; windowMs: nu
       if (!e || e.resetAt <= now || e.count < max) return 0
       return Math.ceil((e.resetAt - now) / 1000)
     },
-    recordFailure(key: string, now = Date.now()) {
-      // Chặn Map phình vô hạn khi bị dò từ nhiều IP.
-      if (hits.size > 1000) sweep(now)
-      const e = hits.get(key)
-      if (!e || e.resetAt <= now) hits.set(key, { count: 1, resetAt: now + windowMs })
-      else e.count++
-    },
+    recordFailure: count,
+    /** Đếm mọi request (không chỉ lần sai) — dùng cho quota như practice. */
+    hit: count,
     reset(key: string) {
       hits.delete(key)
     },
