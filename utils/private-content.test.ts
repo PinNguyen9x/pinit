@@ -76,7 +76,11 @@ describe('private-content.example', () => {
   it('case study hợp lệ', async () => {
     const list = await listCaseStudies()
     expect(list.errors).toEqual([])
-    expect(list.data[0]).toMatchObject({ slug: 'example-migration', visibility: 'private' })
+    // Sắp theo updated mới nhất trước.
+    expect(list.data.map((c) => [c.slug, c.visibility])).toEqual([
+      ['public-candidate-example', 'public-candidate'],
+      ['example-migration', 'private'],
+    ])
     expect((await loadCaseStudy('example-migration'))?.data?.body).toContain('## Bối cảnh')
   })
 

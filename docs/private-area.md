@@ -34,6 +34,20 @@ biến này — staging mở thẳng HTTP :3001, không qua nginx.
 Cookie `pinit_owner` mang cờ `Secure` khi `NODE_ENV=production` hoặc request đến
 qua https (`X-Forwarded-Proto: https`); dev local trên http không có cờ này.
 
+## Denylist
+
+`.denylist` nằm trong `PRIVATE_CONTENT_DIR` (gitignore + dockerignore), mỗi dòng một
+từ khóa; dòng trống và dòng bắt đầu bằng `#` bị bỏ qua. So chuỗi thuần, không phân
+biệt hoa thường, sau khi chuẩn hoá Unicode NFC cả hai phía.
+
+- `npm run check:denylist` — quét `roadmap.yaml`, `learn/**/*.md`, `case-studies/*.md`,
+  in `file:line:từ-khóa`. Exit `0` sạch · `1` có khớp · `2` chưa có/rỗng denylist
+  hoặc không có thư mục content. Từ khóa ≤ 3 ký tự chỉ bị cảnh báo.
+- Nút **Kiểm denylist** trên trang case study gọi `POST /api/me/check-denylist`
+  (`{ slug }`, sau middleware) để kiểm riêng file đó.
+- **Đừng chạy script trên CI có log public**: output in nguyên từ khóa — chính những
+  tên nội bộ cần giấu.
+
 ## Ràng buộc cho các phase sau
 
 - **Text do model sinh (Phase 4: câu hỏi, feedback chấm điểm) KHÔNG đi qua
