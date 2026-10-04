@@ -4,8 +4,11 @@ import { join, resolve } from 'path'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   contentDir,
+  checkedCount,
   isSlug,
   laneProgress,
+  milestoneProgress,
+  monthsUntil,
   listCaseStudies,
   listTopics,
   loadCaseStudy,
@@ -16,6 +19,7 @@ import {
   parseNote,
   parseRoadmap,
 } from './private-content'
+import type { Milestone, RoadmapState } from './private-content-schema'
 
 // Bộ mẫu trong repo là fixture chính: test xanh nghĩa là private-content.example/
 // khớp schema — tài liệu không lệch khỏi code.
@@ -51,6 +55,12 @@ describe('private-content.example', () => {
       lane: 'ai-platform',
       status: 'doing',
       links: ['https://example.com/llm-gateway-notes'],
+      topics: ['kubernetes'],
+      checklist: [
+        expect.objectContaining({ id: 'rate-limit' }),
+        expect.objectContaining({ id: 'cost-log' }),
+        expect.objectContaining({ id: 'deploy-k8s' }),
+      ],
     })
   })
 
@@ -205,8 +215,24 @@ describe('parseCaseStudy', () => {
   })
 })
 
-describe('laneProgress', () => {
-  const m = (status: string) => ({ status }) as never
+describe('tiến độ roadmap', () => {
+  const m = (
+    status: string,
+    checklist: string[] = [],
+    id = Math.random().toString(36),
+  ): Milestone =>
+    ({
+      id,
+      title: id,
+      lane: 'ai-platform',
+      target: '2026-12',
+      status,
+      notes: null,
+      links: [],
+      topics: [],
+      checklist: checklist.map((c) => ({ id: c, text: c })),
+    }) as Milestone
+
   it('dropped không tính vào mẫu số', () => {
     expect(laneProgress([m('done'), m('doing'), m('dropped')])).toEqual({
       done: 1,
@@ -214,7 +240,106 @@ describe('laneProgress', () => {
       percent: 50,
     })
   })
+
   it('lane toàn dropped → 0%, không chia cho 0', () => {
     expect(laneProgress([m('dropped')])).toEqual({ done: 0, total: 0, percent: 0 })
+  })
+
+  // Lỗi cũ: thanh đầy xanh khi 0/8 là chuyện màu nền; ở đây chốt con số phải là 0.
+  it('0 milestone xong, 0 tick → 0%', () => {
+    const items = Array.from({ length: 8 }, () => m('todo', ['a', 'b']))
+    expect(laneProgress(items, {})).toEqual({ done: 0, total: 8, percent: 0 })
+  })
+
+  it('milestone chưa done đóng góp theo tỉ lệ checklist đã tick', () => {
+    const a = m('done', [], 'a')
+    const b = m('doing', ['x', 'y', 'z', 'w'], 'b')
+    const c = m('todo', [], 'c') // không checklist → 0
+    const state: RoadmapState = { b: { x: true, y: true } }
+    // (1 + 2/4 + 0) / 3 = 50%
+    expect(laneProgress([a, b, c], state)).toEqual({ done: 1, total: 3, percent: 50 })
+    expect(milestoneProgress(b, state)).toBe(0.5)
+  })
+
+  it('milestone done = 100% dù checklist chưa tick hết', () => {
+    expect(milestoneProgress(m('done', ['x']), {})).toBe(1)
+  })
+
+  it('tick của mục đã xoá khỏi yaml không được tính', () => {
+    const b = m('doing', ['x'], 'b')
+    expect(checkedCount(b, { b: { x: true, 'da-xoa': true } })).toBe(1)
+    expect(milestoneProgress(b, { b: { x: true, 'da-xoa': true } })).toBe(1)
+  })
+
+  it.each([
+    ['2026-12', '2026-10', 2],
+    ['2027-01', '2026-12', 1],
+    ['2026-10', '2026-10', 0],
+    ['2026-08', '2026-10', -2],
+  ])('monthsUntil(%s, now=%s) = %i', (target, now, n) => {
+    expect(monthsUntil(target, now)).toBe(n)
+  })
+})
+
+describe('parseRoadmap — topics và checklist', () => {
+  const base = 'id: a, title: A, lane: degree, target: "2026-01", status: todo'
+
+  it('đọc topics + checklist; mặc định rỗng khi không khai', () => {
+    const r = parseRoadmap(`
+milestones:
+  - { ${base}, topics: [kubernetes, kafka, kubernetes], checklist: [{ id: x, text: Ý X }] }
+  - { id: b, title: B, lane: degree, target: "2026-02", status: todo }
+`)
+    expect(r.errors).toEqual([])
+    expect(r.data[0]).toMatchObject({
+      topics: ['kubernetes', 'kafka'],
+      checklist: [{ id: 'x', text: 'Ý X' }],
+    })
+    expect(r.data[1]).toMatchObject({ topics: [], checklist: [] })
+  })
+
+  it('mục con hỏng bị bỏ kèm lỗi, milestone vẫn giữ', () => {
+    const r = parseRoadmap(`
+milestones:
+  - ${'{'} ${base}, topics: [ok, "../etc", Hoa], checklist: [{ id: x, text: X }, { id: x, text: trùng }, { id: "có dấu", text: Y }, { text: thiếu id }] }
+`)
+    expect(r.data).toHaveLength(1)
+    expect(r.data[0].topics).toEqual(['ok'])
+    expect(r.data[0].checklist.map((c) => c.id)).toEqual(['x'])
+    expect(r.errors).toHaveLength(5)
+    expect(r.errors.join('\n')).toMatch(/topic "\.\.\/etc"/)
+    expect(r.errors.join('\n')).toMatch(/checklist\[1\] id "x" trùng/)
+  })
+
+  it('topics/checklist sai kiểu → bỏ cả milestone như các trường bắt buộc khác', () => {
+    const r = parseRoadmap(`
+milestones:
+  - { ${base}, topics: kubernetes }
+  - { id: b, title: B, lane: degree, target: "2026-02", status: todo, checklist: "x" }
+`)
+    expect(r.data).toEqual([])
+    expect(r.errors[0]).toContain('topics phải là mảng slug')
+    expect(r.errors[1]).toContain('checklist phải là mảng')
+  })
+})
+
+describe('loadRoadmap — topic phải tồn tại trong learn/', () => {
+  it('topic không có → bỏ khỏi milestone, báo lỗi file:lý do', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pinit-roadmap-'))
+    mkdirSync(join(dir, 'learn/k8s'), { recursive: true })
+    writeFileSync(join(dir, 'learn/k8s/index.md'), '---\ntitle: K8s\n---\n')
+    // Thư mục có nhưng thiếu index.md → không phải topic hợp lệ.
+    mkdirSync(join(dir, 'learn/rong'), { recursive: true })
+    writeFileSync(
+      join(dir, 'roadmap.yaml'),
+      'milestones:\n  - { id: a, title: A, lane: degree, target: "2026-01", status: todo, topics: [k8s, kafka, rong] }\n',
+    )
+    vi.stubEnv('PRIVATE_CONTENT_DIR', dir)
+    const r = await loadRoadmap()
+    expect(r!.data[0].topics).toEqual(['k8s'])
+    expect(r!.errors).toEqual([
+      'roadmap.yaml: milestone a: topic "kafka", "rong" không có trong learn/',
+    ])
+    rmSync(dir, { recursive: true, force: true })
   })
 })

@@ -8,7 +8,7 @@ Chạy local với bộ mẫu này:
     PRIVATE_CONTENT_DIR=./private-content.example npm run dev
 
 ```
-roadmap.yaml                 milestones theo lane
+roadmap.yaml                 milestones theo lane (+ topics, checklist tuỳ chọn)
 learn/<topic>/index.md       tổng quan topic (bắt buộc)
 learn/<topic>/<note>.md      từng note
 case-studies/<slug>.md       case study đã ẩn danh
@@ -29,3 +29,14 @@ denylist. Thử với bộ mẫu (cố tình có một chỗ khớp):
 
     cp private-content.example/denylist.example private-content.example/.denylist
     PRIVATE_CONTENT_DIR=./private-content.example npm run check:denylist
+
+## Nối roadmap với learn/practice
+
+Mỗi milestone có thể có:
+
+- `topics: [slug]` — topic trong `learn/`. Trang roadmap hiện điểm practice trung bình
+  của topic và nút **Luyện** (`/me/practice?topic=<slug>`); trang topic hiện ngược lại
+  khối *Thuộc milestone* trỏ về `/me/roadmap#<id>`. Slug không tồn tại → bỏ + báo lỗi.
+- `checklist: [{ id, text }]` — ý cần nắm. Tick trên trang roadmap, lưu ở
+  `roadmap-state.json` cạnh practice log (thư mục content là read-only). Tiến độ lane =
+  (milestone done + tỉ lệ checklist đã tick của milestone chưa done) / tổng.
