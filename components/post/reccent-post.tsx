@@ -2,7 +2,7 @@ import { Post } from '@/models'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Box, Container, Stack, Typography, useTheme } from '@mui/material'
 import Link from 'next/link'
-import { NoDataFound } from '../common'
+import { NoDataFound } from '../common/no-data-found'
 import { PostList } from './post-list'
 
 interface RecentPostProps {

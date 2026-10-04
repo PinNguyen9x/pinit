@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# pre-commit — chặn secret lọt vào repo public.
+#
+# Bật (mỗi clone chạy một lần, xem CLAUDE.md mục "Bootstrap worktree mới"):
+#   git config core.hooksPath .githooks
+#
+# Bỏ qua khi báo nhầm:  git commit --no-verify
+#
+# Logic dò nằm ở scripts/scan-secrets.sh — DÙNG CHUNG với CI
+# (.github/workflows/secret-scan.yml). Sửa mẫu thì sửa ở đó, đừng thêm vào đây.
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+SCANNER="$ROOT/scripts/scan-secrets.sh"
+
+# Worktree đang ở commit cũ hơn lần thêm scanner thì file chưa tồn tại. Cho commit đi
+# tiếp thay vì chặn: hook là lưới an toàn, không phải thứ được quyền khoá repo lại.
+if [ ! -x "$SCANNER" ]; then
+  echo "pre-commit: không thấy $SCANNER — bỏ qua bước quét secret." >&2
+  exit 0
+fi
+
+if ! "$SCANNER" --cached; then
+  echo "Nếu là báo nhầm:  git commit --no-verify" >&2
+  exit 1
+fi

@@ -1,4 +1,4 @@
-import { useLoginFormSchema } from '@/hooks'
+import { useLoginFormSchema } from '@/hooks/useLoginFormShema'
 import { LoginPayload } from '@/models'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Visibility, VisibilityOff } from '@mui/icons-material'

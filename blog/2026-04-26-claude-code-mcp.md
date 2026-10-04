@@ -48,16 +48,19 @@ MCP Server -- Response             -->  Claude
 
 ### MCP Ecosystem
 
-```
-            Claude
-               ↓ MCP
-    ┌──────────┼──────────┬──────────┬──────────┐
-    │          │          │          │          │
-Filesystem  GitHub    Database    Slack    Google Docs
- MCP Server MCP Server MCP Server MCP Server MCP Server
-    ↓          ↓          ↓          ↓          ↓
-Local Files GitHub    PostgreSQL  Slack    Google Drive
-            Repos     /MySQL      Workspace
+```mermaid
+flowchart TB
+  C["Claude"]
+  C -- MCP --> FS["Filesystem<br/>MCP Server"]
+  C -- MCP --> GH["GitHub<br/>MCP Server"]
+  C -- MCP --> DB["Database<br/>MCP Server"]
+  C -- MCP --> SL["Slack<br/>MCP Server"]
+  C -- MCP --> GD["Google Docs<br/>MCP Server"]
+  FS --> FS2["Local Files"]
+  GH --> GH2["GitHub Repos"]
+  DB --> DB2["PostgreSQL / MySQL"]
+  SL --> SL2["Slack Workspace"]
+  GD --> GD2["Google Drive"]
 ```
 
 ## 3. Transport Protocols

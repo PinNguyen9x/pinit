@@ -207,7 +207,73 @@ flowchart LR
 
 Cuối ngày mình chỉ cần `Ctrl-b d` để detach — server vẫn chạy nền. Sáng hôm sau mở terminal, gõ `tmux attach -t pinit` là toàn bộ bố cục, server và log hiện ra y nguyên. Không phải dựng lại gì cả.
 
-## 11. Những điều rút ra
+## 11. Case study: bốn agent AI, bốn session
+
+Phần trên là tmux dùng cho **một người**. Dưới đây là lúc setup đó bị đẩy xa hơn: mình chạy **nhiều agent Claude Code song song trên cùng một repo**, và tmux là thứ giữ cho nó không loạn.
+
+Quy ước rất gọn — **1 worktree = 1 branch = 1 session = 1 agent**:
+
+```mermaid
+flowchart LR
+    T["🖥️ tmux server<br/>(chạy nền, sống qua mọi lần đóng cửa sổ)"] --> S1["glossary"]
+    T --> S2["research-plane"]
+    T --> S3["tmux-terminal-git"]
+    T --> S4["console"]
+    S1 --> A1["claude --continue<br/>~/Desktop/pinit-glossary"]
+    S2 --> A2["claude --continue<br/>~/Desktop/pinit-research-plane"]
+    S3 --> A3["claude --continue<br/>~/Desktop/pinit-tmux-terminal-git"]
+    S4 --> A4["pane trên: console<br/>pane dưới: shell"]
+```
+
+Điều đáng nói: **không có khái niệm tmux nào mới ở đây cả.** Vẫn đúng ba thứ ở mục 3, 7 và 8, chỉ là dùng ở quy mô khác:
+
+| Khái niệm trong bài | Vai trò trong setup nhiều agent |
+|---|---|
+| **Session** (mục 3) | Định danh của một agent. `glossary` là tên tra cứu được, không phải "tab thứ mấy". |
+| **Detach** (mục 8) | Đóng máy đi ngủ, bốn agent vẫn chạy. Sáng mai `attach` là thấy nguyên chỗ đang dở. |
+| **Split pane** (mục 7) | Session `console`: pane trên theo dõi mọi agent, pane dưới gõ lệnh. |
+
+Và một khả năng chưa nhắc tới ở các mục trước, chính là thứ làm cho toàn bộ chuyện này tự động hoá được:
+
+```bash
+tmux new-session -d -s glossary -c ~/Desktop/pinit-glossary "claude --continue"
+```
+
+Cờ **`-d`** = tạo session ở chế độ detached: nó chạy ngay, **không cần ai mở cửa sổ nhìn vào**. Nhờ vậy một script bash bật lại cả bốn agent trong một dòng lệnh. Terminal thường không có cửa nào tương đương — muốn tự động thì phải nhờ AppleScript giả lập gõ phím.
+
+Bộ ba lệnh còn lại đủ để quản cả cụm:
+
+```bash
+tmux has-session -t glossary    # agent này còn sống không?
+tmux switch-client -t glossary  # đang trong tmux, nhảy sang agent khác
+tmux kill-session -t glossary   # tắt một agent
+```
+
+### Cái bẫy lớn nhất: env thuộc về *server*, không thuộc về pane
+
+Đây là bài học tmux đắt nhất mình học được, và nó đúng cho **mọi** ai chạy lệnh dài hơi trong tmux chứ không riêng agent AI.
+
+Khi bạn truyền command cho `tmux new-session ... "lệnh"`, tmux chạy lệnh đó qua **`sh -c`**, không qua zsh. Nghĩa là `~/.zshrc` **không bao giờ được đọc**, và tiến trình thừa kế env của **tmux server**. Server được tạo từ lần đầu bạn gõ `tmux` — có khi từ vài tháng trước — nên nó thiếu sạch mọi biến bạn thêm vào `~/.zshrc` sau đó.
+
+Triệu chứng ở đây là một API token rỗng, dẫn tới HTTP 403, trong khi mọi health check vẫn báo xanh. Mất khá lâu mới lần ra, vì phản xạ đầu tiên là *mở pane mới cho chắc* — mà **mở pane mới không cứu được**: env hỏng nằm ở server.
+
+Kiểm chứng và chữa:
+
+```bash
+tmux show-environment -g | grep MY_TOKEN     # rỗng = server thiếu biến
+
+# chữa tạm, chỉ áp cho session tạo SAU đó:
+tmux set-environment -g MY_TOKEN "$MY_TOKEN"
+
+# chữa gốc: bọc lệnh để pane tự đọc ~/.zshrc lúc khởi động
+tmux new-session -d -s glossary -c "$path" "zsh -ic 'claude --continue'"
+```
+
+> ⚠️ Phải là **`-ic`**, không phải `-lc`. `export` nằm trong `~/.zshrc`, mà zsh chỉ source file này khi **interactive**. Đo thật trong pane: `zsh -lc` ra chuỗi rỗng, `zsh -ic` ra đúng 42 ký tự.
+
+Toàn bộ vòng đời một task trên setup này — 14 lệnh, 9 bước từ worktree tới merge, và 12 ca lỗi đã gặp — mình viết riêng ở bài [Vòng đời một task với script `agents`](/blog/agents-script-vong-doi-task).
+
+## 12. Những điều rút ra
 
 - **Hiểu mô hình session → window → pane** là hiểu được 80% tmux.
 - **Detach/attach** là tính năng đáng giá nhất: phiên không chết, đặc biệt cứu mạng khi làm việc qua SSH.

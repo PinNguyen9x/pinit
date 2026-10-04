@@ -7,6 +7,8 @@
 // và fullDescription fetch từ json-server — nên người đọc không cần tải một
 // byte renderer nào.
 import { renderMermaidSVG, type RenderOptions } from 'agentic-mermaid'
+import { createHash } from 'crypto'
+import { createLruCache } from './lru-cache'
 
 /**
  * Màu để nguyên dạng `var(--diagram-*)` trong SVG, không chốt cứng giá trị.
@@ -67,6 +69,23 @@ export function renderDiagram(source: string): string {
   const trimmed = source.trim()
   if (!trimmed) return ''
 
+  // Khu /me render markdown mỗi request (getServerSideProps), không phải một
+  // lần lúc build như blog — cùng một sơ đồ sẽ bị dựng lại mỗi lần F5. Đầu ra
+  // chỉ phụ thuộc nguồn (idPrefix cũng băm từ nguồn), nên cache theo hash nội
+  // dung là an toàn. Key là sha256 thay vì chính nguồn: khỏi giữ hai bản chuỗi dài.
+  const key = createHash('sha256').update(trimmed).digest('hex')
+  const cached = diagramCache.get(key)
+  if (cached !== undefined) return cached
+
+  const html = renderUncached(trimmed)
+  diagramCache.set(key, html)
+  return html
+}
+
+/** ~200 sơ đồ: đủ cho toàn bộ note của một người, vài MB RAM là cùng. */
+export const diagramCache = createLruCache<string>(200)
+
+function renderUncached(trimmed: string): string {
   try {
     const svg = renderMermaidSVG(trimmed, {
       ...DIAGRAM_OPTIONS,
@@ -74,6 +93,7 @@ export function renderDiagram(source: string): string {
     })
     return `<figure class="diagram">${svg}</figure>`
   } catch (error) {
+    // Cache cả kết quả lỗi: nguồn không đổi thì lỗi không đổi, khỏi log lại mỗi request.
     console.warn(
       `[diagram] bỏ qua sơ đồ không dựng được: ${
         error instanceof Error ? error.message : String(error)

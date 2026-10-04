@@ -35,24 +35,13 @@ Mỗi skill là **một thư mục** chứa file `SKILL.md` (instructions chính
 
 Đây là điểm hay nhất của Skills — Claude load context theo từng tầng, **không nuốt hết** một lúc:
 
-```
-┌─────────────────────────────────────────────┐
-│ Level 1: Metadata (luôn được load)          │
-│   - YAML Frontmatter (name + description)   │
-│   - ~100 tokens/skill                       │
-└─────────────────────────────────────────────┘
-                ↓ (khi Claude detect skill phù hợp)
-┌─────────────────────────────────────────────┐
-│ Level 2: Instructions (khi triggered)       │
-│   - SKILL.md body                           │
-│   - Dưới 500 dòng / ~5k tokens              │
-└─────────────────────────────────────────────┘
-                ↓ (khi cần chi tiết)
-┌─────────────────────────────────────────────┐
-│ Level 3: Resources (on-demand)              │
-│   - Scripts, templates, references          │
-│   - Effectively unlimited                   │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+  L1["Level 1: Metadata (luôn được load)<br/>YAML Frontmatter (name + description)<br/>~100 tokens/skill"]
+  L2["Level 2: Instructions (khi triggered)<br/>SKILL.md body<br/>Dưới 500 dòng / ~5k tokens"]
+  L3["Level 3: Resources (on-demand)<br/>Scripts, templates, references<br/>Effectively unlimited"]
+  L1 -- "khi Claude detect skill phù hợp" --> L2
+  L2 -- "khi cần chi tiết" --> L3
 ```
 
 **Hệ quả thực tế:**

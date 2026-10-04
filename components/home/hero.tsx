@@ -1,6 +1,7 @@
 import { LoginDialog } from '@/components/auth'
 import { CvViewerDialog } from '@/components/cv'
-import { useAuth, useCvDownload } from '@/hooks'
+import { useCvDownload } from '@/hooks/use-cv-download'
+import { useAuth } from '@/hooks/use-auth'
 import avatar from '@/images/avatar.png'
 import { getErrorMessage } from '@/utils'
 import { Box, Button, CircularProgress, Container, keyframes, Stack, Typography, useTheme } from '@mui/material'

@@ -1,4 +1,3 @@
-import authApi from '@/api/auth-api'
 import { StorageKeys } from '@/constants/storage-key'
 import { LoginPayload, UserProfile } from '@/models'
 import useSWR, { SWRConfiguration } from 'swr'
@@ -26,21 +25,28 @@ export function useAuth(options?: Partial<SWRConfiguration>) {
       // save user info to local storage
       localStorage.setItem(StorageKeys.USER_INFO, JSON.stringify(data))
     },
-    onError: (error) => {
-      // failt to getProfile -> logout
-      console.log('fetch profile error', error)
+    onError: () => {
+      // Không log ở đây: khách chưa đăng nhập thì '/profile' trả 401 và nhánh
+      // này chạy trên mọi trang (Header gọi useAuth) — đó là luồng bình thường
+      // chứ không phải sự cố.
       logout()
     },
   })
-  console.log({ profile, error })
 
   const firstLoading = profile === undefined && error === undefined
   // khong su dung try catch o day de cho cho nao su dung thi handle
+  //
+  // authApi nạp động: Header gọi useAuth trên MỌI trang, nên import tĩnh sẽ kéo
+  // axios (và buffer/base64-js, qs) vào chunk mà cả site phải tải — chỉ để phục
+  // vụ hai hành động người dùng hiếm khi chạm. Việc đọc profile đã đi qua
+  // fetcher fetch() khai báo ở pages/_app.
   async function login(data: LoginPayload) {
+    const { default: authApi } = await import('@/api/auth-api')
     await authApi.login(data)
     await mutate()
   }
   async function logout() {
+    const { default: authApi } = await import('@/api/auth-api')
     await authApi.logout()
     await mutate(null, false)
     localStorage.removeItem(StorageKeys.USER_INFO)

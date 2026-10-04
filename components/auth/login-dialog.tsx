@@ -1,4 +1,4 @@
-import { useAuth } from '@/hooks'
+import { useAuth } from '@/hooks/use-auth'
 import { LoginPayload } from '@/models'
 import { getErrorMessage } from '@/utils'
 import CloseIcon from '@mui/icons-material/Close'

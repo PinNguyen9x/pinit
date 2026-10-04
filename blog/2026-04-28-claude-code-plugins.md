@@ -21,13 +21,14 @@ Plugins là bộ sưu tập đóng gói các customization của Claude Code (sl
 
 ### Plugin = Bundle các module 01-06
 
-```
-            Plugin
-              ↓
-   ┌──────────┼──────────┬──────────┬──────────┐
-   │          │          │          │          │
-Slash      Subagents   MCP       Hooks      Skills
-Commands               Servers
+```mermaid
+flowchart TB
+  P["Plugin"]
+  P --> SC["Slash Commands"]
+  P --> SA["Subagents"]
+  P --> MS["MCP Servers"]
+  P --> HK["Hooks"]
+  P --> SK["Skills"]
 ```
 
 ### Vì sao dùng Plugin?

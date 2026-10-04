@@ -1,6 +1,6 @@
-import { MainLayout } from '@/components/layouts'
+import { MainLayout } from '@/components/layouts/main'
 import { WorkFilterForm, WorkList } from '@/components/work'
-import { useWorkListInfinity } from '@/hooks'
+import { useWorkListInfinity } from '@/hooks/use-work-list-infinity'
 import { ListParams, ListResponse, Work, WorkFilterPayload } from '@/models'
 import { Box, Button, CircularProgress, Container, Stack, Typography } from '@mui/material'
 import { useRouter } from 'next/router'

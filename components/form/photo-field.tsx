@@ -1,4 +1,7 @@
-import { DEFAULT_THUMBNAIL_URL } from '@/constants'
+// Import thẳng './common', không qua barrel '@/constants': barrel re-export cả
+// './glossary' (912 dòng dữ liệu), và photo-field nằm trong chuỗi form → works
+// nên cả bộ glossary bị kéo vào bundle của works, login và trang chủ.
+import { DEFAULT_THUMBNAIL_URL } from '@/constants/common'
 import { Box, FormHelperText, Typography } from '@mui/material'
 import Image from 'next/image'
 import { ChangeEvent } from 'react'
@@ -23,7 +26,6 @@ export function PhotoField<T extends FieldValues>({ name, label, control }: Phot
     if (!file) return
 
     const url = URL.createObjectURL(file)
-    console.log({ url, file })
     onChange({
       file,
       previewUrl: url,

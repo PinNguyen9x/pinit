@@ -1,7 +1,7 @@
 import { Work } from '@/models'
 import { Stack } from '@mui/material'
 import { Fragment } from 'react'
-import { NoDataFound } from '../common'
+import { NoDataFound } from '../common/no-data-found'
 import { WorkItem } from './work-item'
 import { WorkSkeleton } from './work-skeleton'
 

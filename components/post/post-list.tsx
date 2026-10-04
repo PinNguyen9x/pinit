@@ -1,7 +1,7 @@
 import { Post } from '@/models'
 import { Box } from '@mui/material'
 import { Fragment } from 'react'
-import { NoDataFound } from '../common'
+import { NoDataFound } from '../common/no-data-found'
 import { PostCard } from './post-card'
 import { PostItemSkeleton } from './post-skeleton'
 

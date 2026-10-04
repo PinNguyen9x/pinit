@@ -1,5 +1,5 @@
 import { ThemeColorModeContext } from '@/context/theme-mode'
-import { useAuth } from '@/hooks'
+import { useAuth } from '@/hooks/use-auth'
 import { encodeUrl } from '@/utils'
 import { Logo } from '../logo'
 import CloseIcon from '@mui/icons-material/Close'

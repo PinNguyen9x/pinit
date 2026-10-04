@@ -1,4 +1,4 @@
-import { MainLayout } from '@/components/layouts'
+import { MainLayout } from '@/components/layouts/main'
 import avatar from '@/images/avatar.png'
 import {
   Avatar,

@@ -8,12 +8,28 @@ services:
       # BIND_ADDR mặc định 127.0.0.1 = ẩn khỏi internet (prod đi qua nginx :443).
       # Staging cần truy cập trực tiếp IP:3001 -> deploy set BIND_ADDR=0.0.0.0
       - "${BIND_ADDR:-127.0.0.1}:${HOST_PORT:-3000}:3000"
+    # Secrets khu /me (OWNER_PASSWORD_HASH, SESSION_SECRET, ANTHROPIC_API_KEY,
+    # TRUST_PROXY) — file nằm cạnh compose trên VPS, chmod 600, KHÔNG có trong repo.
+    # Prod có nội dung; staging là file rỗng (deploy.yml `touch`) nên /me tắt ở
+    # staging. Hash bcrypt trong file này phải bọc nháy đơn — xem docs/private-area.md.
+    env_file:
+      - .env.private
     environment:
       - NODE_ENV=production
       # Gọi backend qua tên container trên webnet (prod: json-server-blog, staging: json-server-blog-staging)
       - API_URL=${API_TARGET:-http://json-server-blog:4000}
       # Next standalone bind vào HOSTNAME; Docker đặt = container ID -> ép 0.0.0.0
       - HOSTNAME=0.0.0.0
+      - PRIVATE_CONTENT_DIR=/app/private-content
+      - PRACTICE_LOG_PATH=/app/practice-data/practice-log.jsonl
+    volumes:
+      # Content private: chỉ đọc. Repo + image đều public, content chỉ sống ở đây.
+      - /srv/pinit-private/content:/app/private-content:ro
+      # Log practice: thư mục riêng (chown 1001:1001 = user nextjs trong image).
+      # Mount THƯ MỤC, không mount file đơn: file chưa có trên host thì Docker tạo
+      # một thư mục trùng tên và app ghi log lỗi EISDIR. Prod rw; staging dùng
+      # chung thư mục nên deploy.yml export PRACTICE_LOG_MODE=ro — không ghi nhầm.
+      - /srv/pinit-private/practice-log:/app/practice-data:${PRACTICE_LOG_MODE:-rw}
     networks:
       - webnet
     healthcheck:

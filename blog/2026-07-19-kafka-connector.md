@@ -30,15 +30,13 @@ Ai cũng viết producer/consumer để làm việc này. Mà đã tự viết t
 
 Đây là khái niệm cốt lõi, nhớ được cái này là hiểu 80% Kafka Connect.
 
-```
-   Hệ ngoài                Kafka                 Hệ ngoài
- (upstream)                                     (downstream)
-┌──────────┐   Source    ┌─────────┐   Sink    ┌──────────────┐
-│ Postgres │ ──────────> │  Topic  │ ────────> │ Elasticsearch│
-│  MySQL   │  connector  │  Kafka  │ connector │   S3 / GCS   │
-│   API    │             └─────────┘           │   Database   │
-└──────────┘                                   └──────────────┘
-   kéo VÀO Kafka                            đẩy RA khỏi Kafka
+```mermaid
+flowchart LR
+  UP["Hệ ngoài (upstream)<br/>Postgres / MySQL / API"]
+  K["Topic Kafka"]
+  DOWN["Hệ ngoài (downstream)<br/>Elasticsearch / S3 / GCS<br/>Database"]
+  UP -- "Source connector<br/>(kéo VÀO Kafka)" --> K
+  K -- "Sink connector<br/>(đẩy RA khỏi Kafka)" --> DOWN
 ```
 
 - **Source connector** — kéo dữ liệu từ hệ thống **[upstream](/glossary#Upstream)** (database, file, API) **VÀO** topic Kafka. Nó đóng vai một **[producer](/glossary#Producer)** thông minh.
@@ -82,15 +80,19 @@ curl http://localhost:8083/connectors/orders-to-elasticsearch/status
 
 Kafka Connect chạy như một cụm các **worker** (tiến trình JVM). Khi bạn tạo một connector, Connect chia công việc thành nhiều **task** và rải đều lên các worker.
 
-```
-        Kafka Connect Cluster
-┌─────────────┐   ┌─────────────┐
-│  Worker 1   │   │  Worker 2   │
-│  ┌───────┐  │   │  ┌───────┐  │
-│  │Task 0 │  │   │  │Task 2 │  │
-│  │Task 1 │  │   │  └───────┘  │
-│  └───────┘  │   │             │
-└─────────────┘   └─────────────┘
+```mermaid
+flowchart TB
+  C["Connector"]
+  subgraph W1["Worker 1"]
+    T0["Task 0"]
+    T1["Task 1"]
+  end
+  subgraph W2["Worker 2"]
+    T2["Task 2"]
+  end
+  C --> T0
+  C --> T1
+  C --> T2
 ```
 
 - `tasks.max` quyết định số task tối đa. Với Sink connector, số task hữu ích **không vượt quá số [partition](/glossary#Partition)** của topic — vì mỗi partition chỉ được một task đọc (đúng luật consumer group). Với Source connector thì con số thật do chính connector quyết định theo nguồn dữ liệu: Debezium MySQL luôn chỉ 1 task vì chỉ có một binlog, còn JDBC source có thể chia theo số bảng.

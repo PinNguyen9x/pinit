@@ -33,20 +33,28 @@ Apache **[Kafka](/glossary#Kafka)** là một **distributed event streaming plat
 
 ## 2. Kiến trúc tổng quan
 
-```
-                        ┌─────────────────────────────────────┐
-                        │           KAFKA CLUSTER             │
-                        │                                     │
- ┌──────────┐           │  ┌────────┐ ┌────────┐ ┌────────┐  │          ┌──────────┐
- │ Producer │──produce──▶  │Broker 1│ │Broker 2│ │Broker 3│  ──consume──▶ Consumer │
- └──────────┘           │  └────────┘ └────────┘ └────────┘  │          │  Group   │
- ┌──────────┐           │       ▲                            │          └──────────┘
- │ Producer │──produce──▶       │                            │          ┌──────────┐
- └──────────┘           │  ┌────┴─────────┐                  ──consume──▶ Consumer │
-                        │  │ KRaft Quorum │                  │          │  Group   │
-                        │  │ (metadata)   │                  │          └──────────┘
-                        │  └──────────────┘                  │
-                        └─────────────────────────────────────┘
+```mermaid
+flowchart LR
+  P1["Producer"]
+  P2["Producer"]
+  subgraph cluster["KAFKA CLUSTER"]
+    direction TB
+    KR["KRaft Quorum<br/>(metadata)"]
+    B1["Broker 1"]
+    B2["Broker 2"]
+    B3["Broker 3"]
+    %% Thứ tự cạnh (không phải thứ tự khai báo node) quyết định thứ tự cột.
+    %% Thứ tự 2-3-1 dưới đây cho ra Broker 1-2-3 từ trái sang phải; đổi lại là lệch.
+    KR --> B2
+    KR --> B3
+    KR --> B1
+  end
+  CG1["Consumer Group"]
+  CG2["Consumer Group"]
+  P1 -- produce --> cluster
+  P2 -- produce --> cluster
+  cluster -- consume --> CG1
+  cluster -- consume --> CG2
 ```
 
 - **Producer** ghi message vào **Topic** trên **Broker**.
@@ -183,12 +191,12 @@ Khi consumer join/leave group (deploy, crash, scale), Kafka **phân chia lại p
 
 **[Kafka Connect](/glossary#Kafka%20Connect)** là framework chuẩn để **stream data giữa Kafka và hệ thống ngoài** mà không cần viết producer/consumer code — chỉ cần config JSON.
 
-```
-                    KAFKA CONNECT
-┌──────────┐   ┌─────────────────┐   ┌───────┐   ┌────────────────┐   ┌───────────────┐
-│  MySQL   │──▶│ Source Connector│──▶│ Kafka │──▶│ Sink Connector │──▶│ S3 / ES /     │
-│ Postgres │   │ (vd: Debezium)  │   │ Topics│   │ (vd: S3 Sink)  │   │ BigQuery ...  │
-└──────────┘   └─────────────────┘   └───────┘   └────────────────┘   └───────────────┘
+```mermaid
+flowchart LR
+  DB["MySQL / Postgres"] --> SRC["Source Connector<br/>(vd: Debezium)"]
+  SRC --> K["Kafka Topics"]
+  K --> SNK["Sink Connector<br/>(vd: S3 Sink)"]
+  SNK --> OUT["S3 / ES /<br/>BigQuery ..."]
 ```
 
 - **Source Connector**: kéo data từ ngoài **vào** Kafka (VD: **[Debezium](/glossary#CDC%20%2F%20Debezium)** đọc binlog MySQL → CDC events).
@@ -198,17 +206,27 @@ Khi consumer join/leave group (deploy, crash, scale), Kafka **phân chia lại p
 
 ### 4.2. Kiến trúc Kafka Connect
 
-```
 Connect Cluster (distributed mode):
 
-┌─────────── Worker 1 ──────────┐  ┌─────────── Worker 2 ──────────┐
-│ Connector A                   │  │                               │
-│  ├─ Task A-0 (đọc table X,Y)  │  │  ├─ Task A-1 (đọc table Z)    │
-│ Connector B                   │  │                               │
-│  ├─ Task B-0                  │  │  ├─ Task B-1                  │
-└───────────────────────────────┘  └───────────────────────────────┘
-         Worker chết → tasks tự động chuyển sang worker còn sống
+```mermaid
+flowchart TB
+  CA["Connector A"]
+  CB["Connector B"]
+  subgraph W1["Worker 1"]
+    A0["Task A-0<br/>(đọc table X, Y)"]
+    B0["Task B-0"]
+  end
+  subgraph W2["Worker 2"]
+    A1["Task A-1<br/>(đọc table Z)"]
+    B1["Task B-1"]
+  end
+  CA --> A0
+  CA --> A1
+  CB --> B0
+  CB --> B1
 ```
+
+Worker chết → tasks của nó tự động chuyển sang worker còn sống.
 
 | Thành phần | Vai trò |
 |---|---|
@@ -268,18 +286,22 @@ Connect Cluster (distributed mode):
 
 **Bài toán:** Hệ thống thanh toán — user bấm nút thanh toán, cần: trừ tiền, gửi notification, ghi analytics.
 
-```
-                                    ┌──────────────────────────────────┐
-                                    │      Topic: payment.events       │
-┌──────────┐    produce             │  P0: [e1][e4][e7]                │
-│ Payment  │ ──(key=user_id)──────▶ │  P1: [e2][e5]                    │
-│ API      │                        │  P2: [e3][e6][e8]                │
-└──────────┘                        └──────────────────────────────────┘
-                                        │              │           │
-                          ┌─────────────┘              │           └─────────────┐
-                          ▼                            ▼                         ▼
-                 Group: "wallet-svc"          Group: "notify-svc"       Sink Connector
-                 (trừ tiền, 3 consumers)      (gửi push, 2 consumers)   (đổ BigQuery)
+```mermaid
+flowchart LR
+  API["Payment API"]
+  subgraph T["Topic: payment.events"]
+    direction TB
+    P0["P0: e1, e4, e7"]
+    P1["P1: e2, e5"]
+    P2["P2: e3, e6, e8"]
+  end
+  W["Group: wallet-svc<br/>(trừ tiền, 3 consumers)"]
+  N["Group: notify-svc<br/>(gửi push, 2 consumers)"]
+  S["Sink Connector<br/>(đổ BigQuery)"]
+  API -- "produce (key=user_id)" --> T
+  T --> W
+  T --> N
+  T --> S
 ```
 
 **Diễn giải từng bước:**
@@ -307,15 +329,11 @@ Connect Cluster (distributed mode):
 
 Đây là vấn đề phổ biến nhất. Producer ghi 10.000 msg/s nhưng consumer chỉ xử lý được 4.000 msg/s → lag tăng liên tục.
 
-```
-Lag tăng dần theo thời gian:
-
-msg/s │  produce rate ────────────────── 10k
-      │
-      │  consume rate ────────────────── 4k
-      │
- lag  │            ╱╱╱╱  ← lag = tích lũy 6k msg/s, càng lúc càng xa
-      └──────────────────────────▶ time
+```mermaid
+flowchart LR
+  P["Producer<br/>10.000 msg/s"] --> T["Topic"]
+  T --> C["Consumer<br/>4.000 msg/s"]
+  T -.-> L["Lag tích lũy<br/>+6.000 msg/s, càng lúc càng xa"]
 ```
 
 **Nguyên nhân & giải pháp:**

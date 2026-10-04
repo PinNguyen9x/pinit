@@ -1,4 +1,4 @@
-import { useTagList } from '@/hooks'
+import { useTagList } from '@/hooks/use-tag-list'
 import { WorkPayload } from '@/models'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Box, Button } from '@mui/material'
