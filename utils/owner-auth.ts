@@ -11,15 +11,34 @@ export interface OwnerConfig {
 // Secret ngắn thì HMAC chỉ mạnh bằng độ dài secret — coi như chưa cấu hình.
 const MIN_SECRET_LENGTH = 32
 
+// $2a/$2b/$2y, cost 2 chữ số, 53 ký tự salt+hash. Hash chứa `$` mà Docker
+// Compose diễn giải `$` trong env_file nếu giá trị không bọc nháy đơn — hash bị
+// cắt thì không passphrase nào khớp, triệu chứng chỉ là "login mãi không được".
+const BCRYPT_RE = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/
+
+/** Vì sao khu /me tắt — null = cấu hình hợp lệ. Dùng cho log lúc khởi động. */
+export function ownerConfigProblem(): string | null {
+  const passwordHash = process.env.OWNER_PASSWORD_HASH
+  const sessionSecret = process.env.SESSION_SECRET
+  if (!passwordHash || !sessionSecret) return 'OWNER_PASSWORD_HASH hoặc SESSION_SECRET chưa đặt'
+  if (sessionSecret.length < MIN_SECRET_LENGTH)
+    return `SESSION_SECRET ngắn hơn ${MIN_SECRET_LENGTH} ký tự`
+  if (!BCRYPT_RE.test(passwordHash)) {
+    return `OWNER_PASSWORD_HASH không phải hash bcrypt đầy đủ (dài ${passwordHash.length}, cần 60) — trong env_file của Docker Compose phải bọc nháy đơn: OWNER_PASSWORD_HASH='$2b$12$...'`
+  }
+  return null
+}
+
 /**
  * null = khu /me tắt (mọi route trả 404). Đọc thẳng `process.env.X` chứ không
  * qua biến trung gian: bundler của middleware chỉ nhận ra dạng truy cập này.
  */
 export function getOwnerConfig(): OwnerConfig | null {
-  const passwordHash = process.env.OWNER_PASSWORD_HASH
-  const sessionSecret = process.env.SESSION_SECRET
-  if (!passwordHash || !sessionSecret || sessionSecret.length < MIN_SECRET_LENGTH) return null
-  return { passwordHash, sessionSecret }
+  if (ownerConfigProblem()) return null
+  return {
+    passwordHash: process.env.OWNER_PASSWORD_HASH!,
+    sessionSecret: process.env.SESSION_SECRET!,
+  }
 }
 
 /**
@@ -31,7 +50,7 @@ export function getOwnerConfig(): OwnerConfig | null {
 export function getClientIp(
   forwardedFor: string | string[] | undefined,
   remoteAddress: string | undefined,
-  trustProxy = process.env.TRUST_PROXY === '1'
+  trustProxy = process.env.TRUST_PROXY === '1',
 ): string {
   if (trustProxy && forwardedFor) {
     const raw = Array.isArray(forwardedFor) ? forwardedFor.join(',') : forwardedFor

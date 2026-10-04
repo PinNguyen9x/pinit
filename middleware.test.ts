@@ -12,7 +12,7 @@ function req(path: string, cookie?: string) {
 }
 
 beforeEach(() => {
-  vi.stubEnv('OWNER_PASSWORD_HASH', '$2b$12$dummy')
+  vi.stubEnv('OWNER_PASSWORD_HASH', '$2b$12$6cUN0FGunfzqrq/hVycpSO.EXidPdqQ.de6xpp/4HO6zeqrn4ZNvq')
   vi.stubEnv('SESSION_SECRET', SECRET)
 })
 afterEach(() => vi.unstubAllEnvs())
