@@ -13,3 +13,8 @@ README.md
 coverage
 *.pem
 .env.local
+
+# Khu private /me — không bao giờ bake vào image (repo và image đều public).
+private-content
+**/.denylist
+**/*.jsonl
