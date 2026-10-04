@@ -1,6 +1,10 @@
 # lane: ai-platform | data-platform | degree | english | interview
 # status: todo | doing | done | dropped
 # target: YYYY-MM (để trong nháy kép cho chắc YAML không hiểu thành số/ngày)
+# topics: [slug] (tuỳ chọn) — thư mục trong learn/; slug không tồn tại bị bỏ và báo lỗi
+# checklist: [{ id, text }] (tuỳ chọn) — ý cần nắm / bài toán cần giải được.
+#   Trạng thái tick KHÔNG ghi vào file này (content mount read-only) mà nằm ở
+#   roadmap-state.json cạnh practice log. Đổi `id` của một mục = mất tick của mục đó.
 milestones:
   - id: llm-gateway
     title: Dựng LLM gateway nội bộ có rate limit và log chi phí
@@ -10,6 +14,14 @@ milestones:
     notes: Bắt đầu từ proxy đơn giản, thêm cache sau.
     links:
       - https://example.com/llm-gateway-notes
+    topics: [kubernetes]
+    checklist:
+      - id: rate-limit
+        text: Giải thích được token bucket và chỗ đặt rate limit (per-user hay per-model)
+      - id: cost-log
+        text: Thiết kế được bảng log chi phí theo request
+      - id: deploy-k8s
+        text: Deploy gateway lên Kubernetes với HPA theo QPS
 
   - id: rag-eval
     title: Bộ eval cho pipeline RAG
@@ -41,3 +53,9 @@ milestones:
     lane: interview
     target: "2026-12"
     status: doing
+    topics: [kubernetes]
+    checklist:
+      - id: scheduling
+        text: Trả lời trôi chảy câu hỏi về scheduler (filter/score, taint)
+      - id: whiteboard-45
+        text: Vẽ kiến trúc trong 10 phút đầu, để 35 phút cho đánh đổi

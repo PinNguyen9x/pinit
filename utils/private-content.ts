@@ -13,6 +13,7 @@ import { join, resolve } from 'path'
 import {
   CaseStudy,
   CaseStudyMeta,
+  ChecklistItem,
   isSlug,
   LANES,
   Milestone,
@@ -140,12 +141,37 @@ export function parseRoadmap(raw: string, file = 'roadmap.yaml'): WithErrors<Mil
       problems.push('links phải là mảng URL http(s)')
     }
     if (m?.notes != null && typeof m.notes !== 'string') problems.push('notes phải là chuỗi')
+    const topics = stringArray(m?.topics)
+    if (!topics) problems.push('topics phải là mảng slug')
+    if (m?.checklist != null && !Array.isArray(m.checklist)) {
+      problems.push('checklist phải là mảng { id, text }')
+    }
 
     if (problems.length) {
       errors.push(`${where}: ${problems.join(', ')}`)
       return
     }
     seen.add(id!)
+
+    // Mục con hỏng không làm mất cả milestone — bỏ mục đó, báo lỗi, giữ phần còn lại.
+    const validTopics: string[] = []
+    for (const t of topics!) {
+      if (!isSlug(t)) errors.push(`${where}: topic "${t}" không phải slug hợp lệ (a-z 0-9 - _)`)
+      else if (!validTopics.includes(t)) validTopics.push(t)
+    }
+    const checklist: ChecklistItem[] = []
+    ;((m.checklist as any[]) ?? []).forEach((c, j) => {
+      const cid = nonEmptyString(c?.id)
+      const text = nonEmptyString(c?.text)
+      if (!cid || !isSlug(cid) || !text) {
+        errors.push(`${where}: checklist[${j}] cần id (slug) và text`)
+      } else if (checklist.some((x) => x.id === cid)) {
+        errors.push(`${where}: checklist[${j}] id "${cid}" trùng`)
+      } else {
+        checklist.push({ id: cid, text })
+      }
+    })
+
     milestones.push({
       id: id!,
       title: title!,
@@ -154,16 +180,34 @@ export function parseRoadmap(raw: string, file = 'roadmap.yaml'): WithErrors<Mil
       status: status!,
       notes: nonEmptyString(m.notes),
       links: links!,
+      topics: validTopics,
+      checklist,
     })
   })
   milestones.sort((a, b) => a.target.localeCompare(b.target))
   return { data: milestones, errors }
 }
 
-/** null = chưa có roadmap.yaml. */
+/**
+ * null = chưa có roadmap.yaml. Topic phải tồn tại (là topic hợp lệ trong learn/,
+ * có index.md) — sai thì bỏ khỏi milestone và báo lỗi như mọi lỗi schema khác.
+ */
 export async function loadRoadmap(): Promise<WithErrors<Milestone[]> | null> {
   const raw = await readOptional(join(contentDir(), 'roadmap.yaml'))
-  return raw == null ? null : parseRoadmap(raw)
+  if (raw == null) return null
+  const parsed = parseRoadmap(raw)
+  if (!parsed.data.some((m) => m.topics.length)) return parsed
+
+  const known = new Set((await listTopics()).data.map((t) => t.slug))
+  for (const m of parsed.data) {
+    const missing = m.topics.filter((t) => !known.has(t))
+    if (!missing.length) continue
+    parsed.errors.push(
+      `roadmap.yaml: milestone ${m.id}: topic ${missing.map((t) => `"${t}"`).join(', ')} không có trong learn/`,
+    )
+    m.topics = m.topics.filter((t) => known.has(t))
+  }
+  return parsed
 }
 
 // ---------- learn ----------
