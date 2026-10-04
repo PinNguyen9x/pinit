@@ -25,10 +25,13 @@ describe('middleware /me', () => {
     }
   })
 
-  it.each(['/me/login', '/api/me/login', '/api/me/logout'])('cho qua %s khi chưa đăng nhập', async (p) => {
-    const res = await middleware(req(p))
-    expect(res.headers.get('x-middleware-next')).toBe('1')
-  })
+  it.each(['/me/login', '/api/me/login', '/api/me/logout'])(
+    'cho qua %s khi chưa đăng nhập',
+    async (p) => {
+      const res = await middleware(req(p))
+      expect(res.headers.get('x-middleware-next')).toBe('1')
+    },
+  )
 
   it('chưa đăng nhập → redirect về login kèm next', async () => {
     const res = await middleware(req('/me/learn/k8s?tab=q'))
@@ -40,6 +43,7 @@ describe('middleware /me', () => {
 
   it('API chưa đăng nhập → 401 thay vì redirect', async () => {
     expect((await middleware(req('/api/me/practice'))).status).toBe(401)
+    expect((await middleware(req('/api/me/check-denylist'))).status).toBe(401)
   })
 
   it('cookie hợp lệ → cho qua', async () => {
