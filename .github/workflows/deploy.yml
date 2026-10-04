@@ -39,7 +39,9 @@ jobs:
           username: pinnguyen9x
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Build & push (amd64 native)
+      # Build -> kiểm -> push, tách làm ba bước: image chứa content private của khu
+      # /me thì dừng ở bước kiểm, KHÔNG BAO GIỜ lên ghcr (repo + image đều public).
+      - name: Build (amd64 native, chưa push)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -48,7 +50,14 @@ jobs:
           build-args: |
             API_URL=http://json-server-blog:4000
           tags: ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
-          push: true
+          load: true
+          push: false
+
+      - name: Kiểm image không chứa content private
+        run: scripts/check-image-private.sh "$IMAGE:${{ steps.meta.outputs.tag }}"
+
+      - name: Push
+        run: docker push "$IMAGE:${{ steps.meta.outputs.tag }}"
 
   deploy:
     needs: build-push
@@ -60,6 +69,10 @@ jobs:
       name: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
       url: ${{ github.ref_name == 'main' && 'https://nipit.pro' || format('http://{0}:3001', vars.VPS_HOST) }}
     steps:
+      # Cần docker-compose.yml của chính commit này để scp lên VPS (job này chạy
+      # trên runner khác job build — không có sẵn workspace).
+      - uses: actions/checkout@v4
+
       - name: Chuẩn bị SSH
         run: |
           mkdir -p ~/.ssh
@@ -70,13 +83,23 @@ jobs:
       - name: Deploy lên VPS
         run: |
           TAG='${{ needs.build-push.outputs.tag }}'
+          # BIND: prod chỉ nghe 127.0.0.1 (nginx đứng trước); staging mở thẳng IP:3001.
+          # LOG_MODE: staging dùng chung thư mục practice-log với prod -> mount ro.
           if [ "${{ github.ref_name }}" = "main" ]; then
             DIR=/opt/learn-nextjs; CON=learn-nextjs; PORT=3000; API=http://json-server-blog:4000
+            BIND=127.0.0.1; LOG_MODE=rw
           else
             DIR=/opt/learn-nextjs-staging; CON=learn-nextjs-staging; PORT=3001; API=http://json-server-blog-staging:4000
+            BIND=0.0.0.0; LOG_MODE=ro
           fi
+          # Compose trong repo là nguồn duy nhất: chép lên trước mỗi lần deploy, ghi
+          # đè bản trên VPS. KHÔNG đụng $DIR/.env (cấu hình riêng từng môi trường).
+          scp -o StrictHostKeyChecking=no docker-compose.yml "$VPS:$DIR/docker-compose.yml"
+          # touch không sửa file đã có: .env.private của prod giữ nguyên secrets.
+          # Thiếu file thì compose dừng hẳn ("env file not found") -> cả site sập;
+          # có file rỗng thì site chạy, chỉ khu /me tắt (staging luôn ở trạng thái này).
           ssh -o StrictHostKeyChecking=no "$VPS" "
             docker network create webnet 2>/dev/null || true
-            export IMAGE=$IMAGE:$TAG CONTAINER=$CON HOST_PORT=$PORT API_TARGET=$API
-            cd $DIR && docker compose pull && docker compose up -d --remove-orphans && docker image prune -af
+            export IMAGE=$IMAGE:$TAG CONTAINER=$CON HOST_PORT=$PORT API_TARGET=$API BIND_ADDR=$BIND PRACTICE_LOG_MODE=$LOG_MODE
+            cd $DIR && touch .env.private && docker compose pull && docker compose up -d --remove-orphans && docker image prune -af
           "
