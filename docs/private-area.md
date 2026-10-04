@@ -33,8 +33,8 @@ Các lớp còn lại:
 
 | Đường dẫn | Chủ / quyền | Vai trò |
 |---|---|---|
-| `/srv/pinit-private/content/` | `pin:pin` 755 | repo content (private), owner `git pull`; container (uid 1001) chỉ đọc |
-| `/srv/pinit-private/practice-log/` | `1001:1001` 700 | container ghi `practice-log.jsonl` |
+| `/srv/pinit-private/content/` | `pin:pin` 755 | clone của `PinNguyen9x/pinit-private-content`, owner `git pull`; container (uid 1001) chỉ đọc |
+| `/srv/pinit-private/practice-log/` | `1001:1001` 700 | container ghi `practice-log.jsonl`; `pin` không đọc được — dùng `sudo` (xem *Đọc practice log*) |
 | `/opt/learn-nextjs/.env.private` | chmod 600 | secrets prod — **cần tạo**, xem dưới |
 | `/opt/learn-nextjs-staging/.env.private` | rỗng | `deploy.yml` tự `touch`; để rỗng |
 
@@ -84,7 +84,7 @@ node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 12))" '<passp
 |---|---|---|
 | `OWNER_PASSWORD_HASH` | `.env.private` | thiếu/sai dạng → `/me` 404 |
 | `SESSION_SECRET` | `.env.private` | ≥ 32 ký tự; ngắn hơn → `/me` 404 |
-| `ANTHROPIC_API_KEY` | `.env.private` | thiếu → `/me/practice` tắt, API 503 `practice-not-configured` |
+| `ANTHROPIC_API_KEY` | `.env.private` | thiếu → `/me/practice` tắt, API 503 `practice-not-configured`. Có nhưng không giống key thật (không bắt đầu bằng `sk-ant-` hoặc < 40 ký tự) → **chỉ cảnh báo**: log `[practice] ANTHROPIC_API_KEY không giống key thật…` + banner trên `/me/practice`; roadmap/learn không bị ảnh hưởng |
 | `TRUST_PROXY` | `.env.private` | `1` — xem mục nginx |
 | `PRACTICE_MODEL` | `.env.private` (tuỳ chọn) | mặc định `claude-haiku-4-5` |
 | `PRIVATE_CONTENT_DIR` | compose | `/app/private-content` |
@@ -117,17 +117,66 @@ tử cuối do client viết — rate limit bị lách. Đổi/thêm vhost thì 
 sudo nginx -T 2>/dev/null | grep -n 'proxy_pass\|X-Forwarded-For'   # mỗi proxy_pass tới :3000 phải đi kèm X-Forwarded-For
 ```
 
-## Sync content
+## Content: repo, deploy key, sync
 
-Content là một repo git **private** riêng, clone vào `/srv/pinit-private/content`
-(user `pin`, deploy key read-only). Cập nhật:
+Content là repo git **private** `PinNguyen9x/pinit-private-content`, clone vào
+`/srv/pinit-private/content` bằng user `pin` qua một **deploy key chỉ đọc** — VPS
+kéo được content nhưng không đẩy ngược được, và key này không mở được repo nào khác.
+
+**Clone lần đầu** (user `pin`):
+
+```bash
+# 1. Key riêng cho repo content
+ssh-keygen -t ed25519 -f ~/.ssh/pinit_content -N '' -C 'pinit-content-readonly'
+cat ~/.ssh/pinit_content.pub
+#    → repo content → Settings → Deploy keys → Add; KHÔNG tick "Allow write access"
+
+# 2. Alias ssh: git dùng đúng key này cho repo này (IdentitiesOnly chặn ssh thử key khác)
+cat >> ~/.ssh/config <<'EOF'
+Host github-pinit-content
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/pinit_content
+  IdentitiesOnly yes
+EOF
+
+# 3. Clone VÀO thư mục hiện tại — dấu `.` cuối lệnh là bắt buộc
+cd /srv/pinit-private/content
+git clone git@github-pinit-content:PinNguyen9x/pinit-private-content.git .
+ls    # phải thấy roadmap.yaml, learn/, case-studies/ ngay tại đây
+```
+
+**Thiếu dấu `.`** thì git tạo thư mục con `content/pinit-private-content/…` — app không
+thấy gì: đăng nhập được nhưng mọi trang hiện "Chưa có roadmap.yaml / topic / case study"
+(trạng thái trống, không phải lỗi 500). Đã gặp đúng triệu chứng này ở lần deploy đầu
+(khi đó thư mục còn rỗng hẳn).
+
+**Cập nhật:**
 
 ```bash
 cd /srv/pinit-private/content && git pull
 ```
 
-Không cần restart: mọi trang đọc file lúc request. Trước khi promote một note/case
-study lên blog public, chạy denylist (mục dưới) trên máy owner.
+Không cần restart: mọi trang đọc file lúc request.
+
+### `.denylist` chỉ sống trên VPS
+
+Viết trực tiếp tại `/srv/pinit-private/content/.denylist` — **không commit** (repo
+content đã `.gitignore` file này, và `git pull` không đụng tới file untracked). Tên
+nội bộ không đi qua GitHub, không đi qua phiên làm việc với AI. Nút *Kiểm denylist*
+trên trang case study đọc file này. Muốn quét toàn bộ content bằng
+`npm run check:denylist` trên máy owner: clone repo content vào thư mục tạm, chép
+`.denylist` từ VPS vào đó, chạy `PRIVATE_CONTENT_DIR=<thư-mục-tạm> npm run check:denylist`
+trong repo `pinit`, rồi xoá thư mục tạm.
+
+### Đọc practice log
+
+Thư mục log thuộc `1001:1001` quyền 700 (chỉ container ghi), nên user `pin` cần `sudo`:
+
+```bash
+sudo wc -l /srv/pinit-private/practice-log/practice-log.jsonl
+sudo tail -3 /srv/pinit-private/practice-log/practice-log.jsonl
+```
 
 ## Xoay passphrase / secret / key
 
@@ -187,18 +236,20 @@ Theo thứ tự — bước nào hỏng thì dừng ở đó.
    `docker compose up -d --force-recreate` (kèm `IMAGE=...` như mục *Xoay passphrase*) —
    `restart` **không đủ** vì `env_file` chỉ được đọc lúc tạo container. Áp dụng cho
    **mọi lần** sửa `.env.private` về sau.
-3. Log không có cảnh báo `[me]`: `docker logs learn-nextjs 2>&1 | grep '\[me\]'` → rỗng.
-4. Clone repo content vào `/srv/pinit-private/content`.
+3. Log không có cảnh báo: `docker logs learn-nextjs 2>&1 | grep -E '\[me\]|\[practice\]'` → rỗng.
+   `[practice] ANTHROPIC_API_KEY không giống key thật` = key là chuỗi giữ chỗ hoặc dán thiếu.
+4. Clone repo content theo mục *Content: repo, deploy key, sync* — nhớ dấu `.`.
 5. Mount đúng chiều:
    - `docker exec learn-nextjs touch /app/private-content/x` → `Read-only file system`;
    - `docker exec learn-nextjs touch /app/practice-data/x && docker exec learn-nextjs rm /app/practice-data/x` → thành công.
 6. Từ máy ngoài: `curl -sI https://nipit.pro/me` → `307` về `/me/login?next=…`, có `x-robots-tag: noindex, nofollow`.
 7. Staging: `curl -sI http://<staging>:3001/me` → `404` (khu `/me` tắt ở staging).
 8. Đăng nhập trên `https://nipit.pro/me/login`; `/me/roadmap`, `/me/learn`, `/me/case-studies` hiện content thật.
-9. **Practice với Anthropic API thật — chưa từng chạy** (Phase 4 chỉ test với client mock):
+9. **Practice với Anthropic API thật** (đạt lần đầu 2026-10-04 với claude-haiku-4-5):
    một lượt *Sinh 5 câu hỏi* + *Chấm* một câu trên `/me/practice`. Đạt khi: không lỗi 502
    (JSON đúng schema), câu hỏi bám notes, điểm/`missing`/`followUp` hợp lý; và
-   `/srv/pinit-private/practice-log/practice-log.jsonl` có thêm 6 dòng (5 câu + 1 lần chấm).
+   `sudo wc -l /srv/pinit-private/practice-log/practice-log.jsonl` tăng 6 dòng (5 câu + 1 lần chấm).
+   Lỗi upstream hiện mã + type ngay trên UI (vd `401 authentication_error` → kiểm key).
    Model trả sai schema lặp lại → sửa prompt trong `utils/practice.ts` hoặc đổi `PRACTICE_MODEL`.
 
 ## Ràng buộc khi sửa code

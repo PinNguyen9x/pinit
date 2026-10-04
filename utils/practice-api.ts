@@ -78,7 +78,11 @@ export function handleModelError(res: NextApiResponse, err: unknown) {
   }
   if (err instanceof Anthropic.APIError) {
     console.warn(`[practice] Anthropic API lỗi ${err.status}: ${err.message}`)
-    return res.status(502).json({ code: 'upstream-error', status: err.status ?? null })
+    // status + type (vd 401 authentication_error) đủ để chẩn đoán từ UI; message
+    // thô của Anthropic chỉ nằm trong log server, không gửi về client.
+    return res
+      .status(502)
+      .json({ code: 'upstream-error', status: err.status ?? null, type: err.type ?? null })
   }
   throw err
 }
