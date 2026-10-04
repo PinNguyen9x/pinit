@@ -10,6 +10,7 @@
 | `OWNER_PASSWORD_HASH` | có | bcrypt của passphrase. Sinh: `node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 12))" '<passphrase>'` |
 | `SESSION_SECRET` | có | ≥ 32 ký tự, ví dụ `openssl rand -hex 32`. Xoay biến này = đá mọi phiên ra |
 | `TRUST_PROXY` | prod | `1` để rate limit tin `X-Forwarded-For` — xem dưới |
+| `PRIVATE_CONTENT_DIR` | không | mặc định `./private-content`. Cấu trúc xem `private-content.example/README.md`; chạy thử: `PRIVATE_CONTENT_DIR=./private-content.example npm run dev` |
 
 Thiếu một trong hai biến đầu (hoặc secret ngắn hơn 32 ký tự) thì cả khu `/me` tắt:
 mọi route trả 404, log khởi động in một dòng `[me] ...`. Staging cố ý không đặt hai
@@ -32,3 +33,12 @@ biến này — staging mở thẳng HTTP :3001, không qua nginx.
 
 Cookie `pinit_owner` mang cờ `Secure` khi `NODE_ENV=production` hoặc request đến
 qua https (`X-Forwarded-Proto: https`); dev local trên http không có cờ này.
+
+## Ràng buộc cho các phase sau
+
+- **Text do model sinh (Phase 4: câu hỏi, feedback chấm điểm) KHÔNG đi qua
+  `utils/markdown.ts`.** Pipeline đó bật `rehype-raw` — giữ nguyên HTML thô — vì
+  content markdown do chính owner viết. Output của model thì không tin được
+  (prompt injection qua chính notes có thể khiến nó in ra `<script>`/`<img onerror>`).
+  Render dạng text thuần (React tự escape) hoặc markdown đã sanitize
+  (không `rehype-raw`, hoặc qua `sanitize-html` sẵn có trong dependencies).

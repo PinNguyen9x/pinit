@@ -1,0 +1,43 @@
+# lane: ai-platform | data-platform | degree | english | interview
+# status: todo | doing | done | dropped
+# target: YYYY-MM (để trong nháy kép cho chắc YAML không hiểu thành số/ngày)
+milestones:
+  - id: llm-gateway
+    title: Dựng LLM gateway nội bộ có rate limit và log chi phí
+    lane: ai-platform
+    target: "2026-12"
+    status: doing
+    notes: Bắt đầu từ proxy đơn giản, thêm cache sau.
+    links:
+      - https://example.com/llm-gateway-notes
+
+  - id: rag-eval
+    title: Bộ eval cho pipeline RAG
+    lane: ai-platform
+    target: "2027-03"
+    status: todo
+
+  - id: streaming-basics
+    title: Nắm vững streaming cơ bản (Kafka, exactly-once)
+    lane: data-platform
+    target: "2026-09"
+    status: done
+
+  - id: thesis
+    title: Hoàn thành đề cương luận văn
+    lane: degree
+    target: "2027-06"
+    status: todo
+
+  - id: ielts
+    title: IELTS 7.0
+    lane: english
+    target: "2026-11"
+    status: dropped
+    notes: Đổi sang mục tiêu speaking thực tế thay vì điểm thi.
+
+  - id: system-design-mock
+    title: 10 buổi mock system design
+    lane: interview
+    target: "2026-12"
+    status: doing
