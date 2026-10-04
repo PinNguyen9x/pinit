@@ -152,7 +152,20 @@ describe('POST /api/me/practice/generate', () => {
     )
     const r = await call(generate, { topic: 'k8s' })
     expect(r.status).toBe(502)
-    expect(r.json).toMatchObject({ code: 'upstream-error', status: 500 })
+    expect(r.json).toMatchObject({ code: 'upstream-error', status: 500, type: null })
+    // Status + type của Anthropic đi về client; message thô thì không.
+    create.mockRejectedValueOnce(
+      new Anthropic.APIError(
+        401,
+        { type: 'error', error: { type: 'authentication_error', message: 'API key is invalid.' } },
+        'API key is invalid.',
+        new Headers(),
+        'authentication_error',
+      ),
+    )
+    const auth = await call(generate, { topic: 'k8s' })
+    expect(auth.json).toEqual({ code: 'upstream-error', status: 401, type: 'authentication_error' })
+    expect(JSON.stringify(auth.json)).not.toContain('invalid.')
   })
 
   it.each([

@@ -3,7 +3,8 @@ import { PracticeHistory, scoreColor } from '@/components/me/practice-history'
 import { requireOwner } from '@/utils/owner-auth'
 import type { Grade, PracticeQuestion, PracticeStats } from '@/utils/practice'
 import { PRACTICE_REQUESTS_PER_HOUR, readPracticeStats } from '@/utils/practice'
-import { practiceModel } from '@/utils/practice-client'
+import { anthropicKeyProblem, practiceModel } from '@/utils/practice-client'
+import { describePracticeError } from '@/utils/practice-errors'
 import { listTopics } from '@/utils/private-content'
 import {
   Alert,
@@ -26,16 +27,10 @@ interface PracticePageProps {
   topics: { slug: string; title: string }[]
   stats: Omit<PracticeStats, 'corruptLines'>
   configured: boolean
+  keyProblem: string | null
   model: string
   limitPerHour: number
   statsError: string | null
-}
-
-const ERRORS: Record<string, string> = {
-  'rate-limited': 'Đã dùng hết lượt gọi model trong giờ này.',
-  'bad-model-output': 'Model trả về không đúng định dạng — thử lại.',
-  'model-timeout': 'Model không trả lời trong 30 giây — thử lại.',
-  'upstream-error': 'Anthropic API báo lỗi — thử lại sau.',
 }
 
 async function post<T>(url: string, body: object): Promise<{ data?: T; error?: string }> {
@@ -47,7 +42,7 @@ async function post<T>(url: string, body: object): Promise<{ data?: T; error?: s
   if (!res) return { error: 'Không gọi được API.' }
   if (res.status === 401) return { error: 'Phiên đã hết hạn — đăng nhập lại.' }
   const json = await res.json().catch(() => null)
-  if (!res.ok) return { error: ERRORS[json?.code] ?? json?.message ?? `Lỗi ${res.status}.` }
+  if (!res.ok) return { error: describePracticeError(json, res.status) }
   return { data: json as T }
 }
 
@@ -143,6 +138,7 @@ export default function PracticePage({
   topics,
   stats,
   configured,
+  keyProblem,
   model,
   limitPerHour,
   statsError,
@@ -183,6 +179,11 @@ export default function PracticePage({
       {!configured && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           Chưa đặt ANTHROPIC_API_KEY — practice đang tắt.
+        </Alert>
+      )}
+      {keyProblem && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          {keyProblem}.
         </Alert>
       )}
       {!topics.length && <Alert severity="info">Chưa có topic nào trong learn/.</Alert>}
@@ -259,6 +260,7 @@ export const getServerSideProps: GetServerSideProps<PracticePageProps> = async (
       topics: data.map((t) => ({ slug: t.slug, title: t.title })),
       stats: { recent: stats.recent, byTopic: stats.byTopic },
       configured: !!process.env.ANTHROPIC_API_KEY,
+      keyProblem: anthropicKeyProblem(),
       model: practiceModel(),
       limitPerHour: PRACTICE_REQUESTS_PER_HOUR,
       statsError,
