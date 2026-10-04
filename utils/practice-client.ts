@@ -9,6 +9,26 @@ export function practiceModel(): string {
   return process.env.PRACTICE_MODEL || DEFAULT_PRACTICE_MODEL
 }
 
+// Key thật dài ~100 ký tự; 40 là ngưỡng thấp an toàn — chỉ để bắt chuỗi giữ
+// chỗ kiểu `sk-ant-...` (đã gặp trên prod: len=10 → 401 khi bấm nút).
+const KEY_PREFIX = 'sk-ant-'
+const KEY_MIN_LENGTH = 40
+
+/**
+ * Key có dạng lạ → mô tả vấn đề, ngược lại null (kể cả khi chưa đặt key — đó là
+ * trạng thái "practice tắt" có chủ đích, không phải lỗi). CHỈ để cảnh báo: không
+ * chặn gọi API, không tắt khu /me — roadmap/learn vẫn phải dùng được khi key sai.
+ * Không bao giờ in giá trị key, chỉ độ dài.
+ */
+export function anthropicKeyProblem(): string | null {
+  const key = process.env.ANTHROPIC_API_KEY
+  if (!key) return null
+  if (!key.startsWith(KEY_PREFIX) || key.length < KEY_MIN_LENGTH) {
+    return `ANTHROPIC_API_KEY không giống key thật (dài ${key.length} ký tự; cần bắt đầu bằng ${KEY_PREFIX} và ≥ ${KEY_MIN_LENGTH} ký tự) — /me/practice sẽ bị Anthropic từ chối (401)`
+  }
+  return null
+}
+
 let client: Anthropic | null = null
 
 /** null = chưa đặt ANTHROPIC_API_KEY → practice tắt, API trả 503 rõ ràng. */

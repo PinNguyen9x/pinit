@@ -193,6 +193,7 @@ describe('readPracticeStats', () => {
     expect(await readPracticeStats(join(fixture({}), 'x.jsonl'))).toEqual({
       recent: [],
       byTopic: [],
+      activeDays: [],
       corruptLines: 0,
     })
   })
@@ -224,5 +225,7 @@ describe('readPracticeStats', () => {
       { topic: 'b', count: 11, average: 5 },
     ])
     expect(s.corruptLines).toBe(1)
+    // Ngày theo giờ VN của các lần đã chấm (00:00–00:21 UTC → cùng ngày 04 giờ VN).
+    expect(s.activeDays).toEqual(['2026-10-04'])
   })
 })
