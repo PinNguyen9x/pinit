@@ -1,41 +1,154 @@
 # Khu private `/me`
 
-> Bản nháp từ Phase 1 — Phase 5 viết đầy đủ (setup, sync content, xoay secret,
-> threat model). Hiện chỉ ghi những điều kiện mà thiếu thì prod chạy sai im lặng.
+Khu chỉ owner xem được: roadmap sự nghiệp (`/me/roadmap`), notes ôn luyện (`/me/learn`),
+case study ẩn danh (`/me/case-studies`), luyện phỏng vấn với Claude (`/me/practice`).
+Repo **và** image Docker đều public, nên toàn bộ thiết kế xoay quanh một nguyên tắc:
+**content chỉ nằm trên disk VPS, secret chỉ nằm trong env của container prod.**
 
-## Env
+## Threat model
 
-| Biến | Bắt buộc | Ghi chú |
+| Tài sản | Nằm ở đâu | Chặn lộ bằng gì |
 |---|---|---|
-| `OWNER_PASSWORD_HASH` | có | bcrypt của passphrase. Sinh: `node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 12))" '<passphrase>'` |
-| `SESSION_SECRET` | có | ≥ 32 ký tự, ví dụ `openssl rand -hex 32`. Xoay biến này = đá mọi phiên ra |
-| `TRUST_PROXY` | prod | `1` để rate limit tin `X-Forwarded-For` — xem dưới |
-| `ANTHROPIC_API_KEY` | cho Practice | thiếu → `/me/practice` tắt, API trả 503 `practice-not-configured` |
-| `PRACTICE_MODEL` | không | mặc định `claude-haiku-4-5` (rẻ nhất) |
-| `PRACTICE_LOG_PATH` | prod | mặc định `<PRIVATE_CONTENT_DIR>/practice-log.jsonl`. Thư mục content mount `:ro` nên trỏ biến này vào một **thư mục** rw riêng (đừng bind-mount một file đơn: file chưa có trên host thì Docker tạo thư mục trùng tên) |
-| `PRIVATE_CONTENT_DIR` | không | mặc định `./private-content`. Cấu trúc xem `private-content.example/README.md`; chạy thử: `PRIVATE_CONTENT_DIR=./private-content.example npm run dev` |
+| Content (roadmap, notes, case study) | `/srv/pinit-private/content` trên VPS, mount `:ro` | `.gitignore`, `.dockerignore`, `outputFileTracingExcludes`; CI đọc danh sách file **thật** trong image (`scripts/check-image-private.sh`) và không push nếu vi phạm; đọc lúc request, không bao giờ lúc build |
+| `.denylist` (tên nội bộ) | trong thư mục content | như trên; không bao giờ gửi lên model |
+| Passphrase | chỉ trong đầu owner; server giữ hash bcrypt | bcrypt cost 12; 5 lần sai / 15 phút / IP |
+| `SESSION_SECRET`, `ANTHROPIC_API_KEY` | `/opt/learn-nextjs/.env.private` (chmod 600) | không qua GitHub, không vào image, không có ở staging |
+| Cookie phiên `pinit_owner` | trình duyệt owner | httpOnly, Secure, SameSite=Lax, hạn 7 ngày, HMAC-SHA256; lộ thì xoay `SESSION_SECRET` |
+| Tiền API Anthropic | — | quota 40 request/giờ toàn cục; timeout 30s, không retry |
 
-Thiếu một trong hai biến đầu (hoặc secret ngắn hơn 32 ký tự) thì cả khu `/me` tắt:
-mọi route trả 404, log khởi động in một dòng `[me] ...`. Staging cố ý không đặt hai
-biến này — staging mở thẳng HTTP :3001, không qua nginx.
+Các lớp còn lại:
+- **Staging tắt hẳn `/me`** (không có secrets → mọi route 404): staging mở HTTP thẳng
+  ở :3001, không qua nginx — passphrase sẽ đi plaintext và `X-Forwarded-For` giả được.
+- **Không link, không index:** site public không link vào `/me`; mọi phản hồi `/me/*`
+  mang `X-Robots-Tag: noindex, nofollow`. Cố ý **không** thêm `Disallow: /me` vào
+  robots.txt — làm thế là tự công bố đường dẫn. Người dò vẫn biết `/me` tồn tại
+  (redirect thay vì 404) — chấp nhận được, thứ cần giữ là nội dung chứ không phải URL.
+- **Output của model là dữ liệu không tin được:** render text thuần; model không có tool.
+- **Ngoài phạm vi:** VPS bị chiếm quyền root (đọc được mọi thứ); chính sách lưu dữ liệu
+  của Anthropic với notes gửi lên.
 
-## Hai điều kiện bắt buộc ở prod
+## Bố cục trên VPS
 
-1. **`TRUST_PROXY=1`** trong env container. Thiếu nó, IP để rate limit là địa chỉ
-   socket — mà sau Docker thì mọi request đều mang IP gateway của bridge. Kết quả:
-   5 lần sai của *bất kỳ ai* khoá đăng nhập của *mọi người* 15 phút.
-2. **nginx phải set header**, trong `location` proxy tới container:
+Đã tạo sẵn — không cần chạy lại:
+
+| Đường dẫn | Chủ / quyền | Vai trò |
+|---|---|---|
+| `/srv/pinit-private/content/` | `pin:pin` 755 | repo content (private), owner `git pull`; container (uid 1001) chỉ đọc |
+| `/srv/pinit-private/practice-log/` | `1001:1001` 700 | container ghi `practice-log.jsonl` |
+| `/opt/learn-nextjs/.env.private` | chmod 600 | secrets prod — **cần tạo**, xem dưới |
+| `/opt/learn-nextjs-staging/.env.private` | rỗng | `deploy.yml` tự `touch`; để rỗng |
+
+`/srv/pinit-private/practice-log/` mount rw ở prod nhưng **`:ro` ở staging**
+(`PRACTICE_LOG_MODE=ro`) — hai container dùng chung thư mục, staging không được ghi.
+
+`docker-compose.yml` trong repo là **nguồn duy nhất**: `deploy.yml` chép nó lên VPS
+mỗi lần deploy rồi mới `compose pull && up`. Đừng sửa compose trực tiếp trên VPS —
+sẽ bị ghi đè. Khác biệt giữa hai môi trường do `deploy.yml` export qua ssh, không
+nằm trong file nào trên VPS:
+
+| Biến | Prod | Staging |
+|---|---|---|
+| `BIND_ADDR` | `127.0.0.1` (nginx đứng trước) | `0.0.0.0` (mở thẳng :3001) |
+| `HOST_PORT` | `3000` | `3001` |
+| `PRACTICE_LOG_MODE` | `rw` | `ro` |
+| `IMAGE`, `CONTAINER`, `API_TARGET` | theo môi trường | theo môi trường |
+
+## Secrets: `/opt/learn-nextjs/.env.private`
+
+```bash
+# trên VPS, chỉ prod
+cd /opt/learn-nextjs && touch .env.private && chmod 600 .env.private
+```
+
+```dotenv
+# Hash bcrypt PHẢI bọc nháy đơn.
+OWNER_PASSWORD_HASH='$2b$12$TNZPNDMMR3An6PvWBOoujeXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+SESSION_SECRET=<openssl rand -hex 32>
+ANTHROPIC_API_KEY=<key từ Claude Console>
+TRUST_PROXY=1
+```
+
+**Vì sao nháy đơn** (đo trên Docker Compose 2.31): viết không nháy *hoặc* nháy kép thì
+Compose hiểu `$TNZ...` trong hash là tên biến — hash tới container chỉ còn `$2b$12`,
+kèm một dòng warning dễ trôi. Salt bcrypt mở đầu bằng chữ cái ~80% số lần. App kiểm
+dạng bcrypt lúc khởi động: hash cụt → khu `/me` tắt và log
+`[me] OWNER_PASSWORD_HASH không phải hash bcrypt đầy đủ ...`.
+
+Sinh hash **trên máy owner**, không trên VPS (để passphrase không vào shell history của server):
+
+```bash
+node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 12))" '<passphrase>'
+```
+
+| Biến | Ở đâu | Ghi chú |
+|---|---|---|
+| `OWNER_PASSWORD_HASH` | `.env.private` | thiếu/sai dạng → `/me` 404 |
+| `SESSION_SECRET` | `.env.private` | ≥ 32 ký tự; ngắn hơn → `/me` 404 |
+| `ANTHROPIC_API_KEY` | `.env.private` | thiếu → `/me/practice` tắt, API 503 `practice-not-configured` |
+| `TRUST_PROXY` | `.env.private` | `1` — xem mục nginx |
+| `PRACTICE_MODEL` | `.env.private` (tuỳ chọn) | mặc định `claude-haiku-4-5` |
+| `PRIVATE_CONTENT_DIR` | compose | `/app/private-content` |
+| `PRACTICE_LOG_PATH` | compose | `/app/practice-data/practice-log.jsonl` |
+
+Chạy local: `PRIVATE_CONTENT_DIR=./private-content.example npm run dev` (cấu trúc xem
+`private-content.example/README.md`). Không có `PRACTICE_LOG_PATH` thì log nằm trong
+thư mục content.
+
+## nginx và `X-Forwarded-For`
+
+Rate limit đăng nhập tính theo IP. Sau Docker, địa chỉ socket luôn là gateway của
+bridge — mọi người chung một IP, 5 lần sai của bất kỳ ai khoá tất cả. Nên prod cần đủ:
+
+1. `TRUST_PROXY=1` trong `.env.private`;
+2. vhost proxy tới container set header (app lấy **phần tử cuối** — phần nginx nối
+   vào; phần trước do client tự khai):
 
    ```nginx
+   proxy_set_header X-Real-IP $remote_addr;
    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+   proxy_set_header X-Forwarded-Proto $scheme;
    ```
 
-   App lấy **phần tử cuối** của `X-Forwarded-For` — phần nginx nối vào, các phần
-   tử phía trước do client tự khai. Bật `TRUST_PROXY=1` mà nginx không set header
-   thì phần tử cuối là do client viết, rate limit bị lách bằng cách đổi header.
+**Trạng thái: đã thỏa.** Vhost `nipit.pro` (HTTPS) được thêm ba dòng trên; vhost
+catch-all `learn-nextjs` có sẵn. Bật `TRUST_PROXY=1` mà vhost thiếu header thì phần
+tử cuối do client viết — rate limit bị lách. Đổi/thêm vhost thì kiểm lại:
 
-Cookie `pinit_owner` mang cờ `Secure` khi `NODE_ENV=production` hoặc request đến
-qua https (`X-Forwarded-Proto: https`); dev local trên http không có cờ này.
+```bash
+sudo nginx -T 2>/dev/null | grep -n 'proxy_pass\|X-Forwarded-For'   # mỗi proxy_pass tới :3000 phải đi kèm X-Forwarded-For
+```
+
+## Sync content
+
+Content là một repo git **private** riêng, clone vào `/srv/pinit-private/content`
+(user `pin`, deploy key read-only). Cập nhật:
+
+```bash
+cd /srv/pinit-private/content && git pull
+```
+
+Không cần restart: mọi trang đọc file lúc request. Trước khi promote một note/case
+study lên blog public, chạy denylist (mục dưới) trên máy owner.
+
+## Xoay passphrase / secret / key
+
+Sửa `/opt/learn-nextjs/.env.private` rồi **tạo lại** container:
+
+```bash
+cd /opt/learn-nextjs && IMAGE=$(docker inspect -f '{{.Config.Image}}' learn-nextjs) \
+  docker compose up -d --force-recreate
+```
+
+`docker compose restart` **không đủ**: `env_file` chỉ được đọc lúc *tạo* container,
+restart giữ nguyên env cũ. `IMAGE=...` giữ đúng tag đang chạy — thiếu nó compose rơi
+về `:latest` (deploy.yml export biến này qua ssh, shell của bạn thì không có).
+
+| Xoay | Làm | Hệ quả |
+|---|---|---|
+| Passphrase | sinh hash mới (máy owner), thay `OWNER_PASSWORD_HASH` (nháy đơn) | phiên đang mở **vẫn sống** tới hết hạn — muốn đá ra thì xoay luôn `SESSION_SECRET` |
+| `SESSION_SECRET` | `openssl rand -hex 32` | mọi phiên mất hiệu lực ngay |
+| `ANTHROPIC_API_KEY` | revoke key cũ trong Claude Console, tạo key mới | — |
+
+Tạo lại container cũng reset bộ đếm rate limit (đếm trong RAM).
 
 ## Denylist
 
@@ -64,9 +177,33 @@ biệt hoa thường, sau khi chuẩn hoá Unicode NFC cả hai phía.
   bao giờ trả text thô. Quyền ghi log được kiểm **trước** khi gọi model.
 - Text model sinh ra render text thuần (`white-space: pre-wrap`), không qua `utils/markdown.ts`.
 
-## Ràng buộc cho các phase sau
 
-- **Text do model sinh (Phase 4: câu hỏi, feedback chấm điểm) KHÔNG đi qua
+## Checklist sau deploy đầu tiên
+
+Theo thứ tự — bước nào hỏng thì dừng ở đó.
+
+1. Image đã qua bước `Kiểm image không chứa content private` trong Actions (xanh).
+2. Tạo `/opt/learn-nextjs/.env.private` như trên, `chmod 600`, rồi tạo lại container bằng
+   `docker compose up -d --force-recreate` (kèm `IMAGE=...` như mục *Xoay passphrase*) —
+   `restart` **không đủ** vì `env_file` chỉ được đọc lúc tạo container. Áp dụng cho
+   **mọi lần** sửa `.env.private` về sau.
+3. Log không có cảnh báo `[me]`: `docker logs learn-nextjs 2>&1 | grep '\[me\]'` → rỗng.
+4. Clone repo content vào `/srv/pinit-private/content`.
+5. Mount đúng chiều:
+   - `docker exec learn-nextjs touch /app/private-content/x` → `Read-only file system`;
+   - `docker exec learn-nextjs touch /app/practice-data/x && docker exec learn-nextjs rm /app/practice-data/x` → thành công.
+6. Từ máy ngoài: `curl -sI https://nipit.pro/me` → `307` về `/me/login?next=…`, có `x-robots-tag: noindex, nofollow`.
+7. Staging: `curl -sI http://<staging>:3001/me` → `404` (khu `/me` tắt ở staging).
+8. Đăng nhập trên `https://nipit.pro/me/login`; `/me/roadmap`, `/me/learn`, `/me/case-studies` hiện content thật.
+9. **Practice với Anthropic API thật — chưa từng chạy** (Phase 4 chỉ test với client mock):
+   một lượt *Sinh 5 câu hỏi* + *Chấm* một câu trên `/me/practice`. Đạt khi: không lỗi 502
+   (JSON đúng schema), câu hỏi bám notes, điểm/`missing`/`followUp` hợp lý; và
+   `/srv/pinit-private/practice-log/practice-log.jsonl` có thêm 6 dòng (5 câu + 1 lần chấm).
+   Model trả sai schema lặp lại → sửa prompt trong `utils/practice.ts` hoặc đổi `PRACTICE_MODEL`.
+
+## Ràng buộc khi sửa code
+
+- **Text do model sinh (câu hỏi, feedback chấm điểm) KHÔNG đi qua
   `utils/markdown.ts`.** Pipeline đó bật `rehype-raw` — giữ nguyên HTML thô — vì
   content markdown do chính owner viết. Output của model thì không tin được
   (prompt injection qua chính notes có thể khiến nó in ra `<script>`/`<img onerror>`).
