@@ -98,6 +98,16 @@ jobs:
           # touch không sửa file đã có: .env.private của prod giữ nguyên secrets.
           # Thiếu file thì compose dừng hẳn ("env file not found") -> cả site sập;
           # có file rỗng thì site chạy, chỉ khu /me tắt (staging luôn ở trạng thái này).
+          #
+          # Service cloudflared CỐ Ý không xuất hiện ở đây. Nó nằm sau `profiles:
+          # ['tunnel']`, bật bằng COMPOSE_PROFILES=tunnel trong $DIR/.env trên VPS —
+          # file mà deploy.yml không đụng tới. Hệ quả mong muốn:
+          #   - staging: không có biến đó -> cloudflared không khởi động, không cần
+          #     TUNNEL_TOKEN, job không thể fail vì thiếu secret;
+          #   - prod: profile đọc từ $DIR/.env nên CI không thể vô tình kéo tunnel
+          #     xuống. Tunnel chết = cả site chết, vì 80/443 đã đóng ở ufw.
+          # Đừng export COMPOSE_PROFILES ở đây: env của shell đè .env, làm mất đúng
+          # tính chất vừa nói. Xem docs/cloudflare.md.
           ssh -o StrictHostKeyChecking=no "$VPS" "
             docker network create webnet 2>/dev/null || true
             export IMAGE=$IMAGE:$TAG CONTAINER=$CON HOST_PORT=$PORT API_TARGET=$API BIND_ADDR=$BIND PRACTICE_LOG_MODE=$LOG_MODE
