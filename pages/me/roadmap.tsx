@@ -4,9 +4,10 @@ import { LANE_META, LANE_ORDER } from '@/components/me/lane-meta'
 import { MilestoneCard, TopicInfo } from '@/components/me/milestone-card'
 import { ProgressRing } from '@/components/me/progress-ring'
 import { requireOwner } from '@/utils/owner-auth'
-import { readPracticeStats } from '@/utils/practice'
+import { loadTopicActivity } from '@/utils/activity'
+import { readFlashcardDays } from '@/utils/flashcards'
 import { practiceStreak, vnDay } from '@/utils/practice-insights'
-import { listTopics, loadRoadmap } from '@/utils/private-content'
+import { loadRoadmap } from '@/utils/private-content'
 import {
   checkedCount,
   Lane,
@@ -20,7 +21,7 @@ import { Alert, Box, Stack, Typography } from '@mui/material'
 import type { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 
 interface RoadmapPageProps {
   milestones: Milestone[]
@@ -61,12 +62,14 @@ function LaneSection({
   state,
   topics,
   now,
+  onCheckedChange,
 }: {
   lane: Lane
   items: Milestone[]
   state: RoadmapState
   topics: Record<string, TopicInfo>
   now: string
+  onCheckedChange: (milestoneId: string, checked: string[]) => void
 }) {
   const meta = LANE_META[lane]
   const { done, total, percent } = laneProgress(items, state)
@@ -92,6 +95,7 @@ function LaneSection({
             topics={topics}
             now={now}
             accent={meta.color}
+            onCheckedChange={onCheckedChange}
           />
         ))}
       </Stack>
@@ -101,13 +105,25 @@ function LaneSection({
 
 export default function RoadmapPage({
   milestones,
-  state,
+  state: initialState,
   topics,
   errors,
   missing,
   now,
   streak,
 }: RoadmapPageProps) {
+  // Trạng thái tick sống ở cấp trang: tick một ý là vòng tiến độ của lane và ô
+  // tổng quan đổi ngay (ProgressRing có transition), không đợi tải lại trang.
+  const [state, setState] = useState(initialState)
+  const onCheckedChange = useCallback((milestoneId: string, checked: string[]) => {
+    setState((prev) => {
+      const next = { ...prev }
+      if (checked.length)
+        next[milestoneId] = Object.fromEntries(checked.map((c) => [c, true as const]))
+      else delete next[milestoneId]
+      return next
+    })
+  }, [])
   const overall = laneProgress(milestones, state)
   const checklistTotal = milestones.reduce((n, m) => n + m.checklist.length, 0)
   const checklistDone = milestones.reduce((n, m) => n + checkedCount(m, state), 0)
@@ -147,7 +163,7 @@ export default function RoadmapPage({
           <StatTile
             label="Chuỗi luyện"
             value={streak ? `🔥 ${streak} ngày` : '—'}
-            sub={streak ? 'liên tiếp có chấm điểm' : 'luyện hôm nay để bắt đầu'}
+            sub={streak ? 'liên tiếp có luyện' : 'luyện hôm nay để bắt đầu'}
           />
           <StatTile
             label="Mốc kế tiếp"
@@ -179,6 +195,7 @@ export default function RoadmapPage({
             state={state}
             topics={topics}
             now={now}
+            onCheckedChange={onCheckedChange}
           />
         ) : null
       })}
@@ -192,22 +209,21 @@ export const getServerSideProps: GetServerSideProps<RoadmapPageProps> = async (c
   const denied = await requireOwner(ctx)
   if (denied) return denied
 
-  const [roadmap, stateResult, learn, stats] = await Promise.all([
+  const today = vnDay(Date.now())
+  const [roadmap, stateResult, activity, flashDays] = await Promise.all([
     loadRoadmap(),
     readRoadmapState(),
-    listTopics(),
-    // Log hỏng không đáng làm sập roadmap — thiếu điểm thì hiện "Chưa luyện".
-    readPracticeStats().catch(() => null),
+    // Cùng nguồn với /me/learn và cockpit: điểm = TB các lần chấm gần nhất,
+    // không phải TB mọi lần — để một topic không hiện hai con số ở hai trang.
+    loadTopicActivity(today),
+    readFlashcardDays(),
   ])
 
-  const scores = new Map(stats?.byTopic.map((t) => [t.topic, t]) ?? [])
   const topics: Record<string, TopicInfo> = {}
-  for (const t of learn.data) {
-    const s = scores.get(t.slug)
-    topics[t.slug] = { title: t.title, average: s?.average ?? null, count: s?.count ?? 0 }
+  for (const t of activity.topics) {
+    topics[t.slug] = { title: t.title, average: t.recentAverage, count: t.count }
   }
 
-  const today = vnDay(Date.now())
   const errors = [...(roadmap?.errors ?? [])]
   if (stateResult.error) errors.push(stateResult.error)
 
@@ -219,7 +235,8 @@ export const getServerSideProps: GetServerSideProps<RoadmapPageProps> = async (c
       errors,
       missing: roadmap == null,
       now: today.slice(0, 7),
-      streak: practiceStreak(stats?.activeDays ?? [], today),
+      // Cùng định nghĩa với cockpit: ngày có chấm practice HOẶC ôn flashcard.
+      streak: practiceStreak([...activity.scored.map((e) => vnDay(e.ts)), ...flashDays], today),
     },
   }
 }

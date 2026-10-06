@@ -51,7 +51,15 @@ function DeadlineChip({ m, now }: { m: Milestone; now: string }) {
       : n === 0
         ? ['Tháng này', 'warning' as const]
         : [`Còn ${n} tháng`, n <= 2 ? ('warning' as const) : ('default' as const)]
-  return <Chip size="small" variant="outlined" color={color} label={`${m.target} · ${label}`} />
+  // Quá hạn: chip đỏ đặc — phải nổi lên giữa các chip viền khác.
+  return (
+    <Chip
+      size="small"
+      variant={n < 0 ? 'filled' : 'outlined'}
+      color={color}
+      label={`${m.target} · ${label}`}
+    />
+  )
 }
 
 export function MilestoneCard({
@@ -60,14 +68,21 @@ export function MilestoneCard({
   topics,
   now,
   accent,
+  onCheckedChange,
 }: {
   m: Milestone
   initialChecked: string[]
   topics: Record<string, TopicInfo>
   now: string // YYYY-MM, tính ở server để không lệch khi hydrate
   accent: string
+  /** Báo lên trang để vòng tiến độ của lane và các ô tổng quan cập nhật ngay. */
+  onCheckedChange?: (milestoneId: string, checked: string[]) => void
 }) {
-  const [checked, setChecked] = useState<Set<string>>(() => new Set(initialChecked))
+  const [checked, setCheckedState] = useState<Set<string>>(() => new Set(initialChecked))
+  const setChecked = (next: Set<string>) => {
+    setCheckedState(next)
+    onCheckedChange?.(m.id, Array.from(next))
+  }
   const [pending, setPending] = useState<string | null>(null)
   const [error, setError] = useState('')
   const hasDetails = !!(m.notes || m.links.length || m.checklist.length || m.topics.length)
