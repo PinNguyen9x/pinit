@@ -1,4 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import {
+  CF_ACCESS_COOKIE,
+  CF_ACCESS_HEADER,
+  getCfAccessConfig,
+  readAccessToken,
+  verifyAccessJwt,
+} from './utils/cf-access'
 import { getOwnerConfig } from './utils/owner-auth'
 import { OWNER_COOKIE, verifySession } from './utils/owner-session'
 
@@ -19,6 +26,26 @@ export async function middleware(req: NextRequest) {
   if (!config) return noindex(new NextResponse(null, { status: 404 }))
 
   const { pathname, search } = req.nextUrl
+
+  // Lớp Cloudflare Access, TRƯỚC cả PUBLIC_PATHS: /me/login cũng phải có JWT.
+  // Bình thường edge của Cloudflare đã chặn từ xa nên tới được đây là đã có JWT;
+  // check này để bắt request vào THẲNG origin — lúc 80/443 còn mở, hoặc khi
+  // Access app bị sửa/xoá trên dashboard mà không ai để ý.
+  //
+  // 403 chứ không redirect: trang login của Access nằm ở edge, origin không có gì
+  // để redirect tới. Cũng không trả 404 — 404 lẫn với "feature tắt", mà đây là ca
+  // owner cần phân biệt được khi chẩn lỗi.
+  const cf = getCfAccessConfig()
+  if (cf) {
+    const token = readAccessToken(
+      req.headers.get(CF_ACCESS_HEADER),
+      req.cookies.get(CF_ACCESS_COOKIE)?.value,
+    )
+    if (!token || !(await verifyAccessJwt(token, cf))) {
+      return noindex(new NextResponse(null, { status: 403 }))
+    }
+  }
+
   if (PUBLIC_PATHS.has(pathname)) return noindex(NextResponse.next())
 
   const ok = await verifySession(req.cookies.get(OWNER_COOKIE)?.value, config.sessionSecret)
