@@ -1,12 +1,15 @@
 import type { Lane } from '@/utils/private-content-schema'
 
-/** Tên hiển thị + màu nhấn cho từng lane — đủ tương phản trên cả nền sáng lẫn tối. */
+/**
+ * Tên hiển thị + màu nhấn cho từng lane. Màu là CSS variable (styles/globals.css)
+ * nên tự đổi theo theme sáng/tối mà không cần render lại.
+ */
 export const LANE_META: Record<Lane, { label: string; color: string; icon: string }> = {
-  'ai-platform': { label: 'AI Platform', color: '#a78bfa', icon: '🧠' },
-  'data-platform': { label: 'Data Platform', color: '#22d3ee', icon: '🛰️' },
-  interview: { label: 'Phỏng vấn', color: '#4ade80', icon: '🎯' },
-  english: { label: 'Tiếng Anh', color: '#f472b6', icon: '🗣️' },
-  degree: { label: 'Bằng cấp', color: '#fbbf24', icon: '🎓' },
+  'ai-platform': { label: 'AI Platform', color: 'var(--lane-ai-platform)', icon: '🧠' },
+  'data-platform': { label: 'Data Platform', color: 'var(--lane-data-platform)', icon: '🛰️' },
+  interview: { label: 'Phỏng vấn', color: 'var(--lane-interview)', icon: '🎯' },
+  english: { label: 'Tiếng Anh', color: 'var(--lane-english)', icon: '🗣️' },
+  degree: { label: 'Bằng cấp', color: 'var(--lane-degree)', icon: '🎓' },
 }
 
 /** Thứ tự hiển thị: lane nghề trước, lane hỗ trợ sau. */
