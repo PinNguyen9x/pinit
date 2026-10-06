@@ -32,7 +32,20 @@ export function OwnerLayout({ children }: LayoutProps) {
       </Head>
       <Box component="header" sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Container>
-          <Stack direction="row" alignItems="center" spacing={0.5} py={1.5} flexWrap="wrap">
+          {/* Điện thoại: một hàng cuộn ngang thay vì gãy hai dòng chiếm nửa màn hình. */}
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={0.5}
+            py={1.5}
+            sx={{
+              overflowX: 'auto',
+              whiteSpace: 'nowrap',
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': { display: 'none' },
+              '& > *': { flexShrink: 0 },
+            }}
+          >
             <Button component={Link} href="/me" color="inherit" sx={{ fontWeight: 700 }}>
               /me
             </Button>

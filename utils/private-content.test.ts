@@ -185,7 +185,7 @@ describe('parseNote', () => {
       'n',
       'f.md',
     )
-    expect(r.data?.questions).toEqual([{ q: 'Một', a: 'Hai' }])
+    expect(r.data?.questions).toEqual([{ q: 'Một', a: 'Hai', id: null }])
     expect(r.errors).toEqual(['f.md: questions[1] thiếu q hoặc a'])
   })
 
@@ -199,6 +199,41 @@ describe('parseNote', () => {
     const r = parseNote('---\ntitle: [\n---\n', 'n', 'f.md')
     expect(r.data).toBeNull()
     expect(r.errors[0]).toContain('frontmatter không phải YAML hợp lệ')
+  })
+})
+
+describe('parseNote — id câu hỏi', () => {
+  const note = (qs: string) => `---\ntitle: T\nquestions:\n${qs}---\n`
+
+  it('nhận id hợp lệ; không có id → null', () => {
+    const r = parseNote(
+      note('  - { id: pod-vs-container, q: Q1, a: A1 }\n  - { q: Q2, a: A2 }\n'),
+      'n',
+      'f.md',
+    )
+    expect(r.errors).toEqual([])
+    expect(r.data!.questions.map((q) => q.id)).toEqual(['pod-vs-container', null])
+  })
+
+  it.each([
+    ['bắt đầu bằng số (trùng key theo vị trí)', '3'],
+    ['chữ hoa', 'Pod'],
+    ['có dấu cách', 'pod container'],
+    ['có dấu', 'câu-1'],
+  ])('id %s → bỏ id, giữ câu hỏi, báo lỗi', (_, id) => {
+    const r = parseNote(note(`  - { id: "${id}", q: Q, a: A }\n`), 'n', 'f.md')
+    expect(r.data!.questions).toEqual([{ q: 'Q', a: 'A', id: null }])
+    expect(r.errors[0]).toContain('phải bắt đầu bằng chữ cái')
+  })
+
+  it('id trùng trong cùng note → câu sau mất id', () => {
+    const r = parseNote(
+      note('  - { id: x, q: Q1, a: A1 }\n  - { id: x, q: Q2, a: A2 }\n'),
+      'n',
+      'f.md',
+    )
+    expect(r.data!.questions.map((q) => q.id)).toEqual(['x', null])
+    expect(r.errors).toEqual(['f.md: questions[1] id "x" trùng'])
   })
 })
 

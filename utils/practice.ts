@@ -237,6 +237,8 @@ export interface PracticeStats {
   recent: PracticeLogEntry[] // 20 lần chấm gần nhất, mới nhất trước
   byTopic: { topic: string; count: number; average: number }[]
   activeDays: string[] // ngày (giờ VN) có ít nhất một lần chấm, tăng dần
+  /** Mọi lần chấm, cũ → mới — nguồn cho heatmap, trung bình 7 ngày, trạng thái topic. */
+  scored: { ts: string; topic: string; score: number }[]
   corruptLines: number
 }
 
@@ -271,8 +273,13 @@ export async function readPracticeStats(path = practiceLogPath()): Promise<Pract
 
   const activeDays = Array.from(new Set(graded.map((e) => vnDay(e.ts)))).sort()
 
+  const scored = graded
+    .map((e) => ({ ts: e.ts, topic: e.topic, score: e.score! }))
+    .sort((a, b) => a.ts.localeCompare(b.ts))
+
   return {
     activeDays,
+    scored,
     recent: graded.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 20),
     byTopic: Array.from(totals, ([topic, t]) => ({
       topic,

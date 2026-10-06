@@ -14,6 +14,7 @@ import {
   CaseStudy,
   CaseStudyMeta,
   ChecklistItem,
+  isQuestionId,
   isSlug,
   LANES,
   Milestone,
@@ -232,8 +233,24 @@ export function parseNote(raw: string, slug: string, file: string): WithErrors<N
       const q = nonEmptyString(item?.q)
       const a = nonEmptyString(item?.a)
       // Một câu hỏng không đáng làm mất cả note — bỏ câu đó, giữ phần còn lại.
-      if (q && a) questions.push({ q, a })
-      else errors.push(`${file}: questions[${i}] thiếu q hoặc a`)
+      if (!q || !a) {
+        errors.push(`${file}: questions[${i}] thiếu q hoặc a`)
+        return
+      }
+      // id sai/trùng không bỏ câu hỏi — chỉ bỏ id, flashcard quay về key theo vị trí.
+      let id: string | null = null
+      if (item?.id != null) {
+        if (!isQuestionId(item.id)) {
+          errors.push(
+            `${file}: questions[${i}] id "${item.id}" phải bắt đầu bằng chữ cái, chỉ gồm a-z 0-9 - _`,
+          )
+        } else if (questions.some((x) => x.id === item.id)) {
+          errors.push(`${file}: questions[${i}] id "${item.id}" trùng`)
+        } else {
+          id = item.id
+        }
+      }
+      questions.push({ q, a, id })
     })
   }
   if (data.updated != null && !normalizeDate(data.updated, 'day')) {
@@ -318,6 +335,18 @@ export async function loadTopic(
     if (note.data) notes.push(toMeta(note.data))
   }
   notes.sort((a, b) => a.title.localeCompare(b.title, 'vi'))
+
+  // id câu hỏi là khoá flashcard theo topic → phải duy nhất trên mọi note của topic.
+  const seen = new Map<string, string>()
+  for (const n of [{ ...index.data, slug: 'index' }, ...notes]) {
+    for (const q of n.questions) {
+      if (!q.id) continue
+      const first = seen.get(q.id)
+      if (first)
+        errors.push(`learn/${topic}/${n.slug}.md: id câu hỏi "${q.id}" đã dùng ở ${first}.md`)
+      else seen.set(q.id, n.slug)
+    }
+  }
   return { data: { index: { ...index.data, slug: topic }, notes }, errors }
 }
 

@@ -131,6 +131,34 @@ a {
   --diagram-border: rgba(17, 17, 17, 0.18);
 }
 
+/* ===== Màu lane của khu /me =====
+   Năm lane roadmap, dùng xuyên suốt: roadmap, dashboard, learn, heatmap.
+   Bản sáng đậm hơn một nấc để chữ/viền vẫn đủ tương phản trên nền trắng. */
+:root {
+  --lane-ai-platform: #a78bfa;
+  --lane-data-platform: #22d3ee;
+  --lane-interview: #4ade80;
+  --lane-english: #f472b6;
+  --lane-degree: #fbbf24;
+  --heat-0: rgba(237, 237, 237, 0.06);
+  --heat-1: rgba(74, 222, 128, 0.3);
+  --heat-2: rgba(74, 222, 128, 0.55);
+  --heat-3: rgba(74, 222, 128, 0.8);
+  --heat-4: #4ade80;
+}
+:root[data-theme='light'] {
+  --lane-ai-platform: #7c3aed;
+  --lane-data-platform: #0891b2;
+  --lane-interview: #16a34a;
+  --lane-english: #db2777;
+  --lane-degree: #d97706;
+  --heat-0: rgba(17, 17, 17, 0.06);
+  --heat-1: rgba(22, 163, 74, 0.3);
+  --heat-2: rgba(22, 163, 74, 0.55);
+  --heat-3: rgba(22, 163, 74, 0.8);
+  --heat-4: #16a34a;
+}
+
 .diagram {
   display: flex;
   justify-content: center;
