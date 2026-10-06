@@ -489,7 +489,13 @@ export const getServerSideProps: GetServerSideProps<PracticePageProps> = async (
   const denied = await requireOwner(ctx)
   if (denied) return denied
   const { data } = await listTopics()
-  let stats: PracticeStats = { recent: [], byTopic: [], activeDays: [], corruptLines: 0 }
+  let stats: PracticeStats = {
+    recent: [],
+    byTopic: [],
+    activeDays: [],
+    scored: [],
+    corruptLines: 0,
+  }
   let statsError: string | null = null
   try {
     stats = await readPracticeStats()

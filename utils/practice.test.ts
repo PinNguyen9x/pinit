@@ -194,6 +194,7 @@ describe('readPracticeStats', () => {
       recent: [],
       byTopic: [],
       activeDays: [],
+      scored: [],
       corruptLines: 0,
     })
   })
