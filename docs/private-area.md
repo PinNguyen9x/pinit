@@ -117,6 +117,10 @@ tử cuối do client viết — rate limit bị lách. Đổi/thêm vhost thì 
 sudo nginx -T 2>/dev/null | grep -n 'proxy_pass\|X-Forwarded-For'   # mỗi proxy_pass tới :3000 phải đi kèm X-Forwarded-For
 ```
 
+**Đi qua Cloudflare thì ba dòng trên KHÔNG còn đủ.** Phần tử cuối của `X-Forwarded-For`
+lúc đó là IP của cloudflared (`127.0.0.1`), không phải của khách — cần thêm snippet
+`real_ip`. Xem [docs/cloudflare.md](cloudflare.md), mục *nginx: real_ip*.
+
 ## Content: repo, deploy key, sync
 
 Content là repo git **private** `PinNguyen9x/pinit-private-content`, clone vào

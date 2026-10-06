@@ -38,6 +38,38 @@ services:
       timeout: 5s
       retries: 3
 
+  # Cloudflare Tunnel — đường vào duy nhất sau khi đóng 80/443 ở ufw (xem
+  # docs/cloudflare.md). cloudflared mở kết nối RA Cloudflare, nên origin không
+  # cần cổng inbound nào.
+  cloudflared:
+    # latest để tag luôn tồn tại; ghim lại khi đã biết version đang chạy:
+    #   docker exec cloudflared cloudflared --version
+    #   -> CLOUDFLARED_IMAGE=cloudflare/cloudflared:2026.x.y trong $DIR/.env
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
+    container_name: ${CF_CONTAINER:-cloudflared}
+    restart: unless-stopped
+    # Chỉ chạy khi profile `tunnel` được bật. Bật bằng COMPOSE_PROFILES=tunnel
+    # trong $DIR/.env trên VPS — KHÔNG phải trong deploy.yml: deploy.yml không
+    # đụng $DIR/.env, nên một lần deploy quên biến cũng không thể kéo tunnel
+    # xuống (mà tunnel xuống = cả site chết, vì 80/443 đã đóng).
+    # Staging không có dòng đó -> service không bao giờ khởi động, không cần token.
+    profiles: ['tunnel']
+    # nginx chạy TRÊN HOST, không trong Docker. Bridge network không thấy
+    # loopback của host, nên phải dùng host network để tới 127.0.0.1:80.
+    # Kèm lợi ích: $remote_addr mà nginx thấy là 127.0.0.1 -> set_real_ip_from
+    # chỉ cần tin loopback, xem scripts/cloudflare-realip.sh.
+    network_mode: host
+    # TUNNEL_TOKEN nằm trong .env.private (chmod 600) cùng các secret khác của /me.
+    # Tên biến là TUNNEL_TOKEN vì cloudflared đọc đúng tên này từ env; đổi tên
+    # cần bọc entrypoint bằng shell, mà image có thể là distroless.
+    env_file:
+      - .env.private
+    # --no-autoupdate: trong container thì nâng cấp là việc của image, không phải
+    # của process đang chạy (autoupdate tự restart, mất tunnel giữa lúc đang phục vụ).
+    # --metrics: để kiểm sức khoẻ từ host bằng `curl http://127.0.0.1:20241/ready`
+    # (không đặt healthcheck vì image không chắc có wget/curl bên trong).
+    command: tunnel --no-autoupdate --metrics 127.0.0.1:20241 run
+
 # Network dùng chung prod + staging + backend (tạo sẵn: docker network create webnet)
 networks:
   webnet:
