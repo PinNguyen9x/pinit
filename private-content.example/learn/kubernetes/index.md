@@ -3,7 +3,8 @@ title: Kubernetes
 tags: [k8s, infra]
 updated: 2026-09-20
 questions:
-  - q: Pod khác container ở điểm nào?
+  - id: pod-vs-container
+    q: Pod khác container ở điểm nào?
     a: Pod là đơn vị lập lịch nhỏ nhất, gồm một hay nhiều container chia sẻ network namespace và volume.
 ---
 
