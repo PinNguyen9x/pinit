@@ -10,7 +10,7 @@
   - `pinit-glossary` → module `glossary`
   - `pinit-tmux-terminal-git` → module `tmux-terminal-git`
   - `pinit-research-archify` → module `tmux-terminal-git`
-  - `pinit-integration-cloudflares` → module `flowflare`
+  - `pinit-integration-cloudflares` → module `cloudflare`
 
   Worktree không có tên trong bảng trên (ví dụ `pinit-fix-content-blog`, hay `pinit` gốc)
   thì KHÔNG tự suy ra module từ tên gần giống — hỏi tôi. Đoán sai module id thì query
@@ -69,7 +69,7 @@ ID cố định — dùng thẳng, không cần tra (tool `module` và `project`
 - module `glossary` — `9e2260db-6d52-4ded-8b94-52a18758106b`
 - module `research-planed` — `4d198c44-ed66-4606-b8cf-76d5ce86e7ba`
 - module `tmux-terminal-git` — `4135fd88-de22-4a9a-a431-add12a5ed40e`
-- module `flowflare` — `67fc16f7-e191-4909-b1f7-1dccdcd5b14e`
+- module `cloudflare` — `67fc16f7-e191-4909-b1f7-1dccdcd5b14e`
 - state `Todo` — `d6f14d6c-c832-4003-8c26-4d94f14330ba`
 - state `In Progress` — `632c35fa-4945-4e2e-8723-2f3b58c8bff0`
 - state `In Review` — `6f9b66cb-d44a-4f33-8af3-69581d8d90f0`
