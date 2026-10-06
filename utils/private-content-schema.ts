@@ -38,6 +38,18 @@ export type RoadmapState = Record<string, Record<string, true>>
 export interface Question {
   q: string
   a: string
+  /**
+   * Khoá ổn định cho flashcard (`<topic>/<id>`). Không có thì flashcard dùng vị trí
+   * câu hỏi trong topic — chèn câu mới vào giữa hay đổi tên note sẽ xáo lịch ôn.
+   */
+  id: string | null
+}
+
+// Bắt đầu bằng chữ cái: id "3" sẽ trùng key dự phòng theo vị trí `<topic>/3`.
+const QUESTION_ID_RE = /^[a-z][a-z0-9_-]*$/
+
+export function isQuestionId(s: unknown): s is string {
+  return typeof s === 'string' && QUESTION_ID_RE.test(s)
 }
 
 export interface NoteMeta {

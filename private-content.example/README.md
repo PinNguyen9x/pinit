@@ -40,3 +40,21 @@ Mỗi milestone có thể có:
 - `checklist: [{ id, text }]` — ý cần nắm. Tick trên trang roadmap, lưu ở
   `roadmap-state.json` cạnh practice log (thư mục content là read-only). Tiến độ lane =
   (milestone done + tỉ lệ checklist đã tick của milestone chưa done) / tổng.
+
+## Flashcard và `id` câu hỏi
+
+Mỗi câu trong `questions[]` thành một thẻ flashcard ở trang topic. Nên đặt `id` cho
+mọi câu hỏi **ngay khi tạo**:
+
+```yaml
+questions:
+  - id: filter-then-score        # a-z 0-9 - _, bắt đầu bằng chữ cái, duy nhất trong topic
+    q: Scheduler chọn node qua những bước nào?
+    a: ...
+```
+
+- Có `id` → lịch ôn lưu theo `<topic>/<id>`, giữ nguyên dù thêm/xoá/sắp lại câu khác.
+- Không `id` → lưu theo vị trí `<topic>/<index>`: chèn câu vào giữa hay đổi tên note
+  (đổi thứ tự note) làm xáo lịch ôn của các thẻ phía sau.
+- Thêm `id` cho câu **đã ôn** = thẻ đó bắt đầu lại lịch từ đầu (một lần). `id` sai dạng
+  hoặc trùng trong topic bị bỏ kèm lỗi trên trang; câu hỏi vẫn giữ.

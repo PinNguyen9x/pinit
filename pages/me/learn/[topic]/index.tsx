@@ -2,10 +2,13 @@ import { OwnerLayout } from '@/components/layouts/owner'
 import { Breadcrumbs } from '@/components/me/breadcrumbs'
 import { ContentErrors } from '@/components/me/content-errors'
 import { MarkdownBody } from '@/components/me/markdown-body'
-import { QuestionList } from '@/components/me/question-list'
+import { DeckCard, FlashcardDeck } from '@/components/me/flashcard-deck'
 import { TagList } from '@/components/me/tag-list'
 import { renderMarkdown } from '@/utils/markdown'
 import { requireOwner } from '@/utils/owner-auth'
+import { cardStatus, countByStatus, orderCards } from '@/utils/flashcard-schedule'
+import { readFlashcardState, topicCards } from '@/utils/flashcards'
+import { vnDay } from '@/utils/practice-insights'
 import { loadRoadmap, loadTopic } from '@/utils/private-content'
 import type { NoteMeta } from '@/utils/private-content-schema'
 import { LANE_META } from '@/components/me/lane-meta'
@@ -30,10 +33,20 @@ interface TopicPageProps {
   html: string
   notes: NoteMeta[]
   milestones: { id: string; title: string; lane: Lane; target: string; status: string }[]
+  cards: DeckCard[]
+  cardCounts: { due: number; new: number; later: number }
   errors: string[]
 }
 
-export default function TopicPage({ topic, html, notes, milestones, errors }: TopicPageProps) {
+export default function TopicPage({
+  topic,
+  html,
+  notes,
+  milestones,
+  cards,
+  cardCounts,
+  errors,
+}: TopicPageProps) {
   return (
     <>
       <Head>
@@ -89,7 +102,29 @@ export default function TopicPage({ topic, html, notes, milestones, errors }: To
         </Box>
       )}
       <ContentErrors errors={errors} />
-      <MarkdownBody html={html} resetKey={topic.slug} />
+
+      <Box id="flashcards" sx={{ mt: 4, scrollMarginTop: 96 }}>
+        <Stack
+          direction="row"
+          alignItems="baseline"
+          spacing={1.5}
+          mb={1.5}
+          flexWrap="wrap"
+          useFlexGap
+        >
+          <Typography component="h2" variant="h6">
+            Flashcard
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {cardCounts.due} đến hạn · {cardCounts.new} mới · {cardCounts.later} chưa tới hạn
+          </Typography>
+        </Stack>
+        <FlashcardDeck topic={topic.slug} cards={cards} />
+      </Box>
+
+      <Box mt={5}>
+        <MarkdownBody html={html} resetKey={topic.slug} />
+      </Box>
 
       {notes.length > 0 && (
         <>
@@ -115,8 +150,6 @@ export default function TopicPage({ topic, html, notes, milestones, errors }: To
           </List>
         </>
       )}
-
-      <QuestionList questions={topic.questions} />
     </>
   )
 }
@@ -129,9 +162,40 @@ export const getServerSideProps: GetServerSideProps<TopicPageProps> = async (ctx
   const result = await loadTopic(ctx.params?.topic)
   if (!result) return { notFound: true }
   const { body, ...topic } = result.data.index
-  const [{ html }, roadmap] = await Promise.all([renderMarkdown(body), loadRoadmap()])
+  const [{ html }, roadmap, all, state] = await Promise.all([
+    renderMarkdown(body),
+    loadRoadmap(),
+    topicCards(topic.slug),
+    readFlashcardState(),
+  ])
   const milestones = (roadmap?.data ?? [])
     .filter((m) => m.topics.includes(topic.slug))
     .map(({ id, title, lane, target, status }) => ({ id, title, lane, target, status }))
-  return { props: { topic, html, notes: result.data.notes, milestones, errors: result.errors } }
+  // Xếp thẻ ở server theo ngày giờ VN — client không tự tính "hôm nay" để khỏi lệch múi giờ.
+  const today = vnDay(Date.now())
+  const ordered = orderCards(all ?? [], state, today)
+  const cards: DeckCard[] = ordered.map((c) => ({
+    index: c.index,
+    q: c.q,
+    a: c.a,
+    source: c.source,
+    status: cardStatus(state[c.key], today),
+    due: state[c.key]?.due ?? null,
+  }))
+  const cardCounts = countByStatus(
+    ordered.map((c) => c.key),
+    state,
+    today,
+  )
+  return {
+    props: {
+      topic,
+      html,
+      notes: result.data.notes,
+      milestones,
+      cards,
+      cardCounts,
+      errors: result.errors,
+    },
+  }
 }
