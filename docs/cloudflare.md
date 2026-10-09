@@ -138,8 +138,20 @@ Service nằm trong `docker-compose.yml` sau `profiles: ['tunnel']`.
 | `TUNNEL_TOKEN` | `/opt/learn-nextjs/.env.private` (chmod 600) |
 
 Tách hai chỗ là cố ý: profile nằm ngoài tầm với của CI nên **một lần deploy quên biến cũng
-không thể kéo tunnel xuống**. Đã kiểm chứng bằng hai lần deploy thật (staging và prod): log
-không có một dòng nào về `cloudflared`, `--remove-orphans` không xoá gì.
+không thể kéo tunnel xuống**. Đã kiểm chứng bằng deploy thật: `--remove-orphans` không xoá
+`cloudflared`, và ở staging (không có profile) nó không hề được tạo.
+
+> ⚠️ **Nhưng deploy KHÔNG phải luôn luôn không chạm tunnel.** Profile chỉ chặn việc *xoá*;
+> nếu **config của service đổi** thì compose vẫn **recreate** container như mọi service khác.
+>
+> Đã gặp 09/10/2026 khi deploy commit ghim tag `:latest` → `2026.10.0`: log hiện
+> `Container cloudflared Recreate` → `Started`, gián đoạn **~2 giây** (`03:06:30.757` →
+> `03:06:32.807`). Site tự phục hồi, không cần làm gì.
+>
+> **Hệ quả sau khi đóng ufw 80/443:** vài giây đó là site *không vào được từ đâu cả*, vì
+> tunnel là đường duy nhất. Nên **đổi bất cứ thứ gì trong block `cloudflared` của compose
+> là một deploy có chủ đích**, làm lúc vắng, không gộp chung với một thay đổi đang gấp.
+> Deploy mà không đụng block đó thì tunnel đứng im — đó là trường hợp thường ngày.
 
 Kiểm sức khoẻ (không cần ssh vào container):
 

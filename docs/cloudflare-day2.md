@@ -382,6 +382,25 @@ Hai thứ **chỉ kiểm được bằng tay**, và đừng bỏ:
 Dòng 5 là đường lùi cuối. Nó còn dùng được miễn là cert origin hợp lệ — sau bước 1 là Origin
 CA (15 năm), trước bước 1 là LE (27/12/2026).
 
+## Lưu ý vận hành sau khi đóng cổng
+
+Sau bước 2, tunnel là **đường duy nhất** vào site. Một hệ quả đã đo được:
+
+**Deploy có đổi config của service `cloudflared` sẽ recreate container** → gián đoạn vài
+giây (đo 09/10/2026: ~2s khi ghim tag `:latest` → `2026.10.0`). Profile `tunnel` chỉ chặn
+việc *xoá* service, không chặn recreate khi config đổi.
+
+Nên: **đổi bất cứ thứ gì trong block `cloudflared` của compose là một deploy có chủ đích** —
+làm lúc vắng, không gộp với thay đổi đang gấp. Deploy không đụng block đó thì tunnel đứng im.
+
+Kiểm sau một deploy như vậy:
+
+```bash
+curl -sSI --max-time 15 https://nipit.pro | head -1          # 200
+docker logs cloudflared --since 5m 2>&1 | tail -5            # "Registered tunnel connection"
+curl -fsS http://127.0.0.1:20241/ready && echo
+```
+
 ## Việc nhỏ còn lại
 
 - [x] Pin `cloudflared:2026.10.0` trong `docker-compose.yml` — xong, có hiệu lực từ lần
