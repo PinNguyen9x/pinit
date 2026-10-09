@@ -42,10 +42,11 @@ services:
   # docs/cloudflare.md). cloudflared mở kết nối RA Cloudflare, nên origin không
   # cần cổng inbound nào.
   cloudflared:
-    # latest để tag luôn tồn tại; ghim lại khi đã biết version đang chạy:
-    #   docker exec cloudflared cloudflared --version
-    #   -> CLOUDFLARED_IMAGE=cloudflare/cloudflared:2026.x.y trong $DIR/.env
-    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
+    # Ghim tag: bản đang chạy trên prod từ 06/10/2026. KHÔNG dùng :latest —
+    # restart: unless-stopped + :latest nghĩa là một lần `compose pull` bất kỳ có
+    # thể đổi version của đường vào duy nhất vào site, không ai chủ ý.
+    # Nâng cấp thì sửa tag ở đây, có PR, chứ đừng để nó tự trôi.
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:2026.10.0}
     container_name: ${CF_CONTAINER:-cloudflared}
     restart: unless-stopped
     # Chỉ chạy khi profile `tunnel` được bật. Bật bằng COMPOSE_PROFILES=tunnel
