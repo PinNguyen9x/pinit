@@ -265,8 +265,17 @@ sudo ufw allow 443/tcp
 ```
 
 Vẫn không vào được site thì vấn đề không phải ufw — tạo lại A record `nipit.pro` → IP VPS
-(proxied) để bỏ qua tunnel hoàn toàn. Lưu ý sau bước 1, A record + Origin CA cần SSL mode
-**Full (strict)** vẫn hoạt động (Cloudflare tin Origin CA), nên đường lùi này còn dùng được.
+để bỏ qua tunnel hoàn toàn.
+
+> ⚠️ **A record đó phải là Proxied (mây cam), KHÔNG được DNS only.** Sau bước 1, cert ở
+> origin là Origin CA — **chỉ Cloudflare tin**, không nằm trong CA store của trình duyệt.
+>
+> | Cách | Kết quả sau bước 1 |
+> |---|---|
+> | A record **Proxied** + SSL *Full (strict)* | ✓ edge tin Origin CA — đúng mục đích của nó |
+> | A record **DNS only** | ✗ khách thấy trang cảnh báo bảo mật, và IP origin bị phơi ra |
+>
+> **Sau day-2, mọi đường rollback đều phải đi qua Cloudflare.**
 
 ---
 
@@ -377,16 +386,40 @@ Hai thứ **chỉ kiểm được bằng tay**, và đừng bỏ:
 | 2 | cert origin sai / key lệch | `echo \| openssl s_client -connect 127.0.0.1:443 -servername nipit.pro 2>/dev/null \| openssl x509 -noout -issuer -enddate` | rollback bước 1 (về cert LE) |
 | 3 | nginx không chạy | `sudo systemctl status nginx`, `sudo nginx -t` | sửa config, `systemctl reload nginx` |
 | 4 | app chết | `docker logs learn-nextjs --tail 50` | xem `[me]` / `[cf-access]` trong log |
-| 5 | mọi cách trên đều không ra | — | mở lại ufw 80/443 **và** tạo A record → bỏ qua tunnel hoàn toàn |
+| 5 | mọi cách trên đều không ra | — | mở lại ufw 80/443 **và** tạo A record **Proxied** (không DNS only — xem cảnh báo ở bước 2) → bỏ qua tunnel hoàn toàn |
 
 Dòng 5 là đường lùi cuối. Nó còn dùng được miễn là cert origin hợp lệ — sau bước 1 là Origin
 CA (15 năm), trước bước 1 là LE (27/12/2026).
+
+## Lưu ý vận hành sau khi đóng cổng
+
+Sau bước 2, tunnel là **đường duy nhất** vào site. Một hệ quả đã đo được:
+
+**Deploy có đổi config của service `cloudflared` sẽ recreate container** → gián đoạn vài
+giây (đo 09/10/2026: ~2s khi ghim tag `:latest` → `2026.10.0`). Profile `tunnel` chỉ chặn
+việc *xoá* service, không chặn recreate khi config đổi.
+
+Nên: **đổi bất cứ thứ gì trong block `cloudflared` của compose là một deploy có chủ đích** —
+làm lúc vắng, không gộp với thay đổi đang gấp. Deploy không đụng block đó thì tunnel đứng im.
+
+Kiểm sau một deploy như vậy:
+
+```bash
+curl -sSI --max-time 15 https://nipit.pro | head -1          # 200
+docker logs cloudflared --since 5m 2>&1 | tail -5            # "Registered tunnel connection"
+curl -fsS http://127.0.0.1:20241/ready && echo
+```
 
 ## Việc nhỏ còn lại
 
 - [x] Pin `cloudflared:2026.10.0` trong `docker-compose.yml` — xong, có hiệu lực từ lần
       deploy `main` tiếp theo
-- [ ] Bật **HSTS** (free) — chỉ bật khi đã chắc mọi thứ chạy HTTPS; nó có thời hạn cam kết
-      và trình duyệt đã nhớ thì không rút lại ngay được
-- [ ] Chạy lại `scripts/cloudflare-realip.sh` định kỳ (dải IP Cloudflare đổi theo thời gian).
-      Nhớ `scp` script từ máy owner — `scripts/` không có trên VPS
+- [ ] Bật **HSTS** (free) — **cố ý để sau cùng**, chỉ bật khi cả 3 bước trên đã xong và
+      chắc không còn đường quay về HTTP. Trình duyệt **nhớ** `max-age` và từ đó từ chối mọi
+      kết nối HTTP tới domain, kể cả sau khi ta tắt header — rollback phải chờ hết hạn trên
+      từng máy khách. Bật trước khi day-2 xong là tự bỏ mất đường lùi qua HTTP.
+- [ ] Chạy lại `scripts/cloudflare-realip.sh` khi nhớ — **chưa có cron, làm tay.** Nhớ
+      `scp` script từ máy owner (`scripts/` không có trên VPS).
+      **Tần suất thấp là đủ, đừng lo thừa:** trước bước 2 thì mỗi quý; **sau bước 2 thì dải
+      public thành vô hại** (không còn ai kết nối từ đó), phần thật sự giữ rate limit đúng
+      chỉ còn hai dòng loopback — vốn không bao giờ đổi.
