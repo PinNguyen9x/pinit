@@ -45,9 +45,20 @@ Bốn lớp chặn cho `/me`, từ ngoài vào trong — mỗi lớp chặn mộ
 | Lớp | Ở đâu | Chặn gì | Qua được nếu |
 |---|---|---|---|
 | Access policy | Cloudflare edge | người không có email trong policy | chiếm được hộp mail owner |
-| Verify JWT | `middleware.ts` (origin) | request vào **thẳng** origin, hoặc Access app bị xoá/sửa trên dashboard | — |
+| Verify JWT | `middleware.ts` (origin) | request vào **thẳng** origin, hoặc Access app bị xoá/sửa trên dashboard | **env Access rỗng ở origin** — lớp này phụ thuộc cấu hình, xem dưới |
 | Passphrase bcrypt | `utils/owner-login.ts` | người qua được Access mà không biết passphrase | biết passphrase |
 | Cookie HMAC | `utils/owner-session.ts` | cookie giả | lộ `SESSION_SECRET` |
+
+> **Lớp "Verify JWT" là lớp duy nhất phụ thuộc cấu hình, nên nó không phải tường thành.**
+> Nó bị bỏ qua hoàn toàn khi `CF_ACCESS_TEAM_DOMAIN`/`CF_ACCESS_AUD` rỗng — đúng như thiết
+> kế, để local và staging không tự khoá mình. Hệ quả: ai vào **thẳng** origin trong lúc env
+> rỗng thì chỉ còn passphrase chặn.
+>
+> Hai ca thực tế phải để ý: **staging** (env luôn rỗng — nhưng `/me` ở đó cũng 404 nên không
+> có gì để lộ), và **prod sau một lần sửa `.env.private` mà quên hai biến đó**. Ca thứ hai
+> được app hét lên trong log lúc khởi động (`[cf-access] ...`) nếu chỉ đặt một biến; nhưng
+> **xoá cả hai thì im lặng**. Nên sau mỗi lần sửa `.env.private`, kiểm lại bằng
+> `curl -sSI https://nipit.pro/me` — phải là `302` về Access, không phải `307` về `/me/login`.
 
 ### Hop trong máy hiện là HTTPS, không phải plain HTTP
 
@@ -80,9 +91,18 @@ Ghi lại để tra sau, **không phải** hướng dẫn làm lại từ đầu
 | Nameserver | đã trỏ về Cloudflare |
 | SSL/TLS mode | **Full (strict)** |
 | Always Use HTTPS | bật |
-| HSTS | **chưa bật** — đo từ ngoài không thấy `strict-transport-security` |
+| HSTS | **cố ý chưa bật** (không phải quên) — xem ghi chú dưới bảng |
 | DNS apex | **A record đã xoá**, thay bằng CNAME tunnel (Cloudflare tự tạo) |
 | `www` | CNAME proxied + **Redirect Rule 301 → apex** (đã đo: trả `301 → https://nipit.pro/`) |
+
+> **Vì sao HSTS cố ý chưa bật.** HSTS là cam kết có thời hạn: trình duyệt **nhớ**
+> `max-age` và từ đó từ chối mọi kết nối HTTP tới domain, kể cả khi ta đã tắt header.
+> Rollback không tức thì được — phải chờ hết `max-age` trên từng máy khách.
+>
+> Nên chỉ bật **sau khi day-2 xong** và đã chắc không còn đường quay về HTTP: hiện
+> rollback khẩn cấp vẫn có nhánh "tạo lại A record" và "mở lại ufw 80/443", mà một trong
+> các nhánh đó có thể cần HTTP tạm. Bật HSTS trước là tự bỏ mất đường lùi đó.
+> Đo từ ngoài 09/10: không có header `strict-transport-security` — đúng trạng thái mong đợi.
 
 ### Cache Rules (✓)
 
@@ -101,6 +121,7 @@ quả là lộ content chứ không phải chậm trang.
 | Tunnel | `pinit-vps`, loại Cloudflared |
 | cloudflared | `2026.10.0`, chạy trong compose, `network_mode: host` |
 | Route | `nipit.pro` → **`https://localhost:443`**, *Origin Server Name* = `nipit.pro` |
+| Token | **đã rotate một lần ngày 06/10/2026** — xem ghi chú dưới |
 
 > **Team domain không phải `pinit`** — tên đó đã bị người khác claim. Cloudflare sinh tên
 > ngẫu nhiên `lively-sunset-c9b0`. Team domain là **một phần của issuer JWT**, nên
@@ -108,6 +129,16 @@ quả là lộ content chứ không phải chậm trang.
 
 > **UI đã đổi tên:** tab cũ gọi là *Public Hostname*, nay là ***Published application
 > routes***. Tìm theo tên cũ sẽ không thấy.
+
+> **Token tunnel đã rotate một lần ngày 06/10/2026** (lúc dựng). Nên trong log cũ,
+> ảnh chụp màn hình, hay ghi chú viết trước mốc đó có thể thấy **tunnel ID khác** — đó là
+> bản đã bỏ, không phải dấu hiệu có hai tunnel hay bị chiếm quyền. Tunnel đang dùng là
+> `pinit-vps`; muốn đối chiếu thì so với `docker logs cloudflared | grep -i 'tunnel.*ID'`
+> hoặc trang *Networks → Tunnels* trên dashboard.
+>
+> Rotate token thì phải cập nhật `TUNNEL_TOKEN` trong `.env.private` **và tạo lại
+> container** (`docker compose up -d --force-recreate cloudflared`) — `env_file` chỉ được
+> đọc lúc *tạo* container, `restart` giữ env cũ.
 
 ### Access application (✓)
 
@@ -117,6 +148,7 @@ quả là lộ content chứ không phải chậm trang.
 | Destinations | `nipit.pro/me` **và** `nipit.pro/api/me` |
 | Policy | *Allow*, selector **Emails** = owner |
 | Login method | **One-time PIN** |
+| **Session Duration** | **24 giờ** |
 
 **Phải có cả `api/me`.** `/api/me/*` (practice, check-denylist) là path khác, Access không
 tự suy ra từ `/me`. Đã đo: cả `/me` và `/api/me/practice/generate` đều `302` về Access —
@@ -125,6 +157,16 @@ tự suy ra từ `/me`. Đã đo: cả `/me` và `/api/me/practice/generate` đ�
 > **Bẫy khi thêm One-time PIN:** entry tên **"Cloudflare" trong dropdown IdP là Cloudflare
 > SSO, KHÔNG phải OTP.** One-time PIN phải add ở **Settings → Integrations → Identity
 > providers** trước, rồi mới chọn được trong policy.
+
+**Session Duration 24 giờ** nghĩa là qua OTP một lần thì dùng được `/me` trong 24h, không
+phải nhập lại mỗi request. Hết hạn giữa lúc đang dùng `/me/practice` thì XHR nhận redirect
+về login của Access và fetch fail — **tải lại trang** để qua OTP lần nữa.
+
+**Đá phiên ra ngay, không chờ hết 24h** (vd nghi máy bị mất): *Zero Trust → Team &
+Resources → Users* → chọn user → **Revoke sessions**. Việc này chỉ huỷ phiên **Access**;
+cookie passphrase `pinit_owner` là lớp riêng, muốn huỷ luôn thì xoay `SESSION_SECRET` (xem
+[docs/private-area.md](private-area.md), mục *Xoay passphrase / secret / key*). Mất máy thì
+làm **cả hai**.
 
 ## Cấu hình trên VPS
 
@@ -165,6 +207,18 @@ docker exec cloudflared cloudflared --version
 network không tới được loopback của host. Kèm lợi ích: `$remote_addr` nginx thấy là
 `127.0.0.1`, đúng cái snippet real_ip trông đợi.
 
+Hai hệ quả của host mode, nên biết trước:
+
+- **Endpoint `/ready` ở `127.0.0.1:20241` nằm trên host network**, nên **mọi process trên
+  máy đều gọi được** — không chỉ container. Vô hại (nó chỉ trả trạng thái tunnel, không có
+  secret, và không listen ra ngoài loopback), nhưng đừng ngạc nhiên khi thấy nó từ shell của
+  user `pin` mà không cần `docker exec`.
+- **Nếu sau này đưa nginx vào Docker thì phải bỏ `network_mode: host`** và trỏ ingress sang
+  **tên container** trên `webnet` (vd `http://nginx:80`) thay cho `127.0.0.1`. Lúc đó
+  `$remote_addr` nginx thấy sẽ là IP của bridge, **không còn là `127.0.0.1`** — nên snippet
+  real_ip phải đổi `set_real_ip_from` sang dải của `webnet`, nếu không rate limit lại gộp
+  mọi khách vào một bucket.
+
 ### nginx real_ip (✓)
 
 Snippet đã ghi `/etc/nginx/conf.d/cloudflare-realip.conf` bằng `scripts/cloudflare-realip.sh`.
@@ -201,8 +255,19 @@ nhập của tất cả, và fail2ban ban một IP vô nghĩa.
 > dụng. Script sinh **cả hai** nhóm: loopback (cho tunnel) và dải public (cho giai đoạn
 > 443 còn mở).
 
-Dải IP Cloudflare đổi theo thời gian → chạy lại script định kỳ. Script **không ghi gì** nếu
-tải về không hợp lệ (< 5 dải v4 / < 3 dải v6, hoặc có dòng không phải CIDR).
+Dải IP Cloudflare đổi theo thời gian → cần chạy lại script. **Chưa có cron, làm tay** —
+và tần suất thấp là đủ, đừng lo thừa:
+
+| Giai đoạn | Dải public Cloudflare dùng để làm gì | Tần suất nên chạy lại |
+|---|---|---|
+| Hiện tại (80/443 còn mở) | có tác dụng thật — traffic còn vào thẳng `origin:443` qua A record proxied | mỗi quý |
+| Sau khi đóng ufw (day-2 bước 2) | **thành vô hại** — không còn ai kết nối từ dải đó; chỉ `127.0.0.1` còn khớp | khi nào nhớ cũng được |
+
+Nói cách khác: sau day-2, phần `set_real_ip_from` thật sự giữ rate limit đúng chỉ là hai
+dòng loopback — vốn không bao giờ đổi. Dải public lúc đó chỉ là phần dư vô hại.
+
+Script **không ghi gì** nếu tải về không hợp lệ (< 5 dải v4 / < 3 dải v6, hoặc có dòng không
+phải CIDR).
 
 `TRUST_PROXY=1` **giữ nguyên** — nhưng chỉ còn đúng khi có snippet real_ip. Hai thứ đi kèm
 nhau, đừng tách.
@@ -347,12 +412,26 @@ Hiện tại (80/443 **còn mở**, A record đã xoá) thì rollback nhanh nh�
 
 | # | Bước | Lệnh / thao tác |
 |---|---|---|
-| 1 | DNS về origin | tạo A record `nipit.pro` → IP VPS (proxied), xoá CNAME tunnel |
+| 1 | DNS về origin | tạo A record `nipit.pro` → IP VPS — **bắt buộc Proxied (mây cam)**, xoá CNAME tunnel. Xem cảnh báo dưới bảng |
 | 2 | Tắt lớp Access ở origin | xoá `CF_ACCESS_*` khỏi `.env.private` → `IMAGE=$(docker inspect -f '{{.Config.Image}}' learn-nextjs) docker compose up -d --force-recreate web` |
 | 3 | Tắt Access ở edge | xoá/disable application `pinit-me` |
 | 4 | Tắt tunnel | xoá `COMPOSE_PROFILES=tunnel` khỏi `$DIR/.env` → `docker compose up -d --remove-orphans` |
 | 5 | Bỏ real_ip | `sudo rm /etc/nginx/conf.d/cloudflare-realip.conf && sudo nginx -t && sudo systemctl reload nginx` |
 | 6 | Bỏ Cloudflare hẳn | đổi nameserver về nhà đăng ký cũ (cert LE vẫn còn hạn tới 27/12/2026) |
+
+> ⚠️ **A record phải là Proxied, KHÔNG được DNS only.** Khác biệt này vô hại hôm nay nhưng
+> **sẽ làm site lỗi cert sau day-2**:
+>
+> | Cách rollback | Cert LE (hiện tại) | Cert Origin CA (sau day-2) |
+> |---|---|---|
+> | A record **Proxied** + SSL *Full (strict)* | ✓ edge tin LE | ✓ **edge tin Origin CA** — đây là mục đích của Origin CA |
+> | A record **DNS only** | ✓ trình duyệt tin LE | ✗ **lỗi cert** — Origin CA không nằm trong CA store của trình duyệt |
+>
+> DNS only nghĩa là trình duyệt nối thẳng tới origin, bỏ qua Cloudflare. Sau day-2, cert ở
+> đó là Origin CA — chỉ Cloudflare tin, không ai khác. Khách sẽ thấy trang cảnh báo bảo mật.
+> DNS only còn **phơi IP origin** ra ngoài, đúng thứ cả thiết kế này muốn bịt.
+>
+> Nhớ một câu: **sau day-2, mọi đường rollback đều phải đi qua Cloudflare.**
 
 Sau khi day-2 đóng ufw thì bảng này **không còn đủ** — lúc đó phải mở cổng lại trước đã.
 Xem [docs/cloudflare-day2.md](cloudflare-day2.md).
