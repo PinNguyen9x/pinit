@@ -64,8 +64,9 @@ sẵn nên đi đường đó nhanh hơn. Hệ quả:
 > kết nối tới origin bằng IP qua A record. Vẫn đặt **Full (strict)** để nếu sau này có
 > hostname trỏ bằng A record thì không rơi về Flexible.
 
-Day-2 có hai đường để gỡ phụ thuộc cert, kèm đánh giá rủi ro đã đo:
-[docs/cloudflare-day2.md](cloudflare-day2.md), mục *Bỏ certbot*.
+**Chốt cách gỡ: Cloudflare Origin CA** (free, 15 năm) — giữ route `https://localhost:443`,
+chỉ thay hai file cert. Đường plain HTTP `:80` đã cân nhắc và loại vì đo được rủi ro vòng
+lặp redirect. Lệnh + rollback: [docs/cloudflare-day2.md](cloudflare-day2.md), bước 1.
 
 ## Đã cấu hình gì trên dashboard
 
@@ -228,18 +229,23 @@ ký khớp JWKS của team, `iss`, `aud`. Thiếu `aud` thì JWT của *bất k�
 qua. JWKS lấy không được → fail closed. Không/sai JWT → **403** (không redirect: trang login
 của Access nằm ở edge; không 404: 404 đã mang nghĩa "khu `/me` tắt").
 
-## Đề xuất: đưa IMAGE vào `$DIR/.env`
+## `IMAGE` cho lệnh `compose up` tay — đã chốt
 
-Mỗi lần sửa `.env.private` rồi recreate container tay đều phải nhớ `IMAGE=$(docker inspect
-...)`. Quên là `manifest unknown`. Hai cách gỡ, **chưa áp dụng cái nào** — cần owner chọn:
+Mỗi lần sửa `.env.private` rồi recreate container đều phải nhớ `IMAGE=$(docker inspect ...)`,
+vì **CI không push tag `:latest`**. Thiếu nó compose rơi về default `:latest` →
+`manifest unknown`.
 
-| Cách | Làm gì | Rủi ro |
-|---|---|---|
-| **A. `$DIR/.env`** (đề xuất) | thêm `IMAGE=ghcr.io/pinnguyen9x/learn-nextjs:prod-<n>` vào `/opt/learn-nextjs/.env` | Thấp. `deploy.yml` export `IMAGE` qua ssh, mà **env của shell đè `.env`**, nên deploy vẫn dùng tag mới đúng. Đổi lại: dòng trong `.env` thành cũ dần, chỉ là giá trị dự phòng cho lệnh tay — phải hiểu đúng vai trò của nó, không thì tưởng đang chạy tag đó. |
-| **B. sửa `deploy.yml`** | cho CI ghi tag vừa deploy vào `$DIR/.env` | Cao hơn: `deploy.yml` hiện **cố ý không đụng `$DIR/.env`**, và chính tính chất đó là thứ bảo vệ `COMPOSE_PROFILES=tunnel` khỏi bị CI làm mất. Phá nguyên tắc này để tiện một lệnh tay là đổi sai hướng. |
+**Chốt: thêm `IMAGE=` vào `/opt/learn-nextjs/.env`.** Lệnh cụ thể ở
+[docs/cloudflare-day2.md](cloudflare-day2.md), bước 0.
 
-Khuyến nghị **A**, và **không** chọn B. Nếu muốn gọn hơn nữa thì một alias/script trên VPS
-bọc sẵn `IMAGE=$(docker inspect ...)` là đủ, không cần đụng gì tới CI.
+**CI vẫn là nguồn tag thật.** `deploy.yml` export `IMAGE` qua ssh, và env của shell **đè**
+`.env`, nên mỗi lần deploy vẫn dùng tag mới đúng. Dòng trong `.env` chỉ là **giá trị dự
+phòng cho lệnh tay** — sau vài lần deploy nó thành cũ. Đừng đọc `.env` để kết luận prod
+đang chạy tag nào; muốn biết thật thì `docker inspect -f '{{.Config.Image}}' learn-nextjs`.
+
+Đã cân nhắc và **loại** cách cho CI ghi tag vào `$DIR/.env`: `deploy.yml` hiện cố ý không
+đụng file đó, và chính tính chất ấy đang bảo vệ `COMPOSE_PROFILES=tunnel` khỏi bị CI làm
+mất. Phá nguyên tắc này để tiện một lệnh tay là đổi sai hướng.
 
 ## Nghiệm thu
 
