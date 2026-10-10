@@ -97,12 +97,14 @@ Ghi lại để tra sau, **không phải** hướng dẫn làm lại từ đầu
 
 > **Vì sao HSTS cố ý chưa bật.** HSTS là cam kết có thời hạn: trình duyệt **nhớ**
 > `max-age` và từ đó từ chối mọi kết nối HTTP tới domain, kể cả khi ta đã tắt header.
-> Rollback không tức thì được — phải chờ hết `max-age` trên từng máy khách.
+> Rollback không tức thì được — phải chờ hết `max-age` trên **từng máy khách**.
 >
-> Nên chỉ bật **sau khi day-2 xong** và đã chắc không còn đường quay về HTTP: hiện
-> rollback khẩn cấp vẫn có nhánh "tạo lại A record" và "mở lại ufw 80/443", mà một trong
-> các nhánh đó có thể cần HTTP tạm. Bật HSTS trước là tự bỏ mất đường lùi đó.
-> Đo từ ngoài 09/10: không có header `strict-transport-security` — đúng trạng thái mong đợi.
+> Đo từ ngoài 10/10: không có header `strict-transport-security` ở cả ba hostname
+> (`nipit.pro`, `www`, `staging`) — đúng trạng thái mong đợi.
+>
+> Cách bật đúng (tăng dần `max-age`, điều kiện của `includeSubDomains`, vì sao **không**
+> preload, và hệ quả *mọi rollback phải Proxied*):
+> [docs/cloudflare-day2.md](cloudflare-day2.md), mục *Bật HSTS*.
 
 ### Cache Rules (✓)
 
