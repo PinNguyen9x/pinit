@@ -1,4 +1,4 @@
-import { SignJWT, exportJWK, generateKeyPair, type JWK, type KeyLike } from 'jose'
+import { SignJWT, exportJWK, generateKeyPair, type JWK } from 'jose'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   cfAccessProblem,
@@ -9,7 +9,8 @@ import {
 
 const AUD = 'a'.repeat(64)
 
-let privateKey: KeyLike
+// jose v6 trả CryptoKey của Web Crypto, không còn type KeyLike như v4/v5.
+let privateKey: CryptoKey
 let publicJwk: JWK
 
 beforeEach(async () => {

@@ -10,14 +10,18 @@ import {
   milestoneProgress,
   monthsUntil,
   listCaseStudies,
+  listPosts,
   listTopics,
   loadCaseStudy,
   loadNote,
+  loadPost,
   loadRoadmap,
   loadTopic,
   parseCaseStudy,
   parseNote,
+  parsePost,
   parseRoadmap,
+  splitExcerpt,
 } from './private-content'
 import type { Milestone, RoadmapState } from './private-content-schema'
 
@@ -112,6 +116,36 @@ describe('private-content.example', () => {
   it('loadTopic/loadCaseStudy với slug lạ → null', async () => {
     expect(await loadTopic('..')).toBeNull()
     expect(await loadCaseStudy('../roadmap')).toBeNull()
+  })
+})
+
+describe('private-content.example — posts', () => {
+  beforeEach(() => vi.stubEnv('PRIVATE_CONTENT_DIR', EXAMPLE))
+
+  it('bài mẫu hợp lệ, không lỗi schema', async () => {
+    const r = await listPosts()
+    expect(r.errors).toEqual([])
+    expect(r.data).toEqual([
+      expect.objectContaining({
+        slug: 'vi-du-bai-viet',
+        visibility: 'private',
+        author: 'Pin Nguyen',
+      }),
+    ])
+  })
+
+  it('excerpt là phần trước truncate, không phải cả bài', async () => {
+    const p = await loadPost('vi-du-bai-viet')
+    expect(p?.errors).toEqual([])
+    expect(p?.data?.excerpt).toContain('Đoạn này là excerpt')
+    expect(p?.data?.excerpt).not.toContain('Frontmatter')
+    expect(p?.data?.body).toContain('Frontmatter')
+  })
+
+  it('slug sai định dạng hoặc không có → null, không ném', async () => {
+    expect(await loadPost('../../etc/passwd')).toBeNull()
+    expect(await loadPost('Khong-Hop-Le')).toBeNull()
+    expect(await loadPost('khong-ton-tai')).toBeNull()
   })
 })
 
@@ -247,6 +281,70 @@ describe('parseCaseStudy', () => {
     const r = parseCaseStudy('---\ntitle: T\nsummary: S\nvisibility: public\n---\n', 's', 'f.md')
     expect(r.data).toBeNull()
     expect(r.errors[0]).toContain('visibility')
+  })
+})
+
+describe('splitExcerpt', () => {
+  it('cắt ở <!-- truncate -->', () => {
+    expect(splitExcerpt('Mở đầu.\n\n<!-- truncate -->\n\nThân bài.')).toBe('Mở đầu.')
+  })
+
+  it('chấp cả <!--truncate--> không khoảng trắng', () => {
+    expect(splitExcerpt('Mở đầu.\n<!--truncate-->\nThân.')).toBe('Mở đầu.')
+  })
+
+  it('không có separator → đoạn văn đầu, không phải cả bài', () => {
+    expect(splitExcerpt('Đoạn một.\n\nĐoạn hai.\n\nĐoạn ba.')).toBe('Đoạn một.')
+  })
+
+  it('rỗng → rỗng, không ném', () => {
+    expect(splitExcerpt('')).toBe('')
+  })
+})
+
+describe('parsePost', () => {
+  const ok = "---\ntitle: T\ntags: [a]\ndate: '2026-01-02T00:00:00Z'\n---\nThân."
+
+  it('thiếu visibility → private (mặc định an toàn)', () => {
+    expect(parsePost(ok, 's', 'f.md').data?.visibility).toBe('private')
+  })
+
+  it('slug lấy từ tên file, KHÔNG từ frontmatter', () => {
+    const raw = "---\nslug: khai-trong-frontmatter\ntitle: T\ntags: [a]\ndate: '2026-01-02T00:00:00Z'\n---\n"
+    expect(parsePost(raw, 'ten-file', 'f.md').data?.slug).toBe('ten-file')
+  })
+
+  it('author và image tuỳ chọn → null khi thiếu', () => {
+    const d = parsePost(ok, 's', 'f.md').data
+    expect(d?.author).toBeNull()
+    expect(d?.image).toBeNull()
+  })
+
+  it('thiếu date → lỗi', () => {
+    const r = parsePost('---\ntitle: T\ntags: [a]\n---\n', 's', 'f.md')
+    expect(r.data).toBeNull()
+    expect(r.errors[0]).toContain('date')
+  })
+
+  it('date không parse được → lỗi', () => {
+    const r = parsePost('---\ntitle: T\ntags: [a]\ndate: hom-qua\n---\n', 's', 'f.md')
+    expect(r.data).toBeNull()
+    expect(r.errors[0]).toContain('date')
+  })
+
+  it('visibility lạ → lỗi', () => {
+    const raw = "---\ntitle: T\ntags: [a]\ndate: '2026-01-02T00:00:00Z'\nvisibility: public\n---\n"
+    const r = parsePost(raw, 's', 'f.md')
+    expect(r.data).toBeNull()
+    expect(r.errors[0]).toContain('visibility')
+  })
+
+  it('body giữ CẢ excerpt — trang chi tiết hiện đủ bài', () => {
+    const raw = "---\ntitle: T\ntags: [a]\ndate: '2026-01-02T00:00:00Z'\n---\nMở.\n\n<!-- truncate -->\n\nThân."
+    const d = parsePost(raw, 's', 'f.md').data
+    expect(d?.excerpt).toBe('Mở.')
+    expect(d?.body).toContain('Mở.')
+    expect(d?.body).toContain('Thân.')
   })
 })
 
