@@ -32,7 +32,10 @@ Ba việc, **làm theo đúng thứ tự này**:
 | 0 | Thêm `IMAGE` vào `$DIR/.env` | ✅ **xong 09/10/2026** |
 | 1 | Thay cert sang Cloudflare Origin CA | ✅ **xong 09/10/2026** — hạn 05/10/2041 |
 | 2 | Đóng ufw 80/443 | ✅ **xong 09/10/2026** — chỉ còn `22/tcp` (v4+v6) |
-| 3 | Staging qua `staging.nipit.pro` | ⬜ còn lại |
+| 3 | Staging qua `staging.nipit.pro` | ✅ **xong 10/10/2026** |
+
+**Day-2 đóng.** Ba việc còn lại không thuộc day-2: bật HSTS, và hai phép nghiệm thu chỉ làm
+được bằng tay (xem *Nghiệm thu sau mỗi bước*).
 
 **Deadline 27/12/2026 đã được gỡ** sau bước 1. Khối cảnh báo ở đầu file giữ lại làm hồ sơ
 vì sao thứ tự phải như vậy.
@@ -396,6 +399,26 @@ curl -sSI --max-time 15 https://staging.nipit.pro | head -1         # 302 Access
 ```
 
 **Rollback 3c:** đổi lại `BIND=0.0.0.0`, deploy `develop`.
+
+**Kết quả đo thật 10/10/2026**, sau khi merge + deploy `develop`:
+
+| Phép | Kết quả |
+|---|---|
+| `curl http://<IP-VPS>:3001/` | **`curl: (28)` timeout** ✓ — đã đóng |
+| `https://staging.nipit.pro` | `302` về Access ✓ |
+| prod: apex, `/blog` | `200` ✓ không bị ảnh hưởng |
+| prod: `/me` | `302` về Access ✓ |
+| origin `:80`, `:443` | vẫn `curl: (28)` ✓ |
+
+> ⚠️ **Đo Access một lần là không đủ.** Ngay sau khi tạo Access app ở 3b, đo được `200` một
+> lần rồi `302` lần sau, cách nhau vài giây — **propagation lag ở edge**, không phải cấu hình
+> sai. Nhưng nếu tin lần đo đầu rồi đóng `:3001` luôn thì staging phơi ra qua hostname, **dễ
+> tìm hơn IP:port** nhiều.
+>
+> Trước khi đóng đường vào cũ, đo **lặp lại nhiều lần** và **nhiều path**. Lần làm thật đo
+> 10 request liên tiếp + 8 path (`/`, `/blog`, `/me`, `/me/login`, `/api/me/...`,
+> `/_next/static/...`, `/favicon.ico`, `/robots.txt`) — tất cả `302`, không path nào lách
+> được. Đó là mức đủ để kết luận "destination không có path" đã che toàn hostname.
 
 ---
 
