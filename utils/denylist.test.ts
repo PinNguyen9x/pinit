@@ -82,7 +82,7 @@ describe('loadDenylist', () => {
 })
 
 describe('listScanTargets + scanFiles', () => {
-  it('quét roadmap.yaml, learn/** đệ quy và case-studies; bỏ file ẩn và file không phải .md', async () => {
+  it('quét roadmap.yaml, learn/** đệ quy, case-studies và posts; bỏ file ẩn và file không phải .md', async () => {
     const dir = fixture({
       'roadmap.yaml': 'milestones:\n  - title: Acme migration\n',
       'learn/k8s/index.md': 'sạch',
@@ -90,6 +90,7 @@ describe('listScanTargets + scanFiles', () => {
       'learn/k8s/diagram.png': 'acme',
       'learn/.draft.md': 'acme',
       'case-studies/x.md': 'acme',
+      'posts/bai-viet.md': 'acme trong bài private',
       'practice-log.jsonl': 'acme',
       '.denylist': 'acme',
     })
@@ -99,13 +100,25 @@ describe('listScanTargets + scanFiles', () => {
       'learn/k8s/deep/nested.md',
       'learn/k8s/index.md',
       'case-studies/x.md',
+      'posts/bai-viet.md',
     ])
     const matches = await scanFiles(files, ['acme'], dir)
     expect(matches.map((m) => `${m.file}:${m.line}`)).toEqual([
       'roadmap.yaml:2',
       'learn/k8s/deep/nested.md:2',
       'case-studies/x.md:1',
+      'posts/bai-viet.md:1',
     ])
+  })
+
+  // Hồi quy cho đúng cái lỗ đã gặp lúc thêm posts/: content type mới không được
+  // thêm vào listScanTargets thì nó lách denylist, mà script vẫn exit 0.
+  it('bài trong posts/ KHÔNG được lách denylist', async () => {
+    const dir = fixture({ 'posts/co-ten-noi-bo.md': 'dòng 1\nAcme Corp ở dòng 2' })
+    const files = await listScanTargets(dir)
+    expect(files).toContain('posts/co-ten-noi-bo.md')
+    const matches = await scanFiles(files, ['acme corp'], dir)
+    expect(matches.map((m) => `${m.file}:${m.line}`)).toEqual(['posts/co-ten-noi-bo.md:2'])
   })
 })
 

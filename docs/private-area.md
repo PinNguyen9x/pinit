@@ -276,7 +276,9 @@ từ khóa; dòng trống và dòng bắt đầu bằng `#` bị bỏ qua. So ch
 biệt hoa thường, sau khi chuẩn hoá Unicode NFC cả hai phía.
 
 - `npm run check:denylist` — quét `roadmap.yaml`, `learn/**/*.md`, `case-studies/*.md`,
-  in `file:line:từ-khóa`. Exit `0` sạch · `1` có khớp · `2` chưa có/rỗng denylist
+  `posts/*.md`, in `file:line:từ-khóa`. **Thêm content type mới thì phải thêm vào
+  `listScanTargets` trong `utils/denylist.ts`** — quên là loại content đó lách hẳn hàng rào,
+  và lách im lặng vì script vẫn exit `0`. Exit `0` sạch · `1` có khớp · `2` chưa có/rỗng denylist
   hoặc không có thư mục content. Từ khóa ≤ 3 ký tự chỉ bị cảnh báo.
 - Nút **Kiểm denylist** trên trang case study gọi `POST /api/me/check-denylist`
   (`{ slug }`, sau middleware) để kiểm riêng file đó.
