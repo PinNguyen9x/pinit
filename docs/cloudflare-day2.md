@@ -9,6 +9,11 @@
 > được origin = site sập.** Mà đóng cổng 80 làm HTTP-01 không gia hạn được nữa.
 >
 > **Bước 1 (thay cert) phải xong trước bước 2 (đóng cổng), và cả hai trước 27/12.**
+>
+> ✅ **ĐÃ XỬ LÝ 09/10/2026.** Cert origin nay là Cloudflare Origin CA, hạn **05/10/2041**.
+> `certbot.timer` đã disable, và các `include /etc/letsencrypt/*` đã gỡ khỏi vhost
+> (`options-ssl-nginx.conf` + `ssl-dhparams.pem` copy sang `/etc/nginx/snippets/`) — nên
+> giờ xoá hẳn `/etc/letsencrypt/` cũng không làm nginx chết. Mốc 27/12 không còn ý nghĩa.
 
 Tiếp sau [docs/cloudflare.md](cloudflare.md), nơi ghi trạng thái đã chạy được từ 06/10/2026.
 File này là **runbook để owner chạy tay**: mỗi bước có lệnh cụ thể, cách kiểm, và rollback.
@@ -22,12 +27,18 @@ File này là **runbook để owner chạy tay**: mỗi bước có lệnh cụ 
 
 Ba việc, **làm theo đúng thứ tự này**:
 
-| # | Việc | Chờ |
+| # | Việc | Trạng thái |
 |---|---|---|
-| 0 | Thêm `IMAGE` vào `$DIR/.env` | — (làm trước cho đỡ vướng các bước sau) |
-| 1 | Thay cert sang Cloudflare Origin CA | — |
-| 2 | Đóng ufw 80/443 | ≥ 1 ngày sau khi bước 1 ổn |
-| 3 | Staging qua `staging.nipit.pro` | độc lập, lúc nào cũng được |
+| 0 | Thêm `IMAGE` vào `$DIR/.env` | ✅ **xong 09/10/2026** |
+| 1 | Thay cert sang Cloudflare Origin CA | ✅ **xong 09/10/2026** — hạn 05/10/2041 |
+| 2 | Đóng ufw 80/443 | ✅ **xong 09/10/2026** — chỉ còn `22/tcp` (v4+v6) |
+| 3 | Staging qua `staging.nipit.pro` | ✅ **xong 10/10/2026** |
+
+**Day-2 đóng.** Ba việc còn lại không thuộc day-2: bật HSTS, và hai phép nghiệm thu chỉ làm
+được bằng tay (xem *Nghiệm thu sau mỗi bước*).
+
+**Deadline 27/12/2026 đã được gỡ** sau bước 1. Khối cảnh báo ở đầu file giữ lại làm hồ sơ
+vì sao thứ tự phải như vậy.
 
 Điều kiện "tunnel ổn ≥ 1 ngày" **đã thoả**: tunnel chạy liên tục từ 06/10, qua một lần
 deploy prod, đo lại 09/10 vẫn phục vụ bình thường.
@@ -180,9 +191,33 @@ systemctl list-timers | grep -i certbot      # phải rỗng
 
 Cố ý `disable` chứ không `apt purge`: giữ cert LE và certbot lại làm đường lùi.
 
+### 1f. Gỡ nốt phụ thuộc vào `/etc/letsencrypt/` (đã làm 09/10/2026)
+
+Đổi `ssl_certificate*` là chưa đủ: vhost do certbot sinh còn **`include` hai file trong
+`/etc/letsencrypt/`** mà không liên quan gì tới cert:
+
+```nginx
+include /etc/letsencrypt/options-ssl-nginx.conf;   # protocol + cipher
+ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;     # DH params
+```
+
+Để nguyên thì nginx **vẫn phụ thuộc thư mục đó**: ai `apt purge certbot` hoặc xoá
+`/etc/letsencrypt/` là `nginx -t` fail và **nginx không start lại được**. Sau khi đóng
+80/443 thì đó là mất site, chỉ còn ssh để chữa — mìn nằm im hàng tháng rồi nổ đúng lúc
+reboot.
+
+Đã xử lý: copy hai file sang `/etc/nginx/snippets/` và trỏ `include`/`ssl_dhparam` vào đó.
+Kiểm không còn tham chiếu nào:
+
+```bash
+sudo nginx -T 2>/dev/null | grep -n letsencrypt || echo "sach - khong con phu thuoc /etc/letsencrypt"
+```
+
 **Rollback 1:** đổi hai dòng `ssl_certificate*` về `/etc/letsencrypt/live/nipit.pro/`,
 `sudo nginx -t && sudo systemctl reload nginx`, rồi
-`sudo systemctl enable --now certbot.timer`. Cert LE vẫn còn hạn tới 27/12/2026.
+`sudo systemctl enable --now certbot.timer`. Cert LE vẫn nằm đó (hạn 27/12/2026) vì ta
+`disable` chứ không purge — nhưng gia hạn cần **mở lại cổng 80**, nên rollback này chỉ dùng
+được trước khi đóng ufw, hoặc kèm việc mở cổng lại.
 
 ### Vì sao KHÔNG chọn plain HTTP `:80`
 
@@ -252,6 +287,30 @@ Phân biệt hai trạng thái, đừng lẫn:
 |---|---|
 | `exit=60` + nói về certificate | cổng **còn mở**, chỉ là cert không được tin (sau bước 1) |
 | `exit=28` timeout, hoặc `exit=7` refused | cổng **đã đóng** (sau bước 2) ✓ |
+
+**Kết quả đo thật 10/10/2026, sau khi đóng:**
+
+| Phép | Kết quả |
+|---|---|
+| `https://nipit.pro` qua Cloudflare | `200` ✓ |
+| `/me`, `/api/me/practice/generate` | `302` về Access ✓ |
+| `/blog` | `200` ✓ |
+| Static asset GET ×2 | `HIT` ✓ |
+| `www`, `http://nipit.pro` | `301` → apex ✓ |
+| `curl -k --resolve nipit.pro:443:<IP-VPS>` | **`curl: (28)` timeout** ✓ |
+| `curl http://<IP-VPS>/` | **`curl: (28)` timeout** ✓ |
+| `http://<IP-VPS>:3001` | `200` — staging còn public, bước 3 lo |
+
+> **Từ giờ không kiểm được cert origin từ ngoài nữa** — cổng đã đóng, nên
+> `openssl s_client -connect nipit.pro:443` nối tới **edge của Cloudflare**, không phải
+> origin. Cert nó trả về là **Universal SSL của Cloudflare (issuer Let's Encrypt)** — đúng
+> và bình thường, **không** phải dấu hiệu cert origin bị trả về LE. Muốn xem cert origin thì
+> phải từ VPS:
+>
+> ```bash
+> echo | openssl s_client -connect 127.0.0.1:443 -servername nipit.pro 2>/dev/null \
+>   | openssl x509 -noout -issuer -enddate
+> ```
 
 > **Cổng 3001 của staging KHÔNG bị ufw chặn.** Docker publish port bằng cách ghi iptables
 > vào chain `DOCKER`, **đi vòng qua ufw**. Nên sau bước này `http://<IP-VPS>:3001` **vẫn
@@ -341,6 +400,26 @@ curl -sSI --max-time 15 https://staging.nipit.pro | head -1         # 302 Access
 
 **Rollback 3c:** đổi lại `BIND=0.0.0.0`, deploy `develop`.
 
+**Kết quả đo thật 10/10/2026**, sau khi merge + deploy `develop`:
+
+| Phép | Kết quả |
+|---|---|
+| `curl http://<IP-VPS>:3001/` | **`curl: (28)` timeout** ✓ — đã đóng |
+| `https://staging.nipit.pro` | `302` về Access ✓ |
+| prod: apex, `/blog` | `200` ✓ không bị ảnh hưởng |
+| prod: `/me` | `302` về Access ✓ |
+| origin `:80`, `:443` | vẫn `curl: (28)` ✓ |
+
+> ⚠️ **Đo Access một lần là không đủ.** Ngay sau khi tạo Access app ở 3b, đo được `200` một
+> lần rồi `302` lần sau, cách nhau vài giây — **propagation lag ở edge**, không phải cấu hình
+> sai. Nhưng nếu tin lần đo đầu rồi đóng `:3001` luôn thì staging phơi ra qua hostname, **dễ
+> tìm hơn IP:port** nhiều.
+>
+> Trước khi đóng đường vào cũ, đo **lặp lại nhiều lần** và **nhiều path**. Lần làm thật đo
+> 10 request liên tiếp + 8 path (`/`, `/blog`, `/me`, `/me/login`, `/api/me/...`,
+> `/_next/static/...`, `/favicon.ico`, `/robots.txt`) — tất cả `302`, không path nào lách
+> được. Đó là mức đủ để kết luận "destination không có path" đã che toàn hostname.
+
 ---
 
 ## Nghiệm thu sau mỗi bước
@@ -409,6 +488,30 @@ curl -sSI --max-time 15 https://nipit.pro | head -1          # 200
 docker logs cloudflared --since 5m 2>&1 | tail -5            # "Registered tunnel connection"
 curl -fsS http://127.0.0.1:20241/ready && echo
 ```
+
+### Reboot VPS: lỗi **530** vài chục giây là BÌNH THƯỜNG
+
+Đã kiểm chứng bằng reboot thật **10/10/2026**: site trả `530` trong **vài chục giây** đầu,
+rồi tự về `200`. Mọi container tự lên, không phải can thiệp gì.
+
+Vì sao: `530` (họ "origin unreachable") là Cloudflare nói **nó không nối được tới origin** —
+đúng sự thật trong khoảng Docker chưa khởi động xong `cloudflared`. Trước khi đóng cổng,
+cùng tình huống đó Cloudflare có thể thử A record; giờ tunnel là đường duy nhất nên không
+còn gì để fallback, và `530` hiện ra thẳng.
+
+**Đừng chẩn `530` sau reboot là sự cố.** Thứ tự xử lý:
+
+```bash
+# 1. Chờ 60s rồi thử lại trước khi làm gì cả
+sleep 60; curl -sSI --max-time 15 https://nipit.pro | head -1
+
+# 2. Vẫn 530 thì mới xem container
+docker ps | grep -E 'cloudflared|learn-nextjs'
+curl -fsS http://127.0.0.1:20241/ready && echo
+docker logs --since 5m cloudflared 2>&1 | tail -20
+```
+
+`530` kéo dài **quá vài phút** mới là có vấn đề thật — lúc đó theo bảng *Nếu site sập* dưới.
 
 ## Việc nhỏ còn lại
 

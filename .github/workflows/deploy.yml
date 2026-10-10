@@ -83,14 +83,19 @@ jobs:
       - name: Deploy lên VPS
         run: |
           TAG='${{ needs.build-push.outputs.tag }}'
-          # BIND: prod chỉ nghe 127.0.0.1 (nginx đứng trước); staging mở thẳng IP:3001.
+          # BIND: cả hai môi trường chỉ nghe 127.0.0.1. Prod có nginx đứng trước;
+          # staging đi qua cloudflared (network_mode: host nên tới được loopback)
+          # dưới staging.nipit.pro + Cloudflare Access. Trước 10/2026 staging bind
+          # 0.0.0.0 -> ai cũng vào được http://<IP>:3001, vì Docker publish port
+          # ghi iptables vào chain DOCKER và ĐI VÒNG QUA ufw (ufw status không hề
+          # nhắc 3001 mà cổng vẫn mở). Đóng nó phải bằng bind address, không bằng ufw.
           # LOG_MODE: staging dùng chung thư mục practice-log với prod -> mount ro.
           if [ "${{ github.ref_name }}" = "main" ]; then
             DIR=/opt/learn-nextjs; CON=learn-nextjs; PORT=3000; API=http://json-server-blog:4000
             BIND=127.0.0.1; LOG_MODE=rw
           else
             DIR=/opt/learn-nextjs-staging; CON=learn-nextjs-staging; PORT=3001; API=http://json-server-blog-staging:4000
-            BIND=0.0.0.0; LOG_MODE=ro
+            BIND=127.0.0.1; LOG_MODE=ro
           fi
           # Compose trong repo là nguồn duy nhất: chép lên trước mỗi lần deploy, ghi
           # đè bản trên VPS. KHÔNG đụng $DIR/.env (cấu hình riêng từng môi trường).

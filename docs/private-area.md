@@ -17,8 +17,10 @@ Repo **và** image Docker đều public, nên toàn bộ thiết kế xoay quanh
 | Tiền API Anthropic | — | quota 40 request/giờ toàn cục; timeout 30s, không retry |
 
 Các lớp còn lại:
-- **Staging tắt hẳn `/me`** (không có secrets → mọi route 404): staging mở HTTP thẳng
-  ở :3001, không qua nginx — passphrase sẽ đi plaintext và `X-Forwarded-For` giả được.
+- **Staging tắt hẳn `/me`** (không có secrets → mọi route 404). Trước 10/2026 staging mở
+  HTTP thẳng ở `:3001` nên passphrase sẽ đi plaintext và `X-Forwarded-For` giả được; nay
+  staging chỉ bind `127.0.0.1` và vào qua `staging.nipit.pro` + Cloudflare Access. Khu `/me`
+  ở staging **vẫn tắt** — Access ở đó để staging không phơi ra internet, không phải để mở `/me`.
 - **Không link, không index:** site public không link vào `/me`; mọi phản hồi `/me/*`
   mang `X-Robots-Tag: noindex, nofollow`. Cố ý **không** thêm `Disallow: /me` vào
   robots.txt — làm thế là tự công bố đường dẫn. Người dò vẫn biết `/me` tồn tại
@@ -48,7 +50,7 @@ nằm trong file nào trên VPS:
 
 | Biến | Prod | Staging |
 |---|---|---|
-| `BIND_ADDR` | `127.0.0.1` (nginx đứng trước) | `0.0.0.0` (mở thẳng :3001) |
+| `BIND_ADDR` | `127.0.0.1` (nginx đứng trước) | `127.0.0.1` (qua cloudflared + Access, xem [docs/cloudflare-day2.md](cloudflare-day2.md) bước 3) |
 | `HOST_PORT` | `3000` | `3001` |
 | `PRACTICE_LOG_MODE` | `rw` | `ro` |
 | `IMAGE`, `CONTAINER`, `API_TARGET` | theo môi trường | theo môi trường |
