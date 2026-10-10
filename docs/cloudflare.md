@@ -7,32 +7,38 @@ qua **Cloudflare Tunnel**. Chỉ dùng **Free zone plan** + **Zero Trust Free** 
 giữ nguyên. Access trả lời "đúng người giữ email này", passphrase trả lời "biết bí mật".
 Chi tiết khu `/me`: [docs/private-area.md](private-area.md).
 
-> **Trạng thái 06/10/2026 — đã chạy trên prod.** Zone, tunnel, Access, real_ip đều xong;
-> nghiệm thu từ ngoài đã đạt (xem *Nghiệm thu*). **Chưa làm:** đóng ufw 80/443, bỏ certbot,
-> staging qua `staging.nipit.pro`. Các bước đó có runbook riêng kèm lệnh + rollback:
+> **Trạng thái 10/10/2026 — XONG HẾT.** Zone, tunnel, Access, real_ip, cert Origin CA,
+> lockdown ufw, staging qua Access, HSTS — tất cả đã chạy trên prod và nghiệm thu từ ngoài
+> (xem *Nghiệm thu*). Chi tiết từng bước day-2 kèm rollback:
 > [docs/cloudflare-day2.md](cloudflare-day2.md).
 >
-> ⚠️ **Hạn chót có thật: cert Let's Encrypt hết hạn 27/12/2026.** Đóng cổng 80 làm HTTP-01
-> không gia hạn được. Phải xử lý cert **trước** ngày đó — day-2 lo việc này.
+> ✅ **Hạn chót 27/12/2026 đã được gỡ.** Cert origin nay là Cloudflare Origin CA, hạn
+> **05/10/2041**; `certbot.timer` đã tắt và vhost không còn tham chiếu `/etc/letsencrypt/`.
+>
+> ⚠️ **Quy tắc vĩnh viễn sau khi bật HSTS:** mọi đường rollback **phải Proxied**. Cảnh báo
+> cert giờ không thể bỏ qua, mà cert origin chỉ Cloudflare tin — nên nhánh `A record DNS
+> only` không còn vào được bằng cách nào cả.
 
 ## Kiến trúc
 
 ```mermaid
-flowchart LR
+flowchart TB
   U["Khách / Owner"]
   subgraph CF["Cloudflare edge (Free plan)"]
-    E["DDoS + WAF free, Cache Rules"]
-    A["Access: chỉ /me và /api/me (kèm path con), One-time PIN qua email"]
+    direction TB
+    E["DDoS + WAF free<br/>Cache Rules<br/>HSTS"]
+    A["Access<br/>/me và /api/me (kèm path con)<br/>One-time PIN qua email"]
   end
-  subgraph VPS["VPS Vultr - 80/443 VẪN MỞ, sẽ đóng ở day-2"]
-    CD["cloudflared 2026.10.0, network_mode host"]
-    N["nginx :443 TLS, real_ip CF-Connecting-IP"]
-    W["Next.js :3000, middleware JWT + passphrase"]
+  subgraph VPS["VPS Vultr — chỉ còn cổng 22, không còn 80/443"]
+    direction TB
+    CD["cloudflared 2026.10.0<br/>network_mode: host"]
+    N["nginx :443 TLS Origin CA<br/>real_ip CF-Connecting-IP"]
+    W["Next.js :3000<br/>middleware: JWT + passphrase"]
     J["json-server-blog :4000"]
   end
   U -->|HTTPS| E
   E -->|"/me, /api/me"| A
-  E -->|"blog public (cache)"| CD
+  E -->|"blog public, cache"| CD
   A -->|"JWT Cf-Access-Jwt-Assertion"| CD
   CD -->|"tunnel QUIC ra ngoài"| E
   CD -->|"https 127.0.0.1:443"| N
