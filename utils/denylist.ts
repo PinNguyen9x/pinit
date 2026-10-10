@@ -91,7 +91,12 @@ async function walkMarkdown(dir: string, rel: string, out: string[]) {
   }
 }
 
-/** roadmap.yaml + mọi .md dưới learn/ (đệ quy) và case-studies/. */
+/**
+ * roadmap.yaml + mọi .md dưới learn/, case-studies/ và posts/ (đệ quy).
+ *
+ * ⚠️ **Thêm content type mới thì phải thêm vào đây.** Quên là loại content đó
+ * lách hẳn hàng rào tên nội bộ — và lách im lặng, vì script vẫn exit 0.
+ */
 export async function listScanTargets(dir = contentDir()): Promise<string[]> {
   const files: string[] = []
   try {
@@ -102,6 +107,7 @@ export async function listScanTargets(dir = contentDir()): Promise<string[]> {
   }
   await walkMarkdown(dir, 'learn', files)
   await walkMarkdown(dir, 'case-studies', files)
+  await walkMarkdown(dir, 'posts', files)
   return files
 }
 

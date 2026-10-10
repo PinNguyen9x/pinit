@@ -13,6 +13,7 @@ export const OWNER_NAV = [
   { href: '/me/roadmap', label: 'Roadmap' },
   { href: '/me/learn', label: 'Learn' },
   { href: '/me/case-studies', label: 'Case studies' },
+  { href: '/me/posts', label: 'Bài viết' },
   { href: '/me/practice', label: 'Practice' },
 ]
 
