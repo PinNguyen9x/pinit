@@ -1,7 +1,8 @@
 # Khu private `/me`
 
 Khu chỉ owner xem được: roadmap sự nghiệp (`/me/roadmap`), notes ôn luyện (`/me/learn`),
-case study ẩn danh (`/me/case-studies`), luyện phỏng vấn với Claude (`/me/practice`).
+case study ẩn danh (`/me/case-studies`), bài viết riêng (`/me/posts`), luyện phỏng vấn với
+Claude (`/me/practice`).
 Repo **và** image Docker đều public, nên toàn bộ thiết kế xoay quanh một nguyên tắc:
 **content chỉ nằm trên disk VPS, secret chỉ nằm trong env của container prod.**
 
@@ -122,6 +123,69 @@ sudo nginx -T 2>/dev/null | grep -n 'proxy_pass\|X-Forwarded-For'   # mỗi prox
 **Đi qua Cloudflare thì ba dòng trên KHÔNG còn đủ.** Phần tử cuối của `X-Forwarded-For`
 lúc đó là IP của cloudflared (`127.0.0.1`), không phải của khách — cần thêm snippet
 `real_ip`. Xem [docs/cloudflare.md](cloudflare.md), mục *nginx: real_ip*.
+
+## Bài viết riêng (`/me/posts`)
+
+Blog riêng, **không có trong site public**. File `.md` trong `posts/` của thư mục content,
+nên cùng mọi lớp bảo vệ với phần còn lại của `/me`: Access ở edge, verify JWT, passphrase,
+cookie HMAC, `X-Robots-Tag: noindex`.
+
+**Vì sao không để trong `blog/` của repo `pinit`:** repo đó public, và image Docker cũng
+public. Nội dung private đặt ở đó là lộ ngay lúc commit — nguyên tắc gốc của cả thiết kế này
+là *content chỉ nằm trên disk VPS*.
+
+### Frontmatter — cố ý tương thích blog public
+
+```yaml
+---
+slug: ten-bai            # tuỳ chọn; slug THẬT lấy từ tên file
+title: Tiêu đề
+author: Pin Nguyen       # tuỳ chọn
+tags: [Cloudflare, DevOps]
+date: '2026-10-10T00:00:00Z'
+visibility: private      # private (mặc định) | public-candidate
+# image: /covers/...     # tuỳ chọn, blog public thì bắt buộc
+---
+
+Đoạn excerpt.
+
+<!-- truncate -->
+
+Thân bài.
+```
+
+Shape giống blog public để **đưa một bài lên public chỉ là `git mv`**, không phải viết lại:
+
+```bash
+# từ repo content sang repo pinit
+git mv posts/ten-bai.md ../pinit/blog/2026-10-10-ten-bai.md
+# rồi bỏ dòng `visibility`, thêm `image` (cover), và `slug` cho khớp tên file
+```
+
+| | Blog public | Bài private |
+|---|---|---|
+| `image` (cover) | bắt buộc | tuỳ chọn |
+| `visibility` | không có | `private` mặc định |
+| `slug` | từ frontmatter | từ **tên file** |
+
+`slug` lấy từ tên file vì tên file quyết định URL — để frontmatter khai khác đi là có hai
+nguồn sự thật. Đây là khác biệt duy nhất phải nhớ khi `git mv`.
+
+**Thiếu `visibility` → `private`**, giống case-studies: mặc định an toàn, không có bài nào
+tự thành ứng viên public.
+
+### Markdown dùng được gì
+
+Cùng pipeline `utils/markdown.ts` với blog public: GFM, mục lục, prism, và **mermaid render
+thành SVG ngay ở server** — trang không tải renderer nào. Nút copy code do `MarkdownBody`
+gắn. Raw HTML trong markdown được giữ nguyên (`rehype-raw`) vì content do owner viết.
+
+> ⚠️ Khác hẳn output của model ở `/me/practice`, thứ **không** được qua pipeline này. Xem
+> *Ràng buộc khi sửa code* ở cuối file.
+
+Chạy local: `PRIVATE_CONTENT_DIR=./private-content.example npm run dev` rồi mở `/me/posts`.
+Bộ mẫu có một bài ví dụ, và `utils/private-content.test.ts` kiểm nó khớp schema — test xanh
+nghĩa là tài liệu này không lệch khỏi code.
 
 ## Content: repo, deploy key, sync
 

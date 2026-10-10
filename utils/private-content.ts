@@ -21,6 +21,8 @@ import {
   MILESTONE_STATUSES,
   Note,
   NoteMeta,
+  Post,
+  PostMeta,
   Question,
   TopicSummary,
   VISIBILITIES,
@@ -400,6 +402,93 @@ export function parseCaseStudy(
     },
     errors,
   }
+}
+
+/** Tách excerpt: phần trước `<!-- truncate -->`. Chấp cả `<!--truncate-->`. */
+const TRUNCATE_RE = /<!--\s*truncate\s*-->/
+
+export function splitExcerpt(content: string): string {
+  const parts = content.split(TRUNCATE_RE)
+  // Không có separator thì lấy đoạn văn đầu tiên — đủ cho trang list, không phải
+  // cả bài. Cố ý không cắt theo số ký tự: cắt giữa câu đọc rất tệ.
+  const head = parts.length > 1 ? parts[0] : (content.trim().split(/\n{2,}/)[0] ?? '')
+  return head.trim()
+}
+
+/**
+ * Bài blog private. Frontmatter tương thích blog public — xem PostMeta.
+ *
+ * `slug` lấy từ **tên file**, không từ frontmatter: tên file là thứ quyết định URL,
+ * nên để frontmatter tự khai `slug` khác tên file là mời gọi hai nguồn sự thật.
+ * Blog public khai `slug` trong frontmatter, nên khi `git mv` sang `blog/` thì nhớ
+ * thêm lại dòng đó cho khớp tên file.
+ */
+export function parsePost(raw: string, slug: string, file: string): WithErrors<Post | null> {
+  const errors: string[] = []
+  const fm = parseFrontmatter(raw, file, errors)
+  if (!fm) return { data: null, errors }
+  const { data, content } = fm
+
+  const problems: string[] = []
+  const title = nonEmptyString(data.title)
+  const tags = stringArray(data.tags)
+  const date = nonEmptyString(data.date)
+  // Thiếu visibility thì coi là private — mặc định an toàn, giống case-studies.
+  const visibility = data.visibility == null ? 'private' : oneOf(data.visibility, VISIBILITIES)
+  if (!title) problems.push('thiếu title')
+  if (!tags) problems.push('tags phải là mảng chuỗi')
+  if (!date) problems.push('thiếu date')
+  else if (Number.isNaN(Date.parse(date))) problems.push('date không phải thời điểm hợp lệ')
+  if (!visibility) problems.push(`visibility phải là một trong ${VISIBILITIES.join(' | ')}`)
+
+  if (problems.length) {
+    errors.push(`${file}: ${problems.join(', ')}`)
+    return { data: null, errors }
+  }
+  return {
+    data: {
+      slug,
+      title: title!,
+      author: nonEmptyString(data.author),
+      tags: tags!,
+      date: date!,
+      image: nonEmptyString(data.image),
+      visibility: visibility!,
+      excerpt: splitExcerpt(content),
+      body: content,
+    },
+    errors,
+  }
+}
+
+export async function listPosts(): Promise<WithErrors<PostMeta[]>> {
+  const errors: string[] = []
+  const items: PostMeta[] = []
+  for (const e of await listDir(join(contentDir(), 'posts'))) {
+    if (e.isDir || !e.name.endsWith('.md')) continue
+    const slug = e.name.slice(0, -3)
+    if (!isSlug(slug)) {
+      errors.push(`posts/${e.name}: tên file chỉ được chứa a-z 0-9 - _`)
+      continue
+    }
+    const post = await loadPost(slug)
+    if (!post) continue
+    errors.push(...post.errors)
+    if (post.data) {
+      const { body: _body, ...meta } = post.data
+      items.push(meta)
+    }
+  }
+  // Mới nhất lên đầu, theo date của frontmatter chứ không theo mtime của file.
+  items.sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+  return { data: items, errors }
+}
+
+export async function loadPost(slug: unknown): Promise<WithErrors<Post | null> | null> {
+  if (!isSlug(slug)) return null
+  const file = `posts/${slug}.md`
+  const raw = await readOptional(join(contentDir(), file))
+  return raw == null ? null : parsePost(raw, slug, file)
 }
 
 export async function listCaseStudies(): Promise<WithErrors<CaseStudyMeta[]>> {

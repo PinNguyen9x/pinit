@@ -81,6 +81,33 @@ export interface CaseStudy extends CaseStudyMeta {
   body: string
 }
 
+/**
+ * Bài blog private, sống trong `posts/` của thư mục content.
+ *
+ * Frontmatter cố ý **tương thích blog public** (`slug/title/author/tags/date/image`
+ * + `<!-- truncate -->`) để một bài muốn công khai về sau chỉ cần `git mv` sang
+ * `blog/` và bỏ `visibility` — không phải viết lại. Khác biệt duy nhất:
+ * - `visibility` thêm vào, mặc định `private`;
+ * - `image` **tuỳ chọn** (blog public cần cover, bài private thì không).
+ */
+export interface PostMeta {
+  slug: string
+  title: string
+  author: string | null
+  tags: string[]
+  /** ISO 8601 như blog public, vd 2026-10-10T00:00:00Z */
+  date: string
+  image: string | null
+  visibility: Visibility
+  /** Phần trước `<!-- truncate -->`, hoặc đoạn đầu nếu không có. Dùng cho trang list. */
+  excerpt: string
+}
+
+export interface Post extends PostMeta {
+  /** Toàn bộ thân bài, KỂ CẢ phần excerpt — trang chi tiết hiện đủ. */
+  body: string
+}
+
 /** Giá trị kèm lỗi schema gặp trên đường đọc. */
 export interface WithErrors<T> {
   data: T
