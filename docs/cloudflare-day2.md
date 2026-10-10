@@ -513,14 +513,83 @@ docker logs --since 5m cloudflared 2>&1 | tail -20
 
 `530` kéo dài **quá vài phút** mới là có vấn đề thật — lúc đó theo bảng *Nếu site sập* dưới.
 
+---
+
+## Bật HSTS
+
+*SSL/TLS → Edge Certificates → HTTP Strict Transport Security (HSTS) → Enable*.
+
+**Làm sau cùng** — sau cả hai phép nghiệm thu tay. Không phải vì HSTS ảnh hưởng chúng, mà vì
+nếu một trong hai phép đó lộ ra vấn đề thì ta muốn còn nhiều đường chữa nhất có thể.
+
+### `max-age`: tăng dần, đừng đặt 6 tháng ngay
+
+Toàn bộ chi phí của HSTS là *"sai thì phải chờ hết `max-age`"* — trên **từng máy khách đã
+ghé**, không phải trên server. Đặt 6 tháng ngay nghĩa là một lần cấu hình sai tốn 6 tháng.
+
+Thứ tự:
+
+1. Chọn **giá trị ngắn nhất** dropdown cho.
+2. Kiểm header xuất hiện trên **cả ba** hostname:
+
+   ```bash
+   curl -sSI https://nipit.pro         | grep -i strict-transport
+   curl -sSI https://www.nipit.pro     | grep -i strict-transport
+   curl -sSI https://staging.nipit.pro | grep -i strict-transport
+   ```
+
+3. Để **vài ngày**, không thấy gì lạ.
+4. **Rồi mới** nâng lên 6 tháng.
+
+> **Nâng `max-age` có hiệu lực ngay; hạ xuống thì không.** Trình duyệt giữ giá trị **cũ, dài
+> hơn** cho tới khi nó tự hết. Nên chỉ đi từ ngắn lên dài, không bao giờ ngược lại.
+
+### `includeSubDomains`: tick được, nhưng không phải vì lý do dễ nghĩ
+
+Lý do "chỉ có `www` và `staging`, cả hai đều HTTPS" **chưa đủ**: cờ này áp cho **mọi
+subdomain tương lai** nữa, và trình duyệt nhớ nó suốt `max-age`.
+
+An toàn ở đây vì lý do khác: **mọi subdomain proxied qua Cloudflare đều được Universal SSL
+tự động**, nên subdomain mới có HTTPS từ lúc sinh ra.
+
+> ⚠️ **Điều kiện kèm theo, phải giữ:** sau khi tick, **không thêm subdomain DNS only (mây
+> xám) mà không chạy HTTPS**. Trình duyệt sẽ từ chối thẳng, không có cách bỏ qua. Subdomain
+> mới thì để Proxied (mây cam) là xong.
+
+### `preload`: KHÔNG tick
+
+Đây là lựa chọn **duy nhất thật sự không lùi được** trong cả thiết lập Cloudflare này.
+
+Preload nằm trong **binary của trình duyệt**, không phải header của ta. Xoá khỏi danh sách
+mất nhiều tháng và chỉ tới người dùng qua bản cập nhật trình duyệt. Tắt HSTS thường chỉ cần
+chờ hết `max-age`; tắt preload thì không có đường nào nhanh.
+
+### Hệ quả: sau HSTS, mọi rollback phải Proxied
+
+**HSTS làm cảnh báo cert không thể bỏ qua** — mất luôn nút *Proceed anyway*.
+
+Ghép với việc cert origin là **Cloudflare Origin CA** (chỉ Cloudflare tin, không phải trình
+duyệt), điều này **giết hẳn nhánh rollback "A record DNS only"**:
+
+| Nhánh rollback | Trước HSTS | Sau HSTS |
+|---|---|---|
+| A record **Proxied** + SSL *Full (strict)* | ✓ | ✓ **vẫn nguyên vẹn** — khách nối tới Cloudflare bằng cert công khai, edge tin Origin CA |
+| A record **DNS only** | ⚠️ khách thấy cảnh báo nhưng **bấm qua được** | ✗ **khách không vào được bằng cách nào cả** |
+
+Nhớ một câu: **sau HSTS, mọi đường rollback đều phải đi qua Cloudflare.**
+
+### Một lo lắng có thể bỏ
+
+**HSTS không ảnh hưởng ACME HTTP-01.** Nó là chính sách của **trình duyệt**; máy xác thực của
+Let's Encrypt không áp dụng nó. Nếu sau này cần dựng lại cert LE thì HSTS không chặn — thứ
+chặn là cổng 80 đang đóng ở ufw, và đó là chuyện khác.
+
 ## Việc nhỏ còn lại
 
 - [x] Pin `cloudflared:2026.10.0` trong `docker-compose.yml` — xong, có hiệu lực từ lần
       deploy `main` tiếp theo
-- [ ] Bật **HSTS** (free) — **cố ý để sau cùng**, chỉ bật khi cả 3 bước trên đã xong và
-      chắc không còn đường quay về HTTP. Trình duyệt **nhớ** `max-age` và từ đó từ chối mọi
-      kết nối HTTP tới domain, kể cả sau khi ta tắt header — rollback phải chờ hết hạn trên
-      từng máy khách. Bật trước khi day-2 xong là tự bỏ mất đường lùi qua HTTP.
+- [ ] Bật **HSTS** — xem mục riêng *Bật HSTS* bên dưới. Để **sau cùng**, kể cả sau hai phép
+      nghiệm thu tay.
 - [ ] Chạy lại `scripts/cloudflare-realip.sh` khi nhớ — **chưa có cron, làm tay.** Nhớ
       `scp` script từ máy owner (`scripts/` không có trên VPS).
       **Tần suất thấp là đủ, đừng lo thừa:** trước bước 2 thì mỗi quý; **sau bước 2 thì dải
