@@ -30,7 +30,7 @@ export function TopicNav({ tracks, extras }: TopicNavProps) {
         <Typography component="h2" sx={{ fontSize: '0.9375rem', fontWeight: 600, color: 'text.primary', mb: 1.5 }}>
           Chủ đề
         </Typography>
-        <TopicList items={tracks} />
+        <TopicList items={tracks} withBars />
       </Box>
       {extras.length > 0 && (
         <Box sx={{ mt: { md: 2 }, pt: { md: 2 }, borderTop: { md: '1px solid var(--color-line)' } }}>
@@ -47,7 +47,11 @@ export function TopicNav({ tracks, extras }: TopicNavProps) {
   )
 }
 
-function TopicList({ items }: { items: TopicLink[] }) {
+// withBars: thanh mảnh dưới mỗi track, dài theo số bài so với track nhiều bài
+// nhất — đọc nhanh blog nặng về chủ đề nào. Thanh tĩnh, màu chữ phụ: đây là dữ
+// liệu, không phải link hay trạng thái nên không dùng xanh.
+function TopicList({ items, withBars = false }: { items: TopicLink[]; withBars?: boolean }) {
+  const max = Math.max(1, ...items.map((i) => i.count))
   return (
     <Box
       component="ul"
@@ -98,6 +102,19 @@ function TopicList({ items }: { items: TopicLink[] }) {
               {item.count}
             </Box>
           </Box>
+          {withBars && (
+            <Box aria-hidden sx={{ height: 3, mb: 0.75, borderRadius: 2, bgcolor: 'var(--color-line)' }}>
+              <Box
+                sx={{
+                  width: `${(item.count / max) * 100}%`,
+                  height: '100%',
+                  borderRadius: 2,
+                  bgcolor: 'var(--color-ink-muted)',
+                  opacity: 0.7,
+                }}
+              />
+            </Box>
+          )}
         </Box>
       ))}
     </Box>
