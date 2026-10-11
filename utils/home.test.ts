@@ -32,7 +32,7 @@ describe('groupRecentPosts', () => {
       1,
     )
     expect(days).toHaveLength(1)
-    expect(days[0].entries).toEqual([{ slug: 'a', title: 'Bài a' }])
+    expect(days[0].entries).toEqual([{ slug: 'a', title: 'Bài a', cover: null, readingMinutes: null }])
   })
 
   it('thêm năm khi khác năm của bài mới nhất', () => {
@@ -51,6 +51,14 @@ describe('groupRecentPosts', () => {
     )
     expect(days).toHaveLength(1)
     expect(days[0].entries.map((e) => e.slug)).toEqual(['a'])
+  })
+
+  it('trỏ ảnh bìa sang bản -card và giữ thời gian đọc', () => {
+    const [day] = groupRecentPosts(
+      [{ ...post('a', '2026-08-29T09:00:00Z'), thumbnailUrl: '/covers/blog/a.png', readingMinutes: 9 }],
+      8,
+    )
+    expect(day.entries[0]).toMatchObject({ cover: '/covers/blog/a-card.png', readingMinutes: 9 })
   })
 
   it('không có bài thì trả mảng rỗng', () => {
