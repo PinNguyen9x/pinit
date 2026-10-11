@@ -1,4 +1,3 @@
-import cvApi from '@/api-client/cv-api'
 import { useState } from 'react'
 
 export interface UseCvDownloadResult {
@@ -15,6 +14,9 @@ export function useCvDownload(): UseCvDownloadResult {
   async function download() {
     setIsDownloading(true)
     try {
+      // cvApi nạp động, cùng lý do authApi trong use-auth: Footer gọi hook này
+      // trên MỌI trang, import tĩnh sẽ kéo axios vào bundle cả site.
+      const { default: cvApi } = await import('@/api-client/cv-api')
       const blob = await cvApi.download()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')

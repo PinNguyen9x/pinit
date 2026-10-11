@@ -1,11 +1,23 @@
-import { LoginDialog } from '@/components/auth'
-import { CvViewerDialog } from '@/components/cv'
 import { useAuth } from '@/hooks/use-auth'
 import { useCvDownload } from '@/hooks/use-cv-download'
 import { getErrorMessage } from '@/utils'
 import { Box, Container, Stack, Typography } from '@mui/material'
+import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { toast } from 'react-toastify'
+
+// Footer nằm trên MỌI trang của MainLayout. Import thẳng hai dialog thì
+// react-hook-form + yup + LoginForm vào bundle mọi trang (~95 kB first-load JS,
+// đo bằng next build) dù gần như không ai bấm CV. Nạp động + chỉ render khi mở
+// để phần đó chỉ tải lúc người dùng bấm. Import thẳng file, không qua barrel.
+const LoginDialog = dynamic(
+  () => import('@/components/auth/login-dialog').then((mod) => mod.LoginDialog),
+  { ssr: false },
+)
+const CvViewerDialog = dynamic(
+  () => import('@/components/cv/cv-viewer-dialog').then((mod) => mod.CvViewerDialog),
+  { ssr: false },
+)
 
 // Social link chỉ đặt ở đây — hero cũ từng có một bản, URL hardcode hai nơi nên dễ lệch.
 const socialLinks = [
@@ -111,17 +123,19 @@ export function Footer() {
         </Stack>
       </Container>
 
-      <LoginDialog
-        open={loginOpen}
-        onClose={() => {
-          setLoginOpen(false)
-          setPendingAction(null)
-        }}
-        onSuccess={handleLoginSuccess}
-        title={pendingAction === 'view' ? 'Đăng nhập để xem CV' : 'Đăng nhập để tải CV'}
-        description="CV chỉ mở cho người đã đăng nhập."
-      />
-      <CvViewerDialog open={viewerOpen} onClose={() => setViewerOpen(false)} />
+      {loginOpen && (
+        <LoginDialog
+          open
+          onClose={() => {
+            setLoginOpen(false)
+            setPendingAction(null)
+          }}
+          onSuccess={handleLoginSuccess}
+          title={pendingAction === 'view' ? 'Đăng nhập để xem CV' : 'Đăng nhập để tải CV'}
+          description="CV chỉ mở cho người đã đăng nhập."
+        />
+      )}
+      {viewerOpen && <CvViewerDialog open onClose={() => setViewerOpen(false)} />}
     </Box>
   )
 }
