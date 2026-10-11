@@ -130,10 +130,14 @@ function renderTitle(title: string) {
   )
 }
 
+// Đơn vị phải là chuỗi px: trong sx của MUI, số 1 ở width/height nghĩa là 100%.
 const visuallyHidden = {
   position: 'absolute',
-  width: 1,
-  height: 1,
+  width: '1px',
+  height: '1px',
+  margin: '-1px',
+  padding: 0,
+  border: 0,
   overflow: 'hidden',
   clip: 'rect(0 0 0 0)',
   whiteSpace: 'nowrap',
