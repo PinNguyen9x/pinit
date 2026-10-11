@@ -1,263 +1,141 @@
-import { Email, Favorite, GitHub, LinkedIn, KeyboardArrowUp } from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  Container,
-  Divider,
-  IconButton,
-  Stack,
-  Typography,
-  useTheme,
-} from '@mui/material'
-import Link from 'next/link'
-import { Logo } from './logo'
+import { useAuth } from '@/hooks/use-auth'
+import { useCvDownload } from '@/hooks/use-cv-download'
+import { getErrorMessage } from '@/utils'
+import { Box, Container, Stack, Typography } from '@mui/material'
+import dynamic from 'next/dynamic'
+import { useState } from 'react'
+import { toast } from 'react-toastify'
 
-const navLinks = [
-  { label: 'Home', path: '/' },
-  { label: 'Blog', path: '/blog' },
-  { label: 'Works', path: '/works' },
-]
+// Footer nằm trên MỌI trang của MainLayout. Import thẳng hai dialog thì
+// react-hook-form + yup + LoginForm vào bundle mọi trang (~95 kB first-load JS,
+// đo bằng next build) dù gần như không ai bấm CV. Nạp động + chỉ render khi mở
+// để phần đó chỉ tải lúc người dùng bấm. Import thẳng file, không qua barrel.
+const LoginDialog = dynamic(
+  () => import('@/components/auth/login-dialog').then((mod) => mod.LoginDialog),
+  { ssr: false },
+)
+const CvViewerDialog = dynamic(
+  () => import('@/components/cv/cv-viewer-dialog').then((mod) => mod.CvViewerDialog),
+  { ssr: false },
+)
 
+// Social link chỉ đặt ở đây — hero cũ từng có một bản, URL hardcode hai nơi nên dễ lệch.
 const socialLinks = [
-  { icon: GitHub, url: 'https://github.com/PinNguyen9x', label: 'GitHub' },
-  {
-    icon: LinkedIn,
-    url: 'https://www.linkedin.com/in/pin-nguyen-69123b16a/',
-    label: 'LinkedIn',
-  },
-  { icon: Email, url: 'mailto:nguyenthanhpin95@gmail.com', label: 'Email' },
+  { label: 'GitHub', url: 'https://github.com/PinNguyen9x' },
+  { label: 'LinkedIn', url: 'https://www.linkedin.com/in/pin-nguyen-69123b16a/' },
+  { label: 'Email', url: 'mailto:nguyenthanhpin95@gmail.com' },
 ]
+
+const linkSx = {
+  fontSize: '0.875rem',
+  color: 'text.secondary',
+  textDecoration: 'underline',
+  textDecorationColor: 'var(--color-line)',
+  textUnderlineOffset: '4px',
+  transition: 'color 0.15s, text-decoration-color 0.15s',
+  '&:hover': { color: 'text.primary', textDecorationColor: 'currentColor' },
+  '&:focus-visible': { outline: '2px solid var(--color-accent)', outlineOffset: '2px' },
+  '&:disabled': { opacity: 0.6, cursor: 'progress' },
+}
+
+const buttonLinkSx = { ...linkSx, p: 0, border: 0, background: 'none', cursor: 'pointer', fontFamily: 'inherit' }
 
 export function Footer() {
-  const theme = useTheme()
-  const isDark = theme.palette.mode === 'dark'
-  const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+  const { isLoggedIn } = useAuth()
+  const { download, isDownloading } = useCvDownload()
+  const [loginOpen, setLoginOpen] = useState(false)
+  const [viewerOpen, setViewerOpen] = useState(false)
+  // Việc cần làm tiếp sau khi đăng nhập thành công từ một link CV.
+  const [pendingAction, setPendingAction] = useState<'download' | 'view' | null>(null)
 
-  const scrollTop = () => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+  const triggerDownload = async () => {
+    try {
+      await download()
+      toast.success('Đã tải CV')
+    } catch (error) {
+      toast.error(getErrorMessage(error) || 'Không tải được CV, thử lại sau')
     }
   }
 
-  const columnLabelSx = {
-    fontSize: '0.7rem',
-    fontWeight: 700,
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase' as const,
-    color: 'text.disabled',
-    mb: 1.75,
+  const requireLogin = (action: 'download' | 'view') => {
+    if (isLoggedIn) {
+      if (action === 'view') setViewerOpen(true)
+      else triggerDownload()
+      return
+    }
+    setPendingAction(action)
+    setLoginOpen(true)
   }
 
-  const linkTextSx = {
-    fontSize: '0.825rem',
-    color: 'text.secondary',
-    cursor: 'pointer',
-    transition: 'color 0.15s',
-    '&:hover': { color: 'primary.main' },
+  const handleLoginSuccess = () => {
+    if (pendingAction === 'view') setViewerOpen(true)
+    else if (pendingAction === 'download') triggerDownload()
+    setPendingAction(null)
   }
 
   return (
     <Box
       component="footer"
-      sx={{
-        position: 'relative',
-        mt: { xs: 8, md: 12 },
-        pt: 6,
-        pb: 4,
-        borderTop: `1px solid ${borderColor}`,
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: -1,
-          left: 0,
-          right: 0,
-          height: '1px',
-          background:
-            'linear-gradient(90deg, transparent 0%, rgba(22,163,74,0.45) 30%, rgba(16,185,129,0.45) 50%, rgba(52,211,153,0.35) 70%, transparent 100%)',
-          pointerEvents: 'none',
-        },
-      }}
+      sx={{ mt: { xs: 8, md: 12 }, py: { xs: 4, md: 5 }, borderTop: '1px solid var(--color-line)' }}
     >
       <Container>
         <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          spacing={{ xs: 5, md: 6 }}
+          direction={{ xs: 'column', sm: 'row' }}
           justifyContent="space-between"
-          mb={5}
+          alignItems={{ xs: 'flex-start', sm: 'baseline' }}
+          spacing={{ xs: 2, sm: 4 }}
         >
-          {/* Brand */}
-          <Box maxWidth={{ md: 320 }}>
-            <Stack direction="row" alignItems="center" spacing={1.25} mb={2}>
-              <Logo size={32} />
-              <Typography
-                fontWeight={800}
-                fontSize="1.05rem"
-                letterSpacing="-0.02em"
-                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
-              >
-                pin nguyen cute
-                <Favorite
-                  sx={{
-                    fontSize: 16,
-                    color: '#ff4d6d',
-                    animation: 'heartBeat 1.4s ease-in-out infinite',
-                    '@keyframes heartBeat': {
-                      '0%, 100%': { transform: 'scale(1)' },
-                      '25%': { transform: 'scale(1.2)' },
-                      '50%': { transform: 'scale(0.95)' },
-                      '75%': { transform: 'scale(1.15)' },
-                    },
-                  }}
-                />
-              </Typography>
-            </Stack>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              lineHeight={1.7}
-              fontSize="0.875rem"
-              mb={2}
-            >
-              Full-stack engineer building data platforms and big-data systems — from real-time
-              pipelines and scalable APIs to polished user interfaces.
-            </Typography>
-            <Stack
-              direction="row"
-              alignItems="center"
-              spacing={0.75}
-              sx={{
-                display: 'inline-flex',
-                px: 1.25,
-                py: 0.5,
-                borderRadius: '999px',
-                border: `1px solid ${isDark ? 'rgba(52,211,153,0.35)' : 'rgba(5,150,105,0.35)'}`,
-                bgcolor: isDark ? 'rgba(52,211,153,0.08)' : 'rgba(5,150,105,0.06)',
-              }}
-            >
-              <Box
-                sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  bgcolor: 'secondary.main',
-                  boxShadow: `0 0 0 3px ${
-                    isDark ? 'rgba(52,211,153,0.18)' : 'rgba(5,150,105,0.18)'
-                  }`,
-                }}
-              />
-              <Typography
-                variant="caption"
-                sx={{ color: 'secondary.main', fontWeight: 600, fontSize: '0.7rem' }}
-              >
-                Available for work
-              </Typography>
-            </Stack>
-          </Box>
+          <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+            © {new Date().getFullYear()} Pin Nguyen
+          </Typography>
 
-          {/* Navigate */}
-          <Box>
-            <Typography sx={columnLabelSx}>Navigate</Typography>
-            <Stack spacing={1.25}>
-              {navLinks.map(({ label, path }) => (
-                <Link key={label} href={path} style={{ textDecoration: 'none' }}>
-                  <Typography sx={linkTextSx}>{label}</Typography>
-                </Link>
-              ))}
-            </Stack>
-          </Box>
-
-          {/* Connect */}
-          <Box>
-            <Typography sx={columnLabelSx}>Connect</Typography>
-            <Stack direction="row" spacing={1}>
-              {socialLinks.map(({ icon: Icon, url, label }) => (
-                <IconButton
-                  key={label}
+          <Stack direction="row" flexWrap="wrap" columnGap={2.5} rowGap={1} component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
+            {socialLinks.map(({ label, url }) => (
+              <li key={label}>
+                <Box
                   component="a"
                   href={url}
                   target={url.startsWith('mailto:') ? undefined : '_blank'}
                   rel="noopener noreferrer"
-                  aria-label={label}
-                  size="small"
-                  sx={{
-                    color: 'text.secondary',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '10px',
-                    p: 1,
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      color: 'primary.main',
-                      borderColor: 'primary.main',
-                      bgcolor: isDark ? 'rgba(22,163,74,0.08)' : 'rgba(22,163,74,0.05)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: isDark
-                        ? '0 6px 18px -8px rgba(22,163,74,0.5)'
-                        : '0 6px 18px -8px rgba(22,163,74,0.35)',
-                    },
-                  }}
+                  sx={linkSx}
                 >
-                  <Icon sx={{ fontSize: 18 }} />
-                </IconButton>
-              ))}
-            </Stack>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              display="block"
-              mt={2}
-              fontSize="0.75rem"
-            >
-              nguyenthanhpin95@gmail.com
-            </Typography>
-          </Box>
-        </Stack>
-
-        <Divider sx={{ borderColor }} />
-
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
-          spacing={2}
-          pt={3}
-        >
-          <Typography variant="caption" color="text.secondary" fontSize="0.75rem">
-            © {new Date().getFullYear()} Pin Nguyen. Built with{' '}
-            <Box component="span" sx={{ color: 'primary.main', fontWeight: 600 }}>
-              Next.js
-            </Box>{' '}
-            &{' '}
-            <Box component="span" sx={{ color: 'primary.main', fontWeight: 600 }}>
-              TypeScript
-            </Box>
-            .
-          </Typography>
-
-          <Button
-            onClick={scrollTop}
-            size="small"
-            endIcon={<KeyboardArrowUp sx={{ fontSize: 16 }} />}
-            sx={{
-              color: 'text.secondary',
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              textTransform: 'none',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: '8px',
-              border: `1px solid ${borderColor}`,
-              transition: 'all 0.15s',
-              '&:hover': {
-                color: 'primary.main',
-                borderColor: 'primary.main',
-                bgcolor: 'transparent',
-              },
-            }}
-          >
-            Back to top
-          </Button>
+                  {label}
+                </Box>
+              </li>
+            ))}
+            <li>
+              <Box component="button" type="button" onClick={() => requireLogin('view')} sx={buttonLinkSx}>
+                Xem CV
+              </Box>
+            </li>
+            <li>
+              <Box
+                component="button"
+                type="button"
+                onClick={() => requireLogin('download')}
+                disabled={isDownloading}
+                sx={buttonLinkSx}
+              >
+                {isDownloading ? 'Đang chuẩn bị CV…' : 'Tải CV'}
+              </Box>
+            </li>
+          </Stack>
         </Stack>
       </Container>
+
+      {loginOpen && (
+        <LoginDialog
+          open
+          onClose={() => {
+            setLoginOpen(false)
+            setPendingAction(null)
+          }}
+          onSuccess={handleLoginSuccess}
+          title={pendingAction === 'view' ? 'Đăng nhập để xem CV' : 'Đăng nhập để tải CV'}
+          description="CV chỉ mở cho người đã đăng nhập."
+        />
+      )}
+      {viewerOpen && <CvViewerDialog open onClose={() => setViewerOpen(false)} />}
     </Box>
   )
 }

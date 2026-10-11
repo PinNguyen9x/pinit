@@ -6,28 +6,23 @@ import CloseIcon from '@mui/icons-material/Close'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
 import LightModeIcon from '@mui/icons-material/LightMode'
 import MenuIcon from '@mui/icons-material/Menu'
-import {
-  AppBar,
-  Box,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  ListItemButton,
-  Toolbar,
-  Typography,
-} from '@mui/material'
+import { AppBar, Box, Drawer, IconButton, List, ListItemButton, Toolbar } from '@mui/material'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useContext, useState } from 'react'
 
+// Không có mục "Trang chủ": tên trang ở góc trái đã là link về trang chủ.
 const navItems = [
-  { label: 'Home', path: '/' },
-  { label: 'Blog', path: '/blog' },
-  { label: 'Glossary', path: '/glossary' },
-  { label: 'System Design', path: '/system-design' },
-  { label: 'Works', path: '/works' },
+  { label: 'Bài viết', path: '/blog' },
+  { label: 'Thuật ngữ', path: '/glossary' },
+  { label: 'System design', path: '/system-design' },
+  { label: 'Dự án', path: '/works' },
+  { label: 'Giới thiệu', path: '/about' },
 ]
+
+const focusRing = {
+  '&:focus-visible': { outline: '2px solid var(--color-accent)', outlineOffset: '2px' },
+}
 
 export default function Header() {
   const { profile, logout } = useAuth()
@@ -36,25 +31,39 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { toggleColorMode, mode } = useContext(ThemeColorModeContext)
   const isDark = mode === 'dark'
+  const loginHref = `/login?back_to=${encodeUrl(router.asPath)}`
 
-  const isActive = (path: string) =>
-    path === '/' ? router.pathname === '/' : router.pathname.startsWith(path)
+  const isActive = (path: string) => router.pathname.startsWith(path)
 
+  // Mục đang mở: chữ đậm + gạch dưới xanh — xanh ở đây là "trạng thái", đúng
+  // một trong ba vai trò được phép của màu nhấn.
   const navLinkSx = (active: boolean) => ({
     display: 'inline-flex',
-    px: 1.5,
+    px: 1.25,
     py: 0.75,
-    borderRadius: 1,
+    borderRadius: '6px',
     fontSize: '0.875rem',
     fontWeight: active ? 600 : 400,
-    color: active ? (isDark ? '#ffffff' : '#000000') : isDark ? '#888888' : '#666666',
+    color: active ? 'text.primary' : 'text.secondary',
+    textDecoration: active ? 'underline' : 'none',
+    textDecorationColor: 'var(--color-accent)',
+    textDecorationThickness: '2px',
+    textUnderlineOffset: '6px',
     cursor: 'pointer',
-    userSelect: 'none',
-    transition: 'color 0.15s, background-color 0.15s',
-    '&:hover': {
-      color: isDark ? '#ffffff' : '#000000',
-      bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-    },
+    transition: 'color 0.15s',
+    '&:hover': { color: 'text.primary' },
+    ...focusRing,
+  })
+
+  const drawerItemSx = (active: boolean) => ({
+    mx: 1,
+    mb: 0.5,
+    py: 1,
+    borderRadius: '6px',
+    fontSize: '0.9375rem',
+    fontWeight: active ? 600 : 400,
+    color: active ? 'text.primary' : 'text.secondary',
+    '&.Mui-selected, &.Mui-selected:hover': { bgcolor: 'var(--color-line)' },
   })
 
   return (
@@ -65,9 +74,10 @@ export default function Header() {
         sx={{
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
-          backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)',
-          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-          color: isDark ? '#ededed' : '#111111',
+          backgroundColor: 'color-mix(in srgb, var(--color-bg) 88%, transparent)',
+          backgroundImage: 'none',
+          borderBottom: '1px solid var(--color-line)',
+          color: 'text.primary',
         }}
       >
         <Toolbar
@@ -79,120 +89,89 @@ export default function Header() {
             minHeight: { xs: 56, md: 64 },
           }}
         >
-          <Link
-            href="/about"
-            style={{ textDecoration: 'none', display: 'inline-flex' }}
-            aria-label="About me"
+          <Box
+            component={Link}
+            href="/"
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1.25,
+              borderRadius: '999px',
+              fontWeight: 600,
+              fontSize: '0.9375rem',
+              color: 'text.primary',
+              ...focusRing,
+            }}
           >
-            <Logo size={36} />
-          </Link>
+            <Logo size={32} />
+            Sổ tay của Pin
+          </Box>
 
           <Box flexGrow={1} />
 
-          {/* Desktop Nav */}
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+          <Box
+            component="nav"
+            aria-label="Điều hướng chính"
+            sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}
+          >
             {navItems.map((item) => (
-              <Link key={item.label} href={item.path} style={{ textDecoration: 'none' }}>
-                <Box component="span" sx={navLinkSx(isActive(item.path))}>
-                  {item.label}
-                </Box>
-              </Link>
+              <Box
+                key={item.path}
+                component={Link}
+                href={item.path}
+                aria-current={isActive(item.path) ? 'page' : undefined}
+                sx={navLinkSx(isActive(item.path))}
+              >
+                {item.label}
+              </Box>
             ))}
             {!isLoggedIn ? (
-              <Link
-                href={`/login?back_to=${encodeUrl(router.asPath)}`}
-                style={{ textDecoration: 'none' }}
-              >
-                <Box component="span" sx={navLinkSx(false)}>
-                  Login
-                </Box>
-              </Link>
+              <Box component={Link} href={loginHref} sx={navLinkSx(false)}>
+                Đăng nhập
+              </Box>
             ) : (
               <Box
                 sx={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 1,
                   ml: 1,
-                  pl: 1.5,
-                  borderLeft: `1px solid ${
-                    isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
-                  }`,
+                  pl: 1.25,
+                  borderLeft: '1px solid var(--color-line)',
                 }}
               >
                 <Box
+                  component="span"
                   sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 0.75,
-                    px: 1.25,
-                    py: 0.5,
-                    borderRadius: '999px',
-                    border: `1px solid ${
-                      isDark ? 'rgba(74,222,128,0.32)' : 'rgba(22,163,74,0.28)'
-                    }`,
-                    bgcolor: isDark ? 'rgba(22,163,74,0.10)' : 'rgba(22,163,74,0.06)',
-                    color: 'primary.main',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    letterSpacing: '0.01em',
-                    maxWidth: 180,
+                    fontSize: '0.8125rem',
+                    color: 'text.secondary',
+                    maxWidth: 140,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  <Box
-                    component="span"
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      bgcolor: 'secondary.main',
-                      flexShrink: 0,
-                    }}
-                  />
-                  <Box
-                    component="span"
-                    sx={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {profile?.username}
-                  </Box>
+                  {profile?.username}
                 </Box>
-                <Box component="span" onClick={logout} sx={navLinkSx(false)}>
-                  Logout
+                <Box component="button" type="button" onClick={logout} sx={buttonReset(navLinkSx(false))}>
+                  Đăng xuất
                 </Box>
               </Box>
             )}
           </Box>
 
-          {/* Theme Toggle */}
           <IconButton
             onClick={toggleColorMode}
             size="small"
-            aria-label="Toggle theme"
-            sx={{
-              ml: 1,
-              color: isDark ? '#888888' : '#666666',
-              '&:hover': {
-                bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-                color: isDark ? '#ffffff' : '#000000',
-              },
-            }}
+            aria-label={isDark ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'}
+            sx={{ ml: 1, color: 'text.secondary', '&:hover': { color: 'text.primary' }, ...focusRing }}
           >
             {isDark ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
           </IconButton>
 
-          {/* Mobile Menu Button */}
           <IconButton
             size="small"
-            aria-label="Open menu"
-            sx={{
-              ml: 0.5,
-              display: { xs: 'flex', md: 'none' },
-              color: isDark ? '#888888' : '#666666',
-            }}
+            aria-label="Mở menu"
+            sx={{ ml: 0.5, display: { xs: 'flex', md: 'none' }, color: 'text.secondary', ...focusRing }}
             onClick={() => setMobileOpen(true)}
           >
             <MenuIcon fontSize="small" />
@@ -200,118 +179,54 @@ export default function Header() {
         </Toolbar>
       </AppBar>
 
-      {/* Mobile Drawer */}
       <Drawer
         anchor="right"
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
         PaperProps={{
           sx: {
-            width: 240,
-            bgcolor: isDark ? '#0a0a0a' : '#ffffff',
-            borderLeft: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+            width: 260,
+            bgcolor: 'var(--color-surface)',
+            backgroundImage: 'none',
+            borderLeft: '1px solid var(--color-line)',
           },
         }}
       >
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography fontWeight={700} fontSize="0.9rem" color={isDark ? '#ededed' : '#111111'}>
-            Navigation
-          </Typography>
-          <IconButton size="small" onClick={() => setMobileOpen(false)}>
+        <Box sx={{ p: 1, display: 'flex', justifyContent: 'flex-end' }}>
+          <IconButton size="small" aria-label="Đóng menu" onClick={() => setMobileOpen(false)}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
-        <Divider sx={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
-        <List sx={{ py: 1 }}>
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              href={item.path}
-              onClick={() => setMobileOpen(false)}
-              style={{ textDecoration: 'none' }}
-            >
+        <List component="nav" aria-label="Điều hướng chính" sx={{ py: 0 }}>
+          {[{ label: 'Trang chủ', path: '/' }, ...navItems].map((item) => {
+            const active = item.path === '/' ? router.pathname === '/' : isActive(item.path)
+            return (
               <ListItemButton
-                selected={isActive(item.path)}
-                sx={{
-                  mx: 1,
-                  borderRadius: 1,
-                  mb: 0.5,
-                  py: 1,
-                  fontSize: '0.875rem',
-                  fontWeight: isActive(item.path) ? 600 : 400,
-                  color: isActive(item.path)
-                    ? isDark
-                      ? '#ffffff'
-                      : '#000000'
-                    : isDark
-                    ? '#888888'
-                    : '#666666',
-                  '&.Mui-selected': {
-                    bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-                  },
-                  '&:hover': {
-                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                  },
-                }}
+                key={item.path}
+                component={Link}
+                href={item.path}
+                selected={active}
+                aria-current={active ? 'page' : undefined}
+                onClick={() => setMobileOpen(false)}
+                sx={drawerItemSx(active)}
               >
                 {item.label}
               </ListItemButton>
-            </Link>
-          ))}
-          <Divider
-            sx={{ my: 1, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}
-          />
+            )
+          })}
+          <Box sx={{ my: 1, mx: 2, borderTop: '1px solid var(--color-line)' }} />
           {!isLoggedIn ? (
-            <Link
-              href={`/login?back_to=${encodeUrl(router.asPath)}`}
+            <ListItemButton
+              component={Link}
+              href={loginHref}
               onClick={() => setMobileOpen(false)}
-              style={{ textDecoration: 'none' }}
+              sx={drawerItemSx(false)}
             >
-              <ListItemButton
-                sx={{
-                  mx: 1,
-                  borderRadius: 1,
-                  py: 1,
-                  color: isDark ? '#888888' : '#666666',
-                  '&:hover': {
-                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                  },
-                }}
-              >
-                Login
-              </ListItemButton>
-            </Link>
+              Đăng nhập
+            </ListItemButton>
           ) : (
             <>
-              <Box
-                sx={{
-                  mx: 2,
-                  mb: 1,
-                  px: 1.25,
-                  py: 0.75,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.75,
-                  borderRadius: '999px',
-                  border: `1px solid ${
-                    isDark ? 'rgba(74,222,128,0.32)' : 'rgba(22,163,74,0.28)'
-                  }`,
-                  bgcolor: isDark ? 'rgba(22,163,74,0.10)' : 'rgba(22,163,74,0.06)',
-                  color: 'primary.main',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  maxWidth: 'fit-content',
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    bgcolor: 'secondary.main',
-                  }}
-                />
+              <Box sx={{ mx: 2, mb: 1, fontSize: '0.8125rem', color: 'text.secondary' }}>
                 {profile?.username}
               </Box>
               <ListItemButton
@@ -319,17 +234,9 @@ export default function Header() {
                   logout()
                   setMobileOpen(false)
                 }}
-                sx={{
-                  mx: 1,
-                  borderRadius: 1,
-                  py: 1,
-                  color: isDark ? '#888888' : '#666666',
-                  '&:hover': {
-                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                  },
-                }}
+                sx={drawerItemSx(false)}
               >
-                Logout
+                Đăng xuất
               </ListItemButton>
             </>
           )}
@@ -337,4 +244,9 @@ export default function Header() {
       </Drawer>
     </>
   )
+}
+
+function buttonReset<T extends object>(sx: T) {
+  // Reset đứng TRƯỚC: `font` là shorthand, đặt sau sẽ đè mất fontSize/fontWeight của sx.
+  return { border: 0, background: 'none', font: 'inherit', ...sx }
 }
