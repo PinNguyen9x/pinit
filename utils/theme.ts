@@ -55,11 +55,17 @@ export function getTheme(mode: 'light' | 'dark') {
       divider: c.line,
     },
     typography: {
-      fontFamily: '"Inter", "Heebo", sans-serif',
-      h1: { fontWeight: 700, letterSpacing: '-0.04em' },
-      h2: { fontWeight: 700, letterSpacing: '-0.03em' },
-      h3: { fontWeight: 700, letterSpacing: '-0.02em' },
-      h4: { fontWeight: 600, letterSpacing: '-0.02em' },
+      // Be Vietnam Pro: thiết kế riêng cho dấu tiếng Việt — dấu chồng (ẫ, Ứ, ự)
+      // không lệch, không rơi sang font fallback. Inter giữ lại làm fallback.
+      fontFamily: '"Be Vietnam Pro", "Inter", sans-serif',
+      // Thang 1.25: 15 / 17 / 21 / 27 / 34 / 42px. Tracking âm nhẹ thôi — siết
+      // -0.04em như trước làm dấu của hai chữ cạnh nhau chạm vào nhau.
+      body1: { fontSize: '1.0625rem', lineHeight: 1.65 },
+      body2: { fontSize: '0.9375rem', lineHeight: 1.6 },
+      h1: { fontWeight: 700, letterSpacing: '-0.015em' },
+      h2: { fontWeight: 700, letterSpacing: '-0.015em' },
+      h3: { fontWeight: 600, letterSpacing: '-0.01em' },
+      h4: { fontWeight: 600, letterSpacing: '-0.01em' },
       h5: { fontWeight: 600 },
       h6: { fontWeight: 600 },
     },
