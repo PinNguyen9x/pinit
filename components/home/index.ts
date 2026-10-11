@@ -1,2 +1,3 @@
-export * from './hero'
-export * from './knowledge-tracks'
+export * from './intro'
+export * from './recent-log'
+export * from './topic-nav'

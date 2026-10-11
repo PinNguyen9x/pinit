@@ -40,6 +40,21 @@ a {
   background: color-mix(in srgb, var(--color-accent) 28%, transparent);
 }
 
+/* Vệt xanh dưới bài mới nhất trong khối nhật ký trang chủ (components/home/
+   recent-log.tsx) — điểm nhấn duy nhất của trang. Vẽ bằng background chứ
+   không phải border để vệt nằm sau chữ và gãy dòng theo chữ (clone). */
+.log-marker {
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--color-accent) 30%, transparent),
+    color-mix(in srgb, var(--color-accent) 30%, transparent)
+  );
+  background-repeat: no-repeat;
+  background-position: 0 90%;
+  background-size: 100% 42%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 /* Code block wrapper injected by blog page */
 .code-block-wrapper {
   position: relative;

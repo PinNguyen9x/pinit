@@ -1,56 +1,61 @@
-import { BackgroundFx } from '@/components/common/background-fx'
 import { Seo } from '@/components/common/seo'
-import { HeroSection, KnowledgeTracks } from '@/components/home'
+import { Intro, RecentLog, TopicLink, TopicNav } from '@/components/home'
 import { MainLayout } from '@/components/layouts/main'
 import { FeatureWork } from '@/components/work'
 import { KNOWLEDGE_TRACKS } from '@/constants/tracks'
 import { API_BASE, safeFetchJson } from '@/utils'
+import { LogDay, groupRecentPosts } from '@/utils/home'
 import { getPostList } from '@/utils/posts'
-import { TrackWithCount, countPostsByTrack } from '@/utils/tracks'
-import { Box } from '@mui/material'
+import { countPostsByTrack } from '@/utils/tracks'
+import { Box, Container } from '@mui/material'
 import { GetStaticProps } from 'next'
 import { NextPageWithLayout, Work } from '../models'
-import type { HeroStat } from '@/components/home/hero'
 
-// const HeroSection = dynamic(() => import('@/components/home/hero').then((mod) => mod.HeroSection), {
-//   ssr: false,
-// })
-// const RecentPost = dynamic(
-//   () => import('@/components/post/reccent-post').then((mod) => mod.RecentPost),
-//   {
-//     ssr: false,
-//   },
-// )
-// const FeatureWork = dynamic(
-//   () => import('@/components/work/feature-work').then((mod) => mod.FeatureWork),
-//   {
-//     ssr: false,
-//   },
-// )
+// 8 bài: đo ở 375×812 vẫn nằm trọn màn hình đầu (tiêu đề cắt tối đa 2 dòng).
+const RECENT_LIMIT = 8
 
 interface HomeProps {
   works?: Work[]
-  tracks?: TrackWithCount[]
+  days?: LogDay[]
   totalPosts?: number
-  stats?: HeroStat[]
+  tracks?: TopicLink[]
+  extras?: TopicLink[]
 }
 
-const Home: NextPageWithLayout = ({ works, tracks, totalPosts, stats }: HomeProps) => {
+const Home: NextPageWithLayout = ({ works, days, totalPosts, tracks, extras }: HomeProps) => {
   return (
     <Box>
       <Seo
         data={{
-          title: 'Pin Nguyen | Blog',
+          title: 'Sổ tay của Pin',
           description:
-            'Step by step tutorial to build a full CRUD website using NextJs for beginner',
+            'Sổ tay của một kỹ sư full-stack: Claude Code và agent, DevOps tới GitOps, Kafka và Redis, frontend, terminal và git.',
           thumbnailUrl:
             'data:image/png;base64,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',
           url: 'https://pinit-ten.vercel.app/',
         }}
       />
-      <BackgroundFx parallax={false} />
-      <HeroSection stats={stats} />
-      <KnowledgeTracks tracks={tracks || []} totalPosts={totalPosts || 0} />
+
+      <Container sx={{ pt: { xs: 3, md: 6 } }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) 220px' },
+            columnGap: 6,
+            rowGap: { xs: 2.5, md: 4 },
+            alignItems: 'start',
+          }}
+        >
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <Intro />
+          </Box>
+          <RecentLog days={days || []} totalPosts={totalPosts || 0} />
+          <Box sx={{ position: { md: 'sticky' }, top: { md: 88 } }}>
+            <TopicNav tracks={tracks || []} extras={extras || []} />
+          </Box>
+        </Box>
+      </Container>
+
       <FeatureWork workList={works || []} />
     </Box>
   )
@@ -58,7 +63,7 @@ const Home: NextPageWithLayout = ({ works, tracks, totalPosts, stats }: HomeProp
 
 Home.Layout = MainLayout
 
-export const getStaticProps: GetStaticProps<{}> = async () => {
+export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   // Dữ liệu lớn (13 bài system design ~2000 dòng, 109 thuật ngữ ~900 dòng) chỉ
   // import BÊN TRONG getStaticProps để không lọt vào bundle client. Cùng lý do
   // với constants/index.ts không re-export './system-design'.
@@ -69,26 +74,28 @@ export const getStaticProps: GetStaticProps<{}> = async () => {
     import('@/constants/glossary'),
   ])
 
-  const tracks = countPostsByTrack(
+  const tracks: TopicLink[] = countPostsByTrack(
     KNOWLEDGE_TRACKS,
     posts.map((post) => post.tagList),
-  )
+  ).map((track) => ({
+    key: track.key,
+    title: track.title,
+    count: track.count,
+    href: { pathname: '/blog', query: { track: track.key } },
+  }))
 
-  const stats: HeroStat[] = [
-    // 8 năm: 2017 → 2024, khớp workExperience trong pages/about.tsx. Đây là số
-    // duy nhất không đếm được từ dữ liệu trong repo.
-    { value: '8+', label: 'năm kinh nghiệm' },
-    { value: String(posts.length), label: 'bài viết' },
-    { value: String(LESSONS.length), label: 'bài system design' },
-    { value: String(GLOSSARY.length), label: 'thuật ngữ' },
+  const extras: TopicLink[] = [
+    { key: 'glossary', title: 'Thuật ngữ', count: GLOSSARY.length, href: '/glossary' },
+    { key: 'system-design', title: 'System design', count: LESSONS.length, href: '/system-design' },
   ]
 
   return {
     props: {
       works: worksData?.data ?? [],
-      tracks,
+      days: groupRecentPosts(posts, RECENT_LIMIT),
       totalPosts: posts.length,
-      stats,
+      tracks,
+      extras,
     },
     revalidate: 60, // ISR: Revalidate every 60 seconds
   }
