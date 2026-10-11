@@ -32,7 +32,12 @@ const labelFormat = new Intl.DateTimeFormat('vi-VN', {
  * (getPostList làm sẵn).
  */
 export function groupRecentPosts(postList: Post[], limit: number): LogDay[] {
-  const recent = postList.filter((post) => post.slug && post.publishedDate).slice(0, limit)
+  // Ngày sai trong frontmatter (vd. `date: 30/08/2026`) cho ra Invalid Date, và
+  // Intl.DateTimeFormat.format ném RangeError với nó — một bài gõ sai ngày sẽ
+  // làm getStaticProps trang chủ fail, kéo cả build fail. Bỏ qua bài đó.
+  const recent = postList
+    .filter((post) => post.slug && !Number.isNaN(Date.parse(post.publishedDate)))
+    .slice(0, limit)
   if (recent.length === 0) return []
 
   const newestYear = yearFormat.format(new Date(recent[0].publishedDate))

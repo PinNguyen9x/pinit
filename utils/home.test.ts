@@ -44,6 +44,15 @@ describe('groupRecentPosts', () => {
     expect(days[1].label).toBe('Thứ Ba, 30/12/2025')
   })
 
+  it('bỏ qua bài có ngày không hợp lệ thay vì ném RangeError', () => {
+    const days = groupRecentPosts(
+      [post('sai', '30/08/2026'), post('rong', ''), post('a', '2026-08-29T09:00:00Z')],
+      8,
+    )
+    expect(days).toHaveLength(1)
+    expect(days[0].entries.map((e) => e.slug)).toEqual(['a'])
+  })
+
   it('không có bài thì trả mảng rỗng', () => {
     expect(groupRecentPosts([], 8)).toEqual([])
   })
