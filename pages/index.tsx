@@ -1,10 +1,10 @@
 import { Seo } from '@/components/common/seo'
-import { Intro, RecentLog, TopicLink, TopicNav } from '@/components/home'
+import { FeaturedPost, Intro, RecentLog, TopicLink, TopicNav } from '@/components/home'
 import { MainLayout } from '@/components/layouts/main'
 import { FeatureWork } from '@/components/work'
 import { KNOWLEDGE_TRACKS } from '@/constants/tracks'
 import { API_BASE, safeFetchJson } from '@/utils'
-import { LogDay, groupRecentPosts } from '@/utils/home'
+import { FeaturedPost as FeaturedPostData, LogEntry, buildHomeFeed } from '@/utils/home'
 import { getPostList } from '@/utils/posts'
 import { pageContainerSx } from '@/utils/theme'
 import { countPostsByTrack } from '@/utils/tracks'
@@ -12,18 +12,19 @@ import { Box, Container } from '@mui/material'
 import { GetStaticProps } from 'next'
 import { NextPageWithLayout, Work } from '../models'
 
-// 8 bài: đo ở 375×812 vẫn nằm trọn màn hình đầu (tiêu đề cắt tối đa 2 dòng).
+// Bài nổi bật + 8 bài kế tiếp trong danh sách.
 const RECENT_LIMIT = 8
 
 interface HomeProps {
   works?: Work[]
-  days?: LogDay[]
+  featured?: FeaturedPostData | null
+  entries?: LogEntry[]
   totalPosts?: number
   tracks?: TopicLink[]
   extras?: TopicLink[]
 }
 
-const Home: NextPageWithLayout = ({ works, days, totalPosts, tracks, extras }: HomeProps) => {
+const Home: NextPageWithLayout = ({ works, featured, entries, totalPosts, tracks, extras }: HomeProps) => {
   return (
     <Box>
       <Seo
@@ -59,7 +60,12 @@ const Home: NextPageWithLayout = ({ works, days, totalPosts, tracks, extras }: H
           <Box sx={{ gridColumn: '1 / -1' }}>
             <Intro />
           </Box>
-          <RecentLog days={days || []} totalPosts={totalPosts || 0} />
+          {featured && (
+            <Box sx={{ gridColumn: '1 / -1' }}>
+              <FeaturedPost post={featured} />
+            </Box>
+          )}
+          <RecentLog entries={entries || []} totalPosts={totalPosts || 0} />
           <Box sx={{ position: { md: 'sticky' }, top: { md: 88 } }}>
             <TopicNav tracks={tracks || []} extras={extras || []} />
           </Box>
@@ -102,7 +108,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   return {
     props: {
       works: worksData?.data ?? [],
-      days: groupRecentPosts(posts, RECENT_LIMIT),
+      ...buildHomeFeed(posts, KNOWLEDGE_TRACKS, RECENT_LIMIT),
       totalPosts: posts.length,
       tracks,
       extras,

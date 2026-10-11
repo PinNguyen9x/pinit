@@ -1,18 +1,19 @@
-import { LogDay } from '@/utils/home'
+import { LogEntry, groupByDay } from '@/utils/home'
 import { Box, Typography } from '@mui/material'
 import Image from 'next/image'
 import Link from 'next/link'
 
 interface RecentLogProps {
-  days: LogDay[]
+  entries: LogEntry[]
   totalPosts: number
 }
 
 /**
- * Khối nhật ký — điểm nhấn duy nhất của trang chủ: các bài mới nhất nhóm theo
- * ngày đăng thật, bài mới nhất có vệt xanh (class `log-marker`, xem globals.css).
+ * Các bài kế sau bài nổi bật, nhóm theo ngày đăng thật. Ngày đã được format ở
+ * server (utils/home.ts); ở đây chỉ gom lại.
  */
-export function RecentLog({ days, totalPosts }: RecentLogProps) {
+export function RecentLog({ entries, totalPosts }: RecentLogProps) {
+  const days = groupByDay(entries)
   if (days.length === 0) return null
 
   return (
@@ -27,8 +28,12 @@ export function RecentLog({ days, totalPosts }: RecentLogProps) {
         py: { xs: 1.75, md: 2.5 },
       }}
     >
-      <Typography id="recent-log-heading" component="h2" sx={visuallyHidden}>
-        Bài mới
+      <Typography
+        id="recent-log-heading"
+        component="h2"
+        sx={{ fontSize: { xs: '1.0625rem', md: '1.3125rem' }, fontWeight: 600, mb: { xs: 1.5, md: 2 } }}
+      >
+        Bài viết gần đây
       </Typography>
 
       {days.map((day, dayIndex) => (
@@ -47,8 +52,7 @@ export function RecentLog({ days, totalPosts }: RecentLogProps) {
           </Typography>
 
           <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
-            {day.entries.map((entry, entryIndex) => {
-              const isNewest = dayIndex === 0 && entryIndex === 0
+            {day.entries.map((entry) => {
               return (
                 <Box component="li" key={entry.slug} sx={{ '& + &': { mt: { xs: 1.25, md: 1.5 } } }}>
                   <Box
@@ -84,11 +88,7 @@ export function RecentLog({ days, totalPosts }: RecentLogProps) {
                           transition: 'color 0.15s',
                         }}
                       >
-                        {isNewest ? (
-                          <span className="log-marker">{renderTitle(entry.title)}</span>
-                        ) : (
-                          renderTitle(entry.title)
-                        )}
+                        {renderTitle(entry.title)}
                       </Box>
                       {entry.readingMinutes && (
                         // Chỉ từ md: ở 375px dòng meta này đẩy bài thứ 8 ra khỏi màn hình đầu.
@@ -193,16 +193,3 @@ function renderTitle(title: string) {
     ),
   )
 }
-
-// Đơn vị phải là chuỗi px: trong sx của MUI, số 1 ở width/height nghĩa là 100%.
-const visuallyHidden = {
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  margin: '-1px',
-  padding: 0,
-  border: 0,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const

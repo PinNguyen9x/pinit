@@ -11,6 +11,18 @@ export interface TrackWithCount extends KnowledgeTrack {
  *
  * Track không có bài nào bị loại bỏ, để không render card rỗng.
  */
+/**
+ * Key của các track mà một bài thuộc về — cùng luật khớp tag (không phân biệt
+ * hoa thường) với countPostsByTrack, để chip lọc trang chủ lọc ra đúng tập bài
+ * mà con số trên chip đếm.
+ */
+export function trackKeysForTags(tracks: KnowledgeTrack[], tags: string[] | undefined): string[] {
+  const tagSet = new Set((tags ?? []).map((t) => t.toLowerCase()))
+  return tracks
+    .filter((track) => track.tags.some((t) => tagSet.has(t.toLowerCase())))
+    .map((track) => track.key)
+}
+
 export function countPostsByTrack(
   tracks: KnowledgeTrack[],
   postTagLists: (string[] | undefined)[],

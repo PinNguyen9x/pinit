@@ -9,6 +9,8 @@ export interface Post {
   title: string
   tagList: string[]
   description: string
+  /** `description` viết tay trong frontmatter — khác `description` (excerpt cắt từ thân bài). */
+  summary?: string
   publishedDate: string
   slug: string
   author?: Author
