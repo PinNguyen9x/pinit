@@ -1,19 +1,31 @@
-import { LogDay } from '@/utils/home'
+import { LogEntry, groupByDay } from '@/utils/home'
 import { Box, Typography } from '@mui/material'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useState } from 'react'
+import type { TopicLink } from './topic-nav'
+
+// Số bài hiện ra sau khi lọc. Vốn `entries` lớn hơn (xem pages/index.tsx) để
+// chủ đề ít bài vẫn có đủ bài mà lọc.
+const VISIBLE = 8
 
 interface RecentLogProps {
-  days: LogDay[]
+  entries: LogEntry[]
+  /** Track để làm chip lọc; `count` là tổng số bài của track trên cả blog. */
+  tracks: TopicLink[]
   totalPosts: number
 }
 
 /**
- * Khối nhật ký — điểm nhấn duy nhất của trang chủ: các bài mới nhất nhóm theo
- * ngày đăng thật, bài mới nhất có vệt xanh (class `log-marker`, xem globals.css).
+ * Các bài kế sau bài nổi bật, nhóm theo ngày đăng thật, lọc được theo chủ đề.
+ * Ngày đã được format ở server (utils/home.ts); ở đây chỉ lọc rồi gom lại.
  */
-export function RecentLog({ days, totalPosts }: RecentLogProps) {
-  if (days.length === 0) return null
+export function RecentLog({ entries, tracks, totalPosts }: RecentLogProps) {
+  const [active, setActive] = useState<string | null>(null)
+  const activeTrack = tracks.find((t) => t.key === active) ?? null
+  const filtered = active ? entries.filter((e) => e.trackKeys.includes(active)) : entries
+  const days = groupByDay(filtered.slice(0, VISIBLE))
+  if (entries.length === 0) return null
 
   return (
     <Box
@@ -27,9 +39,44 @@ export function RecentLog({ days, totalPosts }: RecentLogProps) {
         py: { xs: 1.75, md: 2.5 },
       }}
     >
-      <Typography id="recent-log-heading" component="h2" sx={visuallyHidden}>
-        Bài mới
+      <Typography
+        id="recent-log-heading"
+        component="h2"
+        sx={{ fontSize: { xs: '1.0625rem', md: '1.3125rem' }, fontWeight: 600, mb: { xs: 1.5, md: 2 } }}
+      >
+        Bài viết gần đây
       </Typography>
+
+      {tracks.length > 0 && (
+        <Box
+          role="group"
+          aria-label="Lọc theo chủ đề"
+          sx={{
+            display: 'flex',
+            gap: 1,
+            mb: { xs: 2, md: 2.5 },
+            // Mobile: một hàng cuộn ngang bên trong khối, không xuống ba dòng
+            // chip đẩy danh sách bài ra khỏi màn hình đầu. Trang thì không cuộn ngang.
+            flexWrap: { xs: 'nowrap', md: 'wrap' },
+            overflowX: { xs: 'auto', md: 'visible' },
+            mx: { xs: -2, md: 0 },
+            px: { xs: 2, md: 0 },
+            scrollbarWidth: 'none',
+            '&::-webkit-scrollbar': { display: 'none' },
+          }}
+        >
+          <Chip label="Tất cả" count={totalPosts} on={active === null} onClick={() => setActive(null)} />
+          {tracks.map((track) => (
+            <Chip
+              key={track.key}
+              label={track.title}
+              count={track.count}
+              on={active === track.key}
+              onClick={() => setActive(track.key)}
+            />
+          ))}
+        </Box>
+      )}
 
       {days.map((day, dayIndex) => (
         <Box key={day.key} sx={{ mt: dayIndex === 0 ? 0 : { xs: 1.75, md: 2.25 } }}>
@@ -47,8 +94,7 @@ export function RecentLog({ days, totalPosts }: RecentLogProps) {
           </Typography>
 
           <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
-            {day.entries.map((entry, entryIndex) => {
-              const isNewest = dayIndex === 0 && entryIndex === 0
+            {day.entries.map((entry) => {
               return (
                 <Box component="li" key={entry.slug} sx={{ '& + &': { mt: { xs: 1.25, md: 1.5 } } }}>
                   <Box
@@ -84,11 +130,7 @@ export function RecentLog({ days, totalPosts }: RecentLogProps) {
                           transition: 'color 0.15s',
                         }}
                       >
-                        {isNewest ? (
-                          <span className="log-marker">{renderTitle(entry.title)}</span>
-                        ) : (
-                          renderTitle(entry.title)
-                        )}
+                        {renderTitle(entry.title)}
                       </Box>
                       {entry.readingMinutes && (
                         // Chỉ từ md: ở 375px dòng meta này đẩy bài thứ 8 ra khỏi màn hình đầu.
@@ -115,7 +157,7 @@ export function RecentLog({ days, totalPosts }: RecentLogProps) {
 
       <Box
         component={Link}
-        href="/blog"
+        href={activeTrack ? activeTrack.href : '/blog'}
         sx={{
           display: 'inline-block',
           mt: { xs: 2, md: 2.5 },
@@ -129,7 +171,46 @@ export function RecentLog({ days, totalPosts }: RecentLogProps) {
           '&:focus-visible': { outline: '2px solid var(--color-accent)', outlineOffset: '3px' },
         }}
       >
-        Đọc tất cả {totalPosts} bài
+        {activeTrack ? `Xem tất cả ${activeTrack.count} bài ${activeTrack.title}` : `Đọc tất cả ${totalPosts} bài`}
+      </Box>
+    </Box>
+  )
+}
+
+// Chip lọc: bật thì nền đảo màu chữ (ink trên nền tối), không dùng xanh —
+// xanh dành cho link. aria-pressed để trình đọc màn hình biết chip nào đang bật.
+function Chip({ label, count, on, onClick }: { label: string; count: number; on: boolean; onClick: () => void }) {
+  return (
+    <Box
+      component="button"
+      type="button"
+      aria-pressed={on}
+      onClick={onClick}
+      sx={{
+        flexShrink: 0,
+        display: 'inline-flex',
+        alignItems: 'baseline',
+        gap: 0.75,
+        px: 1.5,
+        py: 0.75,
+        fontFamily: 'inherit',
+        fontSize: '0.875rem',
+        lineHeight: 1.3,
+        whiteSpace: 'nowrap',
+        cursor: 'pointer',
+        borderRadius: '999px',
+        border: '1px solid',
+        borderColor: on ? 'var(--color-ink)' : 'var(--color-line)',
+        bgcolor: on ? 'var(--color-ink)' : 'transparent',
+        color: on ? 'var(--color-bg)' : 'text.secondary',
+        transition: 'border-color 0.15s, color 0.15s',
+        '&:hover': on ? {} : { borderColor: 'var(--color-ink-muted)', color: 'text.primary' },
+        '&:focus-visible': { outline: '2px solid var(--color-accent)', outlineOffset: '2px' },
+      }}
+    >
+      {label}
+      <Box component="span" sx={{ fontSize: '0.75rem', fontVariantNumeric: 'tabular-nums', opacity: 0.7 }}>
+        {count}
       </Box>
     </Box>
   )
@@ -193,16 +274,3 @@ function renderTitle(title: string) {
     ),
   )
 }
-
-// Đơn vị phải là chuỗi px: trong sx của MUI, số 1 ở width/height nghĩa là 100%.
-const visuallyHidden = {
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  margin: '-1px',
-  padding: 0,
-  border: 0,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const

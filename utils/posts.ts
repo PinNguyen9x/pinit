@@ -34,6 +34,7 @@ export async function getPostList() {
       tagList: data.tags,
       publishedDate: data.date,
       description: excerpt || '',
+      summary: data.description || '',
       readingMinutes: getReadingMinutes(content),
       mdContent: content,
       htmlContent: '',

@@ -1,10 +1,10 @@
 import { Seo } from '@/components/common/seo'
-import { Intro, RecentLog, TopicLink, TopicNav } from '@/components/home'
+import { FeaturedPost, Intro, RecentLog, TermCard, TermSample, TopicLink, TopicNav } from '@/components/home'
 import { MainLayout } from '@/components/layouts/main'
 import { FeatureWork } from '@/components/work'
 import { KNOWLEDGE_TRACKS } from '@/constants/tracks'
 import { API_BASE, safeFetchJson } from '@/utils'
-import { LogDay, groupRecentPosts } from '@/utils/home'
+import { FeaturedPost as FeaturedPostData, LogEntry, buildHomeFeed, pickTermSample } from '@/utils/home'
 import { getPostList } from '@/utils/posts'
 import { pageContainerSx } from '@/utils/theme'
 import { countPostsByTrack } from '@/utils/tracks'
@@ -12,18 +12,22 @@ import { Box, Container } from '@mui/material'
 import { GetStaticProps } from 'next'
 import { NextPageWithLayout, Work } from '../models'
 
-// 8 bài: đo ở 375×812 vẫn nằm trọn màn hình đầu (tiêu đề cắt tối đa 2 dòng).
-const RECENT_LIMIT = 8
+// Vốn bài cho danh sách bên dưới bài nổi bật. Danh sách chỉ hiện 8 bài
+// (components/home/recent-log.tsx) nhưng cần vốn lớn hơn để lọc theo chủ đề ít
+// bài vẫn ra đủ bài. 24 bài ~ 6 kB props, không đáng kể.
+const RECENT_LIMIT = 24
 
 interface HomeProps {
   works?: Work[]
-  days?: LogDay[]
+  featured?: FeaturedPostData | null
+  entries?: LogEntry[]
   totalPosts?: number
   tracks?: TopicLink[]
   extras?: TopicLink[]
+  terms?: TermSample[]
 }
 
-const Home: NextPageWithLayout = ({ works, days, totalPosts, tracks, extras }: HomeProps) => {
+const Home: NextPageWithLayout = ({ works, featured, entries, totalPosts, tracks, extras, terms }: HomeProps) => {
   return (
     <Box>
       <Seo
@@ -46,7 +50,9 @@ const Home: NextPageWithLayout = ({ works, days, totalPosts, tracks, extras }: H
             // kéo dài dòng chữ. Từ 900px tới 1200px khung chưa đủ chỗ cho
             // 720 + 280 nên giữ cột phụ 220px.
             gridTemplateColumns: {
-              xs: '1fr',
+              // minmax(0, …) chứ không '1fr': 1fr không co nhỏ hơn nội dung, và
+              // hàng chip lọc (không xuống dòng ở mobile) sẽ kéo cả trang cuộn ngang.
+              xs: 'minmax(0, 1fr)',
               md: 'minmax(0, 1fr) 220px',
               lg: 'minmax(0, 720px) 280px',
             },
@@ -59,9 +65,15 @@ const Home: NextPageWithLayout = ({ works, days, totalPosts, tracks, extras }: H
           <Box sx={{ gridColumn: '1 / -1' }}>
             <Intro />
           </Box>
-          <RecentLog days={days || []} totalPosts={totalPosts || 0} />
-          <Box sx={{ position: { md: 'sticky' }, top: { md: 88 } }}>
+          {featured && (
+            <Box sx={{ gridColumn: '1 / -1' }}>
+              <FeaturedPost post={featured} />
+            </Box>
+          )}
+          <RecentLog entries={entries || []} tracks={tracks || []} totalPosts={totalPosts || 0} />
+          <Box sx={{ position: { md: 'sticky' }, top: { md: 88 }, display: 'grid', gap: { xs: 3, md: 4 } }}>
             <TopicNav tracks={tracks || []} extras={extras || []} />
+            <TermCard terms={terms || []} />
           </Box>
         </Box>
       </Container>
@@ -102,10 +114,11 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   return {
     props: {
       works: worksData?.data ?? [],
-      days: groupRecentPosts(posts, RECENT_LIMIT),
+      ...buildHomeFeed(posts, KNOWLEDGE_TRACKS, RECENT_LIMIT),
       totalPosts: posts.length,
       tracks,
       extras,
+      terms: pickTermSample(GLOSSARY, 12, new Date()),
     },
     revalidate: 60, // ISR: Revalidate every 60 seconds
   }

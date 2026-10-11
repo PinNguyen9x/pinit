@@ -23,17 +23,23 @@ export function TopicNav({ tracks, extras }: TopicNavProps) {
   if (tracks.length === 0 && extras.length === 0) return null
 
   return (
-    <Box component="nav" aria-labelledby="topic-nav-heading">
-      <Typography
-        id="topic-nav-heading"
-        component="h2"
-        sx={{ fontSize: '0.9375rem', fontWeight: 600, color: 'text.primary', mb: { xs: 1, md: 1.5 } }}
-      >
-        Chủ đề
-      </Typography>
-      <TopicList items={tracks} />
+    <Box component="nav" aria-label="Chủ đề và mục khác">
+      {/* Mobile đã có chip lọc chủ đề ngay trên danh sách bài (recent-log.tsx),
+          lặp lại ở đây chỉ dài trang — nên track chỉ hiện từ md. */}
+      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+        <Typography component="h2" sx={{ fontSize: '0.9375rem', fontWeight: 600, color: 'text.primary', mb: 1.5 }}>
+          Chủ đề
+        </Typography>
+        <TopicList items={tracks} withBars />
+      </Box>
       {extras.length > 0 && (
-        <Box sx={{ mt: { xs: 1, md: 2 }, pt: { md: 2 }, borderTop: { md: '1px solid var(--color-line)' } }}>
+        <Box sx={{ mt: { md: 2 }, pt: { md: 2 }, borderTop: { md: '1px solid var(--color-line)' } }}>
+          <Typography
+            component="h2"
+            sx={{ display: { md: 'none' }, fontSize: '0.9375rem', fontWeight: 600, color: 'text.primary', mb: 1 }}
+          >
+            Khám phá thêm
+          </Typography>
           <TopicList items={extras} />
         </Box>
       )}
@@ -41,7 +47,11 @@ export function TopicNav({ tracks, extras }: TopicNavProps) {
   )
 }
 
-function TopicList({ items }: { items: TopicLink[] }) {
+// withBars: thanh mảnh dưới mỗi track, dài theo số bài so với track nhiều bài
+// nhất — đọc nhanh blog nặng về chủ đề nào. Thanh tĩnh, màu chữ phụ: đây là dữ
+// liệu, không phải link hay trạng thái nên không dùng xanh.
+function TopicList({ items, withBars = false }: { items: TopicLink[]; withBars?: boolean }) {
+  const max = Math.max(1, ...items.map((i) => i.count))
   return (
     <Box
       component="ul"
@@ -92,6 +102,19 @@ function TopicList({ items }: { items: TopicLink[] }) {
               {item.count}
             </Box>
           </Box>
+          {withBars && (
+            <Box aria-hidden sx={{ height: 3, mb: 0.75, borderRadius: 2, bgcolor: 'var(--color-line)' }}>
+              <Box
+                sx={{
+                  width: `${(item.count / max) * 100}%`,
+                  height: '100%',
+                  borderRadius: 2,
+                  bgcolor: 'var(--color-ink-muted)',
+                  opacity: 0.7,
+                }}
+              />
+            </Box>
+          )}
         </Box>
       ))}
     </Box>
