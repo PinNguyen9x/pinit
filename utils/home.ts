@@ -1,8 +1,12 @@
 import { Post } from '@/models'
+import { cardImageUrl } from './cover-image'
 
 export interface LogEntry {
   slug: string
   title: string
+  /** Bản `-card` của ảnh bìa (640×416) — null khi bài không có bìa. */
+  cover: string | null
+  readingMinutes: number | null
 }
 
 export interface LogDay {
@@ -53,7 +57,13 @@ export function groupRecentPosts(postList: Post[], limit: number): LogDay[] {
       day = { key, label, entries: [] }
       days.push(day)
     }
-    day.entries.push({ slug: post.slug, title: post.title })
+    day.entries.push({
+      slug: post.slug,
+      title: post.title,
+      // null chứ không undefined: props của getStaticProps phải serialize được JSON.
+      cover: cardImageUrl(post.thumbnailUrl) || null,
+      readingMinutes: post.readingMinutes ?? null,
+    })
   }
 
   return days
