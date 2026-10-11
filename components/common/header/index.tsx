@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { encodeUrl } from '@/utils'
 import { PAGE_MAX_WIDTH } from '@/utils/theme'
 import { Logo } from '../logo'
+import { NAV_ITEMS } from '../nav-items'
 import CloseIcon from '@mui/icons-material/Close'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
 import LightModeIcon from '@mui/icons-material/LightMode'
@@ -12,14 +13,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useContext, useState } from 'react'
 
-// Không có mục "Trang chủ": tên trang ở góc trái đã là link về trang chủ.
-const navItems = [
-  { label: 'Bài viết', path: '/blog' },
-  { label: 'Thuật ngữ', path: '/glossary' },
-  { label: 'System design', path: '/system-design' },
-  { label: 'Dự án', path: '/works' },
-  { label: 'Giới thiệu', path: '/about' },
-]
 
 const focusRing = {
   '&:focus-visible': { outline: '2px solid var(--color-accent)', outlineOffset: '2px' },
@@ -117,7 +110,7 @@ export default function Header() {
             aria-label="Điều hướng chính"
             sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}
           >
-            {navItems.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <Box
                 key={item.path}
                 component={Link}
@@ -201,7 +194,7 @@ export default function Header() {
           </IconButton>
         </Box>
         <List component="nav" aria-label="Điều hướng chính" sx={{ py: 0 }}>
-          {[{ label: 'Trang chủ', path: '/' }, ...navItems].map((item) => {
+          {[{ label: 'Trang chủ', path: '/' }, ...NAV_ITEMS].map((item) => {
             const active = item.path === '/' ? router.pathname === '/' : isActive(item.path)
             return (
               <ListItemButton
