@@ -30,15 +30,17 @@ export function Intro() {
       <Typography
         component="h1"
         sx={{
-          fontSize: { xs: '1.1875rem', md: '1.6875rem' },
+          fontSize: { xs: '1.125rem', md: '1.6875rem' },
+          // Tránh một chữ mồ côi rơi xuống dòng cuối (vd. "thật." ở 375px).
+          textWrap: 'pretty',
           fontWeight: 600,
           lineHeight: 1.35,
           letterSpacing: '-0.01em',
-          maxWidth: '34ch',
+          maxWidth: { xs: 'none', md: '40ch' },
           color: 'text.primary',
         }}
       >
-        Mình là Pin, kỹ sư full-stack, viết về những gì học được khi làm thật với AI agent, DevOps, Kafka và frontend.
+        Mình là Pin, kỹ sư full-stack, viết về AI agent, DevOps, Kafka và frontend từ việc làm thật.
       </Typography>
     </Box>
   )
