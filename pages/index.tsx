@@ -12,8 +12,10 @@ import { Box, Container } from '@mui/material'
 import { GetStaticProps } from 'next'
 import { NextPageWithLayout, Work } from '../models'
 
-// Bài nổi bật + 8 bài kế tiếp trong danh sách.
-const RECENT_LIMIT = 8
+// Vốn bài cho danh sách bên dưới bài nổi bật. Danh sách chỉ hiện 8 bài
+// (components/home/recent-log.tsx) nhưng cần vốn lớn hơn để lọc theo chủ đề ít
+// bài vẫn ra đủ bài. 24 bài ~ 6 kB props, không đáng kể.
+const RECENT_LIMIT = 24
 
 interface HomeProps {
   works?: Work[]
@@ -47,7 +49,9 @@ const Home: NextPageWithLayout = ({ works, featured, entries, totalPosts, tracks
             // kéo dài dòng chữ. Từ 900px tới 1200px khung chưa đủ chỗ cho
             // 720 + 280 nên giữ cột phụ 220px.
             gridTemplateColumns: {
-              xs: '1fr',
+              // minmax(0, …) chứ không '1fr': 1fr không co nhỏ hơn nội dung, và
+              // hàng chip lọc (không xuống dòng ở mobile) sẽ kéo cả trang cuộn ngang.
+              xs: 'minmax(0, 1fr)',
               md: 'minmax(0, 1fr) 220px',
               lg: 'minmax(0, 720px) 280px',
             },
@@ -65,7 +69,7 @@ const Home: NextPageWithLayout = ({ works, featured, entries, totalPosts, tracks
               <FeaturedPost post={featured} />
             </Box>
           )}
-          <RecentLog entries={entries || []} totalPosts={totalPosts || 0} />
+          <RecentLog entries={entries || []} tracks={tracks || []} totalPosts={totalPosts || 0} />
           <Box sx={{ position: { md: 'sticky' }, top: { md: 88 } }}>
             <TopicNav tracks={tracks || []} extras={extras || []} />
           </Box>

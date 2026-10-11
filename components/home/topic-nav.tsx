@@ -23,17 +23,23 @@ export function TopicNav({ tracks, extras }: TopicNavProps) {
   if (tracks.length === 0 && extras.length === 0) return null
 
   return (
-    <Box component="nav" aria-labelledby="topic-nav-heading">
-      <Typography
-        id="topic-nav-heading"
-        component="h2"
-        sx={{ fontSize: '0.9375rem', fontWeight: 600, color: 'text.primary', mb: { xs: 1, md: 1.5 } }}
-      >
-        Chủ đề
-      </Typography>
-      <TopicList items={tracks} />
+    <Box component="nav" aria-label="Chủ đề và mục khác">
+      {/* Mobile đã có chip lọc chủ đề ngay trên danh sách bài (recent-log.tsx),
+          lặp lại ở đây chỉ dài trang — nên track chỉ hiện từ md. */}
+      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+        <Typography component="h2" sx={{ fontSize: '0.9375rem', fontWeight: 600, color: 'text.primary', mb: 1.5 }}>
+          Chủ đề
+        </Typography>
+        <TopicList items={tracks} />
+      </Box>
       {extras.length > 0 && (
-        <Box sx={{ mt: { xs: 1, md: 2 }, pt: { md: 2 }, borderTop: { md: '1px solid var(--color-line)' } }}>
+        <Box sx={{ mt: { md: 2 }, pt: { md: 2 }, borderTop: { md: '1px solid var(--color-line)' } }}>
+          <Typography
+            component="h2"
+            sx={{ display: { md: 'none' }, fontSize: '0.9375rem', fontWeight: 600, color: 'text.primary', mb: 1 }}
+          >
+            Khám phá thêm
+          </Typography>
           <TopicList items={extras} />
         </Box>
       )}
