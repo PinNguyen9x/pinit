@@ -6,6 +6,7 @@ import { KNOWLEDGE_TRACKS } from '@/constants/tracks'
 import { API_BASE, safeFetchJson } from '@/utils'
 import { LogDay, groupRecentPosts } from '@/utils/home'
 import { getPostList } from '@/utils/posts'
+import { pageContainerSx } from '@/utils/theme'
 import { countPostsByTrack } from '@/utils/tracks'
 import { Box, Container } from '@mui/material'
 import { GetStaticProps } from 'next'
@@ -36,11 +37,20 @@ const Home: NextPageWithLayout = ({ works, days, totalPosts, tracks, extras }: H
         }}
       />
 
-      <Container sx={{ pt: { xs: 3, md: 6 } }}>
+      <Container sx={{ ...pageContainerSx, pt: { xs: 3, md: 6 } }}>
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) 220px' },
+            // Khối bài tối đa 720px để dòng không vượt ~70 ký tự dù khung đã
+            // rộng 1180px; phần dư dồn vào khoảng giữa (space-between), không
+            // kéo dài dòng chữ. Từ 900px tới 1200px khung chưa đủ chỗ cho
+            // 720 + 280 nên giữ cột phụ 220px.
+            gridTemplateColumns: {
+              xs: '1fr',
+              md: 'minmax(0, 1fr) 220px',
+              lg: 'minmax(0, 720px) 280px',
+            },
+            justifyContent: 'space-between',
             columnGap: 6,
             rowGap: { xs: 2.5, md: 4 },
             alignItems: 'start',

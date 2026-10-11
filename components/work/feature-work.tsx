@@ -1,5 +1,6 @@
 import { Work } from '@/models'
 import { Box, Container, Stack, Typography } from '@mui/material'
+import { pageContainerSx } from '@/utils/theme'
 import Link from 'next/link'
 import { WorkList } from './work-list'
 
@@ -13,7 +14,7 @@ export function FeatureWork({ workList, isLoading = false }: FeatureWorkProps) {
 
   return (
     <Box component="section" aria-labelledby="feature-work-heading" sx={{ pt: { xs: 7, md: 10 } }}>
-      <Container>
+      <Container sx={pageContainerSx}>
         <Stack direction="row" mb={3} justifyContent="space-between" alignItems="baseline" gap={2}>
           <Typography
             id="feature-work-heading"
