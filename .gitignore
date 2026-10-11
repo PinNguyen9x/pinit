@@ -57,6 +57,7 @@ tsconfig.tsbuildinfo
 .claude/skills/*
 !.claude/skills/archify
 !.claude/skills/agentic-mermaid-diagram-workflow
+!.claude/skills/frontend-design
 
 # Khu private /me — content thật chỉ nằm trên disk của VPS, không bao giờ vào repo.
 private-content/
