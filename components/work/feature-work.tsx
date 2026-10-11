@@ -2,7 +2,8 @@ import { Work } from '@/models'
 import { Box, Container, Stack, Typography } from '@mui/material'
 import { pageContainerSx } from '@/utils/theme'
 import Link from 'next/link'
-import { WorkList } from './work-list'
+import { WorkGridCard } from './work-grid-card'
+import { WorkSkeleton } from './work-skeleton'
 
 interface FeatureWorkProps {
   isLoading?: boolean
@@ -41,7 +42,31 @@ export function FeatureWork({ workList, isLoading = false }: FeatureWorkProps) {
           </Box>
         </Stack>
 
-        <WorkList workList={workList} isLoading={isLoading} />
+        {/* Lưới 3 cột, cùng WorkGridCard với trang /works: thẻ ngang cũ kéo
+            dài hết khung 1180px thành dải chữ rất dài. Dưới sm là 1 cột. */}
+        <Box
+          component="ul"
+          sx={{
+            listStyle: 'none',
+            m: 0,
+            p: 0,
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' },
+            gap: { xs: 2, md: 3 },
+          }}
+        >
+          {isLoading
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <li key={i}>
+                  <WorkSkeleton />
+                </li>
+              ))
+            : workList.map((work) => (
+                <li key={work.id}>
+                  <WorkGridCard work={work} />
+                </li>
+              ))}
+        </Box>
       </Container>
     </Box>
   )
