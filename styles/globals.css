@@ -37,7 +37,7 @@ a {
 
 /* Text selection */
 ::selection {
-  background: rgba(22,163,74, 0.2);
+  background: color-mix(in srgb, var(--color-accent) 28%, transparent);
 }
 
 /* Code block wrapper injected by blog page */
@@ -113,22 +113,22 @@ a {
    hai theme, đổi sáng/tối chỉ đổi giá trị biến, trình duyệt tô lại ngay mà
    không cần vẽ lại sơ đồ. `data-theme` do pages/_app.tsx gắn lên <html>. */
 :root {
-  --diagram-bg: #0a0a0a;
-  --diagram-fg: #ededed;
-  --diagram-line: rgba(237, 237, 237, 0.45);
-  --diagram-accent: #4ade80;
-  --diagram-muted: #888888;
-  --diagram-surface: #141414;
-  --diagram-border: rgba(237, 237, 237, 0.22);
+  --diagram-bg: #16130f;
+  --diagram-fg: #ece6da;
+  --diagram-line: rgba(236, 230, 218, 0.45);
+  --diagram-accent: #7bd88f;
+  --diagram-muted: #a39b8c;
+  --diagram-surface: #1f1b16;
+  --diagram-border: rgba(236, 230, 218, 0.22);
 }
 :root[data-theme='light'] {
-  --diagram-bg: #fafafa;
-  --diagram-fg: #111111;
-  --diagram-line: rgba(17, 17, 17, 0.45);
-  --diagram-accent: #16a34a;
-  --diagram-muted: #666666;
+  --diagram-bg: #fffcf5;
+  --diagram-fg: #2a2620;
+  --diagram-line: rgba(42, 38, 32, 0.45);
+  --diagram-accent: #1f7a3d;
+  --diagram-muted: #6b655a;
   --diagram-surface: #ffffff;
-  --diagram-border: rgba(17, 17, 17, 0.18);
+  --diagram-border: rgba(42, 38, 32, 0.18);
 }
 
 /* ===== Màu lane của khu /me =====
