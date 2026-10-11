@@ -121,3 +121,28 @@ export function groupByDay(entries: LogEntry[]): LogDay[] {
   }
   return days
 }
+
+/**
+ * Chọn `size` thuật ngữ cho ô "Thuật ngữ ngẫu nhiên", xoay theo ngày: cùng một
+ * ngày (giờ Việt Nam) ra cùng một bộ, qua ngày đổi bộ — trang chủ ISR 60s nên
+ * tự đổi mà không cần deploy. Chọn ở server để HTML server và client khớp
+ * nhau (random ở client sẽ lệch hydration).
+ */
+export function pickTermSample<T extends { term: string; short: string }>(
+  glossary: T[],
+  size: number,
+  now: Date,
+): { term: string; short: string }[] {
+  const usable = glossary.filter((t) => t.short)
+  if (usable.length === 0) return []
+  const day = Number(dayKeyFormat.format(now).replace(/-/g, ''))
+  // Bước nhảy là số nguyên tố không chia hết độ dài danh sách (nên nguyên tố
+  // cùng nhau với nó): đi hết một vòng mới lặp, và rải khắp glossary thay vì 12
+  // từ liền nhau theo bảng chữ cái.
+  const step = [7, 11, 13, 17, 19, 23].find((p) => usable.length % p !== 0) ?? 1
+  const start = day % usable.length
+  return Array.from({ length: Math.min(size, usable.length) }, (_, i) => {
+    const t = usable[(start + i * step) % usable.length]
+    return { term: t.term, short: t.short }
+  })
+}

@@ -1,10 +1,10 @@
 import { Seo } from '@/components/common/seo'
-import { FeaturedPost, Intro, RecentLog, TopicLink, TopicNav } from '@/components/home'
+import { FeaturedPost, Intro, RecentLog, TermCard, TermSample, TopicLink, TopicNav } from '@/components/home'
 import { MainLayout } from '@/components/layouts/main'
 import { FeatureWork } from '@/components/work'
 import { KNOWLEDGE_TRACKS } from '@/constants/tracks'
 import { API_BASE, safeFetchJson } from '@/utils'
-import { FeaturedPost as FeaturedPostData, LogEntry, buildHomeFeed } from '@/utils/home'
+import { FeaturedPost as FeaturedPostData, LogEntry, buildHomeFeed, pickTermSample } from '@/utils/home'
 import { getPostList } from '@/utils/posts'
 import { pageContainerSx } from '@/utils/theme'
 import { countPostsByTrack } from '@/utils/tracks'
@@ -24,9 +24,10 @@ interface HomeProps {
   totalPosts?: number
   tracks?: TopicLink[]
   extras?: TopicLink[]
+  terms?: TermSample[]
 }
 
-const Home: NextPageWithLayout = ({ works, featured, entries, totalPosts, tracks, extras }: HomeProps) => {
+const Home: NextPageWithLayout = ({ works, featured, entries, totalPosts, tracks, extras, terms }: HomeProps) => {
   return (
     <Box>
       <Seo
@@ -70,8 +71,9 @@ const Home: NextPageWithLayout = ({ works, featured, entries, totalPosts, tracks
             </Box>
           )}
           <RecentLog entries={entries || []} tracks={tracks || []} totalPosts={totalPosts || 0} />
-          <Box sx={{ position: { md: 'sticky' }, top: { md: 88 } }}>
+          <Box sx={{ position: { md: 'sticky' }, top: { md: 88 }, display: 'grid', gap: { xs: 3, md: 4 } }}>
             <TopicNav tracks={tracks || []} extras={extras || []} />
+            <TermCard terms={terms || []} />
           </Box>
         </Box>
       </Container>
@@ -116,6 +118,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
       totalPosts: posts.length,
       tracks,
       extras,
+      terms: pickTermSample(GLOSSARY, 12, new Date()),
     },
     revalidate: 60, // ISR: Revalidate every 60 seconds
   }

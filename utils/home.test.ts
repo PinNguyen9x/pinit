@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { KnowledgeTrack } from '@/constants/tracks'
 import type { Post } from '@/models'
-import { buildHomeFeed, groupByDay } from './home'
+import { buildHomeFeed, groupByDay, pickTermSample } from './home'
 
 const post = (slug: string, publishedDate: string, extra: Partial<Post> = {}): Post => ({
   id: slug,
@@ -134,5 +134,35 @@ describe('groupByDay', () => {
     )
     const days = groupByDay(entries.filter((e) => e.trackKeys.includes('git')))
     expect(days.map((d) => d.entries.map((e) => e.slug))).toEqual([['a'], ['c']])
+  })
+})
+
+describe('pickTermSample', () => {
+  const glossary = Array.from({ length: 30 }, (_, i) => ({ term: `T${i}`, short: `định nghĩa ${i}`, cat: 'Web' }))
+
+  it('cùng ngày ra cùng bộ, khác ngày ra bộ khác', () => {
+    const a = pickTermSample(glossary, 12, new Date('2026-10-11T02:00:00Z'))
+    const b = pickTermSample(glossary, 12, new Date('2026-10-11T15:00:00Z')) // 22:00 cùng ngày giờ VN
+    const c = pickTermSample(glossary, 12, new Date('2026-10-12T02:00:00Z'))
+    expect(a).toEqual(b)
+    expect(a).not.toEqual(c)
+  })
+
+  it('đủ size, không trùng, chỉ giữ term và short', () => {
+    const sample = pickTermSample(glossary, 12, new Date('2026-10-11T02:00:00Z'))
+    expect(sample).toHaveLength(12)
+    expect(new Set(sample.map((t) => t.term)).size).toBe(12)
+    expect(Object.keys(sample[0])).toEqual(['term', 'short'])
+  })
+
+  it('không lặp từ kể cả khi độ dài chia hết cho 7 và 11', () => {
+    const g77 = Array.from({ length: 77 }, (_, i) => ({ term: `T${i}`, short: 'x' }))
+    const sample = pickTermSample(g77, 12, new Date('2026-10-11T02:00:00Z'))
+    expect(new Set(sample.map((t) => t.term)).size).toBe(12)
+  })
+
+  it('bỏ thuật ngữ thiếu định nghĩa và không vượt quá số có sẵn', () => {
+    const sample = pickTermSample([{ term: 'A', short: '' }, { term: 'B', short: 'b' }], 12, new Date())
+    expect(sample).toEqual([{ term: 'B', short: 'b' }])
   })
 })
