@@ -1,6 +1,7 @@
 import { ThemeColorModeContext } from '@/context/theme-mode'
 import { useAuth } from '@/hooks/use-auth'
 import { encodeUrl } from '@/utils'
+import { PAGE_MAX_WIDTH } from '@/utils/theme'
 import { Logo } from '../logo'
 import CloseIcon from '@mui/icons-material/Close'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
@@ -82,10 +83,12 @@ export default function Header() {
       >
         <Toolbar
           sx={{
-            maxWidth: '900px',
+            maxWidth: `${PAGE_MAX_WIDTH}px`,
             mx: 'auto',
             width: '100%',
-            px: { xs: 2, md: 3 },
+            // Cùng gutter với Container của MUI (16px, từ sm là 24px) để mép
+            // chữ trong header thẳng hàng với mép nội dung bên dưới.
+            px: { xs: 2, sm: 3 },
             minHeight: { xs: 56, md: 64 },
           }}
         >

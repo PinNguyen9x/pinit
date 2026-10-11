@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/use-auth'
 import { useCvDownload } from '@/hooks/use-cv-download'
 import { getErrorMessage } from '@/utils'
+import { pageContainerSx } from '@/utils/theme'
 import { Box, Container, Stack, Typography } from '@mui/material'
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
@@ -78,7 +79,7 @@ export function Footer() {
       component="footer"
       sx={{ mt: { xs: 8, md: 12 }, py: { xs: 4, md: 5 }, borderTop: '1px solid var(--color-line)' }}
     >
-      <Container>
+      <Container sx={pageContainerSx}>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           justifyContent="space-between"

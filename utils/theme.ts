@@ -27,6 +27,16 @@ export const PALETTE = {
   },
 } as const
 
+/**
+ * Độ rộng khung trang (gồm padding hai bên của Container) cho header, footer và
+ * trang chủ — khớp con số 1180px mà /blog, /works, /glossary đang hardcode, để
+ * mép trái/phải của header thẳng hàng với nội dung. Trước đây header là 900px
+ * nên lệch 140px mỗi bên ở /blog. Container MUI mặc định 'md' bị theme ép về
+ * 900px, nên chỗ nào cần khung rộng phải truyền `sx={pageContainerSx}`.
+ */
+export const PAGE_MAX_WIDTH = 1180
+export const pageContainerSx = { '@media (min-width: 900px)': { maxWidth: `${PAGE_MAX_WIDTH}px` } }
+
 export function getTheme(mode: 'light' | 'dark') {
   const isDark = mode === 'dark'
   const c = PALETTE[mode]
