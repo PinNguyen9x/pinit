@@ -38,7 +38,7 @@ export function Intro() {
           color: 'text.primary',
         }}
       >
-        Mình là Pin, kỹ sư full-stack, và đây là sổ tay ghi lại những gì mình học khi làm thật.
+        Mình là Pin, kỹ sư full-stack, viết về những gì học được khi làm thật với AI agent, DevOps, Kafka và frontend.
       </Typography>
     </Box>
   )

@@ -104,7 +104,7 @@ export default function Header() {
             }}
           >
             <Logo size={32} />
-            Sổ tay của Pin
+            Pin Nguyen
           </Box>
 
           <Box flexGrow={1} />
