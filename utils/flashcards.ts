@@ -1,16 +1,26 @@
-// Flashcard theo topic: lấy thẻ từ questions[] trong notes, lưu lịch ôn. CHỈ CHẠY Ở SERVER.
+// Flashcard: lấy thẻ từ questions[] của notes trong một topic, hoặc của một case
+// study; lưu lịch ôn. CHỈ CHẠY Ở SERVER.
 //
 // Hai file cạnh practice log (thư mục rw duy nhất — content là :ro):
-//   flashcard-state.json  { "<topic>/<index>": { last, interval, due } } — lịch hiện tại
+//   flashcard-state.json  { "<topic>/<id>" | "case/<slug>/<id>": { last, interval, due } }
 //   flashcard-log.jsonl   một dòng mỗi lần tự đánh giá — lịch sử cho streak/heatmap.
 // State chỉ giữ lần ôn CUỐI của mỗi thẻ; tính chuỗi ngày từ state thì ôn lại một
 // thẻ là xoá mất ngày ôn trước của nó. Nên lịch sử phải nằm ở log riêng.
 import { appendFile, mkdir, readFile, rename, writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
-import { cardKey, FlashcardState, Rating, schedule } from './flashcard-schedule'
+import {
+  cardKey,
+  cardStatus,
+  CardStatus,
+  countByStatus,
+  FlashcardState,
+  orderCards,
+  Rating,
+  schedule,
+} from './flashcard-schedule'
 import { practiceLogPath } from './practice'
 import { vnDay } from './practice-insights'
-import { loadNote, loadTopic } from './private-content'
+import { loadCaseStudy, loadNote, loadTopic } from './private-content'
 import type { Question } from './private-content-schema'
 
 export function flashcardStatePath(): string {
@@ -46,6 +56,22 @@ export async function topicCards(topic: unknown): Promise<Flashcard[] | null> {
     const note = await loadNote(index.slug, n.slug)
     if (note) groups.push({ source: note.data.title, questions: note.data.questions })
   }
+  return toCards(index.slug, groups)
+}
+
+/**
+ * Thẻ của một case study. Key `case/<slug>/<id>`: slug topic không chứa `/` nên
+ * key topic luôn có đúng hai đoạn, không bao giờ trùng key ba đoạn này — kể cả
+ * khi có topic tên `case`.
+ */
+export async function caseStudyCards(slug: unknown): Promise<Flashcard[] | null> {
+  const loaded = await loadCaseStudy(slug)
+  if (!loaded?.data) return null
+  const { slug: s, title, questions } = loaded.data
+  return toCards(`case/${s}`, [{ source: title, questions }])
+}
+
+function toCards(prefix: string, groups: { source: string; questions: Question[] }[]) {
   const cards: Flashcard[] = []
   const usedIds = new Set<string>()
   for (const g of groups) {
@@ -54,10 +80,41 @@ export async function topicCards(topic: unknown): Promise<Flashcard[] | null> {
       // id trùng giữa hai note: loadTopic đã báo lỗi; thẻ sau quay về key theo vị trí.
       const id = q.id && !usedIds.has(q.id) ? q.id : null
       if (id) usedIds.add(id)
-      cards.push({ key: cardKey(index.slug, id ?? i), index: i, q: q.q, a: q.a, source: g.source })
+      cards.push({ key: cardKey(prefix, id ?? i), index: i, q: q.q, a: q.a, source: g.source })
     }
   }
   return cards
+}
+
+export interface DeckCardData {
+  index: number
+  q: string
+  a: string
+  source: string
+  status: CardStatus
+  due: string | null
+}
+
+/**
+ * Thẻ đã xếp thứ tự + đếm theo trạng thái, để trang render deck. Tính ở server theo
+ * ngày giờ VN — client không tự tính "hôm nay" để khỏi lệch múi giờ.
+ */
+export function buildDeck(all: Flashcard[], state: FlashcardState, today: string) {
+  const ordered = orderCards(all, state, today)
+  const cards: DeckCardData[] = ordered.map((c) => ({
+    index: c.index,
+    q: c.q,
+    a: c.a,
+    source: c.source,
+    status: cardStatus(state[c.key], today),
+    due: state[c.key]?.due ?? null,
+  }))
+  const counts = countByStatus(
+    ordered.map((c) => c.key),
+    state,
+    today,
+  )
+  return { cards, counts }
 }
 
 function sanitize(raw: unknown): FlashcardState {

@@ -1,25 +1,26 @@
 import { RATINGS, Rating } from '@/utils/flashcard-schedule'
-import { flashcardStatePath, rateCard, topicCards } from '@/utils/flashcards'
+import { caseStudyCards, flashcardStatePath, rateCard, topicCards } from '@/utils/flashcards'
 import { isSlug } from '@/utils/private-content-schema'
 import { checkStateWritable } from '@/utils/roadmap-state'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-// POST { topic, index, rating } → { last, interval, due }. Sau middleware /me.
-// Chỉ nhận thẻ có thật — client không tự đẻ key rác vào state.
+// POST { topic | caseStudy, index, rating } → { last, interval, due }. Sau middleware /me.
+// Đúng một trong topic/caseStudy. Chỉ nhận thẻ có thật — client không tự đẻ key rác vào state.
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST')
     return res.status(405).json({ code: 'method-not-allowed' })
   }
-  const { topic, index, rating } = req.body ?? {}
+  const { topic, caseStudy, index, rating } = req.body ?? {}
   if (
-    !isSlug(topic) ||
+    (topic == null) === (caseStudy == null) ||
+    !isSlug(topic ?? caseStudy) ||
     !Number.isInteger(index) ||
     !(RATINGS as readonly string[]).includes(rating)
   ) {
     return res.status(400).json({ code: 'invalid-input' })
   }
-  const cards = await topicCards(topic)
+  const cards = caseStudy != null ? await caseStudyCards(caseStudy) : await topicCards(topic)
   const card = cards?.[index]
   if (!card) return res.status(404).json({ code: 'card-not-found' })
 
