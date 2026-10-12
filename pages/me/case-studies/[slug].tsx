@@ -40,7 +40,7 @@ export default function CaseStudyPage({ meta, html, errors }: CaseStudyPageProps
       </Typography>
       <TagList tags={meta.tags} />
       <Box my={3}>
-        <DenylistCheck slug={meta.slug} />
+        <DenylistCheck kind="case-study" slug={meta.slug} />
       </Box>
       <ContentErrors errors={errors} />
       <MarkdownBody html={html} resetKey={meta.slug} />
