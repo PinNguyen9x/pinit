@@ -1,7 +1,8 @@
-// Flashcard theo topic: lấy thẻ từ questions[] trong notes, lưu lịch ôn. CHỈ CHẠY Ở SERVER.
+// Flashcard: lấy thẻ từ questions[] của notes trong một topic, hoặc của một case
+// study; lưu lịch ôn. CHỈ CHẠY Ở SERVER.
 //
 // Hai file cạnh practice log (thư mục rw duy nhất — content là :ro):
-//   flashcard-state.json  { "<topic>/<index>": { last, interval, due } } — lịch hiện tại
+//   flashcard-state.json  { "<topic>/<id>" | "case/<slug>/<id>": { last, interval, due } }
 //   flashcard-log.jsonl   một dòng mỗi lần tự đánh giá — lịch sử cho streak/heatmap.
 // State chỉ giữ lần ôn CUỐI của mỗi thẻ; tính chuỗi ngày từ state thì ôn lại một
 // thẻ là xoá mất ngày ôn trước của nó. Nên lịch sử phải nằm ở log riêng.
@@ -19,7 +20,7 @@ import {
 } from './flashcard-schedule'
 import { practiceLogPath } from './practice'
 import { vnDay } from './practice-insights'
-import { loadNote, loadTopic } from './private-content'
+import { loadCaseStudy, loadNote, loadTopic } from './private-content'
 import type { Question } from './private-content-schema'
 
 export function flashcardStatePath(): string {
@@ -56,6 +57,18 @@ export async function topicCards(topic: unknown): Promise<Flashcard[] | null> {
     if (note) groups.push({ source: note.data.title, questions: note.data.questions })
   }
   return toCards(index.slug, groups)
+}
+
+/**
+ * Thẻ của một case study. Key `case/<slug>/<id>`: slug topic không chứa `/` nên
+ * key topic luôn có đúng hai đoạn, không bao giờ trùng key ba đoạn này — kể cả
+ * khi có topic tên `case`.
+ */
+export async function caseStudyCards(slug: unknown): Promise<Flashcard[] | null> {
+  const loaded = await loadCaseStudy(slug)
+  if (!loaded?.data) return null
+  const { slug: s, title, questions } = loaded.data
+  return toCards(`case/${s}`, [{ source: title, questions }])
 }
 
 function toCards(prefix: string, groups: { source: string; questions: Question[] }[]) {

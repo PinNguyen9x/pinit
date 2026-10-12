@@ -399,6 +399,7 @@ export function parseCaseStudy(
   if (data.updated != null && !normalizeDate(data.updated, 'day')) {
     problems.push('updated phải có dạng YYYY-MM-DD')
   }
+  const questions = parseQuestions(data.questions, file, errors, problems)
 
   if (problems.length) {
     errors.push(`${file}: ${problems.join(', ')}`)
@@ -412,6 +413,7 @@ export function parseCaseStudy(
       tags: tags!,
       visibility: visibility!,
       updated: normalizeDate(data.updated, 'day'),
+      questions,
       body: content,
     },
     errors,
@@ -519,7 +521,7 @@ export async function listCaseStudies(): Promise<WithErrors<CaseStudyMeta[]>> {
     if (!cs) continue
     errors.push(...cs.errors)
     if (cs.data) {
-      const { body: _body, ...meta } = cs.data
+      const { body: _body, questions: _questions, ...meta } = cs.data
       items.push(meta)
     }
   }

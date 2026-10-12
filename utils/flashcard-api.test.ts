@@ -5,7 +5,7 @@ import { join } from 'path'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // Test nằm ngoài pages/: Next biến mọi file trong pages/ thành route.
 import handler from '@/pages/api/me/flashcard/rate'
-import { topicCards } from './flashcards'
+import { caseStudyCards, topicCards } from './flashcards'
 
 const isRoot = process.getuid?.() === 0
 const dirs: string[] = []
@@ -30,6 +30,11 @@ beforeEach(() => {
   writeFileSync(
     join(content, 'learn/k8s/net.md'),
     '---\ntitle: Net\nquestions:\n  - { q: "Q2", a: "A2" }\n---\n',
+  )
+  mkdirSync(join(content, 'case-studies'), { recursive: true })
+  writeFileSync(
+    join(content, 'case-studies/runtime.md'),
+    '---\ntitle: Runtime\nsummary: S\nquestions:\n  - { id: pool, q: "C0", a: "A0" }\n  - { q: "C1", a: "A1" }\n---\nThân bài\n',
   )
   vi.stubEnv('PRIVATE_CONTENT_DIR', content)
   vi.stubEnv('PRACTICE_LOG_PATH', join(logDir, 'practice-log.jsonl'))
@@ -115,6 +120,29 @@ describe('topicCards — key theo id', () => {
   })
 })
 
+describe('caseStudyCards', () => {
+  it('key case/<slug>/<id|index>, source là tiêu đề case study', async () => {
+    expect((await caseStudyCards('runtime'))!.map((c) => [c.key, c.q, c.source])).toEqual([
+      ['case/runtime/pool', 'C0', 'Runtime'],
+      ['case/runtime/1', 'C1', 'Runtime'],
+    ])
+  })
+
+  it('không có case study / slug sai → null', async () => {
+    expect(await caseStudyCards('khong-co')).toBeNull()
+    expect(await caseStudyCards('../runtime')).toBeNull()
+  })
+
+  it('rate theo caseStudy ghi key riêng, không đụng key topic', async () => {
+    expect((await call({ caseStudy: 'runtime', index: 0, rating: 'remember' })).status).toBe(200)
+    expect((await call({ topic: 'k8s', index: 0, rating: 'remember' })).status).toBe(200)
+    expect(Object.keys(readJson('flashcard-state.json')).sort()).toEqual([
+      'case/runtime/pool',
+      'k8s/0',
+    ])
+  })
+})
+
 describe('POST /api/me/flashcard/rate', () => {
   it('ghi lịch vào flashcard-state.json và một dòng vào flashcard-log.jsonl', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
@@ -141,6 +169,8 @@ describe('POST /api/me/flashcard/rate', () => {
     [{ topic: 'k8s', index: 0, rating: 'easy' }],
     [{ topic: 'k8s', index: '0', rating: 'remember' }],
     [{ topic: '../k8s', index: 0, rating: 'remember' }],
+    [{ topic: 'k8s', caseStudy: 'runtime', index: 0, rating: 'remember' }],
+    [{ caseStudy: '../runtime', index: 0, rating: 'remember' }],
     [null],
   ])('input sai %j → 400', async (body) => {
     expect((await call(body)).status).toBe(400)
@@ -149,6 +179,8 @@ describe('POST /api/me/flashcard/rate', () => {
   it.each([
     ['topic không có', { topic: 'khong-co', index: 0, rating: 'remember' }],
     ['index vượt số thẻ', { topic: 'k8s', index: 3, rating: 'remember' }],
+    ['case study không có', { caseStudy: 'khong-co', index: 0, rating: 'remember' }],
+    ['index vượt thẻ case study', { caseStudy: 'runtime', index: 2, rating: 'remember' }],
   ])('%s → 404, không tạo file', async (_, body) => {
     expect((await call(body)).status).toBe(404)
     expect(() => readJson('flashcard-state.json')).toThrow()
