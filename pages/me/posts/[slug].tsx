@@ -1,6 +1,7 @@
 import { OwnerLayout } from '@/components/layouts/owner'
 import { Breadcrumbs } from '@/components/me/breadcrumbs'
 import { ContentErrors } from '@/components/me/content-errors'
+import { DenylistCheck } from '@/components/me/denylist-check'
 import { MarkdownBody } from '@/components/me/markdown-body'
 import { TagList } from '@/components/me/tag-list'
 import { VisibilityChip } from '@/components/me/visibility-chip'
@@ -8,7 +9,7 @@ import { renderMarkdown } from '@/utils/markdown'
 import { requireOwner } from '@/utils/owner-auth'
 import { loadPost } from '@/utils/private-content'
 import type { PostMeta } from '@/utils/private-content-schema'
-import { Stack, Typography } from '@mui/material'
+import { Box, Stack, Typography } from '@mui/material'
 import type { GetServerSideProps } from 'next'
 import Head from 'next/head'
 
@@ -38,6 +39,9 @@ export default function PostPage({ meta, html, errors }: PostPageProps) {
         {meta.author && ` · ${meta.author}`}
       </Typography>
       <TagList tags={meta.tags} />
+      <Box my={3}>
+        <DenylistCheck kind="post" slug={meta.slug} />
+      </Box>
       <ContentErrors errors={errors} />
       {/* Cùng pipeline với blog public: mermaid đã thành SVG ở server, prism đã
           tô màu, nút copy code do MarkdownBody gắn. Không tải renderer nào ở client. */}

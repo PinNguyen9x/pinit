@@ -123,14 +123,26 @@ export async function scanFiles(
   return matches
 }
 
-export type CaseStudyCheck =
+/** Loại content có nút "Kiểm denylist" trên trang chi tiết → thư mục chứa nó. */
+export const CHECK_DIRS = { 'case-study': 'case-studies', post: 'posts' } as const
+export type CheckKind = keyof typeof CHECK_DIRS
+
+export function isCheckKind(s: unknown): s is CheckKind {
+  return typeof s === 'string' && Object.prototype.hasOwnProperty.call(CHECK_DIRS, s)
+}
+
+export type ContentCheck =
   | { status: 'not-found' }
   | { status: 'missing-denylist' | 'empty-denylist' }
   | { status: 'clean' | 'matches'; matches: DenylistMatch[] }
 
-/** Kiểm một case study — nút "Kiểm denylist" trên trang chi tiết. */
-export async function checkCaseStudy(slug: string, dir = contentDir()): Promise<CaseStudyCheck> {
-  const file = `case-studies/${slug}.md`
+/** Kiểm một file — nút "Kiểm denylist" trên trang case study và bài viết. */
+export async function checkContentFile(
+  kind: CheckKind,
+  slug: string,
+  dir = contentDir(),
+): Promise<ContentCheck> {
+  const file = `${CHECK_DIRS[kind]}/${slug}.md`
   let text: string
   try {
     text = await readFile(join(dir, file), 'utf8')

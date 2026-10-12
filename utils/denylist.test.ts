@@ -4,7 +4,8 @@ import { tmpdir } from 'os'
 import { join, resolve } from 'path'
 import { afterAll, describe, expect, it } from 'vitest'
 import {
-  checkCaseStudy,
+  checkContentFile,
+  isCheckKind,
   listScanTargets,
   loadDenylist,
   parseDenylist,
@@ -122,22 +123,52 @@ describe('listScanTargets + scanFiles', () => {
   })
 })
 
-describe('checkCaseStudy', () => {
+describe('checkContentFile', () => {
   it('not-found / missing / empty / clean / matches', async () => {
     const base = { 'case-studies/a.md': 'Acme\nsạch' }
-    expect((await checkCaseStudy('khong-co', fixture(base))).status).toBe('not-found')
-    expect((await checkCaseStudy('a', fixture(base))).status).toBe('missing-denylist')
-    expect((await checkCaseStudy('a', fixture({ ...base, '.denylist': '#' }))).status).toBe(
-      'empty-denylist',
+    expect((await checkContentFile('case-study', 'khong-co', fixture(base))).status).toBe(
+      'not-found',
     )
-    expect(await checkCaseStudy('a', fixture({ ...base, '.denylist': 'beta' }))).toEqual({
+    expect((await checkContentFile('case-study', 'a', fixture(base))).status).toBe(
+      'missing-denylist',
+    )
+    expect(
+      (await checkContentFile('case-study', 'a', fixture({ ...base, '.denylist': '#' }))).status,
+    ).toBe('empty-denylist')
+    expect(
+      await checkContentFile('case-study', 'a', fixture({ ...base, '.denylist': 'beta' })),
+    ).toEqual({
       status: 'clean',
       matches: [],
     })
-    expect(await checkCaseStudy('a', fixture({ ...base, '.denylist': 'acme' }))).toEqual({
+    expect(
+      await checkContentFile('case-study', 'a', fixture({ ...base, '.denylist': 'acme' })),
+    ).toEqual({
       status: 'matches',
       matches: [{ file: 'case-studies/a.md', line: 1, keyword: 'acme' }],
     })
+  })
+
+  it('post đọc từ posts/, không lẫn với case study cùng slug', async () => {
+    const dir = fixture({
+      'case-studies/a.md': 'sạch',
+      'posts/a.md': 'dòng 1\nAcme ở bài viết',
+      '.denylist': 'acme',
+    })
+    expect(await checkContentFile('post', 'a', dir)).toEqual({
+      status: 'matches',
+      matches: [{ file: 'posts/a.md', line: 2, keyword: 'acme' }],
+    })
+    expect((await checkContentFile('case-study', 'a', dir)).status).toBe('clean')
+    expect((await checkContentFile('post', 'khong-co', dir)).status).toBe('not-found')
+  })
+
+  it('isCheckKind chỉ nhận kind đã khai, không nhận key của Object.prototype', () => {
+    expect(isCheckKind('post')).toBe(true)
+    expect(isCheckKind('case-study')).toBe(true)
+    for (const k of ['learn', 'toString', '__proto__', '', undefined, 1]) {
+      expect(isCheckKind(k)).toBe(false)
+    }
   })
 })
 

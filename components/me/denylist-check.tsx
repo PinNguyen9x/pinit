@@ -1,14 +1,19 @@
-import type { CaseStudyCheck } from '@/utils/denylist'
+import type { CheckKind, ContentCheck } from '@/utils/denylist'
 import { Alert, AlertTitle, Box, Button, Stack } from '@mui/material'
 import { useState } from 'react'
 
 type State =
   | { kind: 'idle' | 'loading' }
-  | { kind: 'done'; result: CaseStudyCheck }
+  | { kind: 'done'; result: ContentCheck }
   | { kind: 'error'; message: string }
 
-/** Nút chạy denylist cho một case study qua POST /api/me/check-denylist. */
-export function DenylistCheck({ slug }: { slug: string }) {
+const NOT_FOUND: Record<CheckKind, string> = {
+  'case-study': 'Không tìm thấy case study.',
+  post: 'Không tìm thấy bài viết.',
+}
+
+/** Nút chạy denylist cho một case study hoặc bài viết qua POST /api/me/check-denylist. */
+export function DenylistCheck({ kind, slug }: { kind: CheckKind; slug: string }) {
   const [state, setState] = useState<State>({ kind: 'idle' })
 
   async function run() {
@@ -16,7 +21,7 @@ export function DenylistCheck({ slug }: { slug: string }) {
     const res = await fetch('/api/me/check-denylist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug }),
+      body: JSON.stringify({ kind, slug }),
     }).catch(() => null)
     if (!res) return setState({ kind: 'error', message: 'Không gọi được API.' })
     if (res.status === 401)
@@ -31,12 +36,12 @@ export function DenylistCheck({ slug }: { slug: string }) {
         {state.kind === 'loading' ? 'Đang kiểm…' : 'Kiểm denylist'}
       </Button>
       {state.kind === 'error' && <Alert severity="error">{state.message}</Alert>}
-      {state.kind === 'done' && <Result result={state.result} />}
+      {state.kind === 'done' && <Result kind={kind} result={state.result} />}
     </Stack>
   )
 }
 
-function Result({ result }: { result: CaseStudyCheck }) {
+function Result({ kind, result }: { kind: CheckKind; result: ContentCheck }) {
   switch (result.status) {
     case 'clean':
       return <Alert severity="success">Sạch — không khớp từ khóa nào trong denylist.</Alert>
@@ -66,6 +71,6 @@ function Result({ result }: { result: CaseStudyCheck }) {
     case 'empty-denylist':
       return <Alert severity="warning">Denylist rỗng — chưa kiểm được.</Alert>
     default:
-      return <Alert severity="error">Không tìm thấy case study.</Alert>
+      return <Alert severity="error">{NOT_FOUND[kind]}</Alert>
   }
 }

@@ -1,4 +1,4 @@
-import { checkCaseStudy } from '@/utils/denylist'
+import { checkContentFile, isCheckKind } from '@/utils/denylist'
 import { isSlug } from '@/utils/private-content-schema'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
@@ -11,8 +11,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   const slug = req.body?.slug
   if (!isSlug(slug)) return res.status(400).json({ message: 'Invalid slug' })
+  // Thiếu kind = case study: nút cũ chỉ gửi { slug }.
+  const kind = req.body?.kind ?? 'case-study'
+  if (!isCheckKind(kind)) return res.status(400).json({ message: 'Invalid kind' })
 
-  const result = await checkCaseStudy(slug)
+  const result = await checkContentFile(kind, slug)
   if (result.status === 'not-found') return res.status(404).json(result)
   return res.status(200).json(result)
 }
