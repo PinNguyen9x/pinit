@@ -7,7 +7,16 @@
 // thẻ là xoá mất ngày ôn trước của nó. Nên lịch sử phải nằm ở log riêng.
 import { appendFile, mkdir, readFile, rename, writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
-import { cardKey, FlashcardState, Rating, schedule } from './flashcard-schedule'
+import {
+  cardKey,
+  cardStatus,
+  CardStatus,
+  countByStatus,
+  FlashcardState,
+  orderCards,
+  Rating,
+  schedule,
+} from './flashcard-schedule'
 import { practiceLogPath } from './practice'
 import { vnDay } from './practice-insights'
 import { loadNote, loadTopic } from './private-content'
@@ -46,6 +55,10 @@ export async function topicCards(topic: unknown): Promise<Flashcard[] | null> {
     const note = await loadNote(index.slug, n.slug)
     if (note) groups.push({ source: note.data.title, questions: note.data.questions })
   }
+  return toCards(index.slug, groups)
+}
+
+function toCards(prefix: string, groups: { source: string; questions: Question[] }[]) {
   const cards: Flashcard[] = []
   const usedIds = new Set<string>()
   for (const g of groups) {
@@ -54,10 +67,41 @@ export async function topicCards(topic: unknown): Promise<Flashcard[] | null> {
       // id trùng giữa hai note: loadTopic đã báo lỗi; thẻ sau quay về key theo vị trí.
       const id = q.id && !usedIds.has(q.id) ? q.id : null
       if (id) usedIds.add(id)
-      cards.push({ key: cardKey(index.slug, id ?? i), index: i, q: q.q, a: q.a, source: g.source })
+      cards.push({ key: cardKey(prefix, id ?? i), index: i, q: q.q, a: q.a, source: g.source })
     }
   }
   return cards
+}
+
+export interface DeckCardData {
+  index: number
+  q: string
+  a: string
+  source: string
+  status: CardStatus
+  due: string | null
+}
+
+/**
+ * Thẻ đã xếp thứ tự + đếm theo trạng thái, để trang render deck. Tính ở server theo
+ * ngày giờ VN — client không tự tính "hôm nay" để khỏi lệch múi giờ.
+ */
+export function buildDeck(all: Flashcard[], state: FlashcardState, today: string) {
+  const ordered = orderCards(all, state, today)
+  const cards: DeckCardData[] = ordered.map((c) => ({
+    index: c.index,
+    q: c.q,
+    a: c.a,
+    source: c.source,
+    status: cardStatus(state[c.key], today),
+    due: state[c.key]?.due ?? null,
+  }))
+  const counts = countByStatus(
+    ordered.map((c) => c.key),
+    state,
+    today,
+  )
+  return { cards, counts }
 }
 
 function sanitize(raw: unknown): FlashcardState {

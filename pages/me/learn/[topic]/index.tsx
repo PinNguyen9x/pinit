@@ -6,8 +6,7 @@ import { DeckCard, FlashcardDeck } from '@/components/me/flashcard-deck'
 import { TagList } from '@/components/me/tag-list'
 import { renderMarkdown } from '@/utils/markdown'
 import { requireOwner } from '@/utils/owner-auth'
-import { cardStatus, countByStatus, orderCards } from '@/utils/flashcard-schedule'
-import { readFlashcardState, topicCards } from '@/utils/flashcards'
+import { buildDeck, readFlashcardState, topicCards } from '@/utils/flashcards'
 import { vnDay } from '@/utils/practice-insights'
 import { loadRoadmap, loadTopic } from '@/utils/private-content'
 import type { NoteMeta } from '@/utils/private-content-schema'
@@ -171,22 +170,7 @@ export const getServerSideProps: GetServerSideProps<TopicPageProps> = async (ctx
   const milestones = (roadmap?.data ?? [])
     .filter((m) => m.topics.includes(topic.slug))
     .map(({ id, title, lane, target, status }) => ({ id, title, lane, target, status }))
-  // Xếp thẻ ở server theo ngày giờ VN — client không tự tính "hôm nay" để khỏi lệch múi giờ.
-  const today = vnDay(Date.now())
-  const ordered = orderCards(all ?? [], state, today)
-  const cards: DeckCard[] = ordered.map((c) => ({
-    index: c.index,
-    q: c.q,
-    a: c.a,
-    source: c.source,
-    status: cardStatus(state[c.key], today),
-    due: state[c.key]?.due ?? null,
-  }))
-  const cardCounts = countByStatus(
-    ordered.map((c) => c.key),
-    state,
-    today,
-  )
+  const { cards, counts: cardCounts } = buildDeck(all ?? [], state, vnDay(Date.now()))
   return {
     props: {
       topic,
