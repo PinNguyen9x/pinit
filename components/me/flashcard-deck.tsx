@@ -1,16 +1,10 @@
 import { CardStatus, Rating, RATING_LABEL, RATINGS } from '@/utils/flashcard-schedule'
+import type { DeckCardData } from '@/utils/flashcards'
 import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ProgressBar } from './progress-ring'
 
-export interface DeckCard {
-  index: number
-  q: string
-  a: string
-  source: string
-  status: CardStatus
-  due: string | null
-}
+export type DeckCard = DeckCardData
 
 const RATING_COLOR: Record<Rating, 'error' | 'warning' | 'success'> = {
   forgot: 'error',
