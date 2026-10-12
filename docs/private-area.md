@@ -293,7 +293,8 @@ biệt hoa thường, sau khi chuẩn hoá Unicode NFC cả hai phía.
   `{ topic, question, answer }` → `{ score 0–10, missing[], followUp }`. Cả hai sau middleware.
 - Chỉ gửi `learn/<topic>/` (index.md trước, rồi note theo `updated` mới nhất), cắt ở
   12.000 ký tự theo ranh giới note — UI báo note nào bị bỏ. Không bao giờ gửi
-  `case-studies/`, `roadmap.yaml`, `.denylist`.
+  `case-studies/`, `roadmap.yaml`, `.denylist` — kể cả `questions[]` của case study: chúng
+  chỉ thành flashcard (`case/<slug>/<id>` trong `flashcard-state.json`), không lên model.
 - Quota **40 request/giờ chung cho cả hai API, toàn cục** (không theo IP) — chặn đốt
   tiền nếu cookie lộ. Một lượt = 1 generate + 5 grade. Đếm trong RAM: restart là reset.
 - Timeout 30s, không retry. Output model sai schema / refusal / bị cắt → 502, không

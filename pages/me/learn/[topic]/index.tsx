@@ -118,7 +118,7 @@ export default function TopicPage({
             {cardCounts.due} đến hạn · {cardCounts.new} mới · {cardCounts.later} chưa tới hạn
           </Typography>
         </Stack>
-        <FlashcardDeck topic={topic.slug} cards={cards} />
+        <FlashcardDeck target={{ topic: topic.slug }} cards={cards} />
       </Box>
 
       <Box mt={5}>
