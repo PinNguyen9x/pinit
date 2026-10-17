@@ -215,6 +215,47 @@ export async function loadRoadmap(): Promise<WithErrors<Milestone[]> | null> {
 
 // ---------- learn ----------
 
+/**
+ * `questions[]` trong frontmatter — dùng chung cho note và case study. Không phải
+ * mảng là lỗi schema (`problems`, bỏ cả file); một câu hỏng chỉ bỏ câu đó (`errors`).
+ */
+function parseQuestions(
+  raw: unknown,
+  file: string,
+  errors: string[],
+  problems: string[],
+): Question[] {
+  const questions: Question[] = []
+  if (raw != null && !Array.isArray(raw)) {
+    problems.push('questions phải là mảng { q, a }')
+    return questions
+  }
+  ;((raw as any[]) ?? []).forEach((item, i) => {
+    const q = nonEmptyString(item?.q)
+    const a = nonEmptyString(item?.a)
+    // Một câu hỏng không đáng làm mất cả file — bỏ câu đó, giữ phần còn lại.
+    if (!q || !a) {
+      errors.push(`${file}: questions[${i}] thiếu q hoặc a`)
+      return
+    }
+    // id sai/trùng không bỏ câu hỏi — chỉ bỏ id, flashcard quay về key theo vị trí.
+    let id: string | null = null
+    if (item?.id != null) {
+      if (!isQuestionId(item.id)) {
+        errors.push(
+          `${file}: questions[${i}] id "${item.id}" phải bắt đầu bằng chữ cái, chỉ gồm a-z 0-9 - _`,
+        )
+      } else if (questions.some((x) => x.id === item.id)) {
+        errors.push(`${file}: questions[${i}] id "${item.id}" trùng`)
+      } else {
+        id = item.id
+      }
+    }
+    questions.push({ q, a, id })
+  })
+  return questions
+}
+
 export function parseNote(raw: string, slug: string, file: string): WithErrors<Note | null> {
   const errors: string[] = []
   const fm = parseFrontmatter(raw, file, errors)
@@ -227,34 +268,7 @@ export function parseNote(raw: string, slug: string, file: string): WithErrors<N
   if (!title) problems.push('thiếu title')
   if (!tags) problems.push('tags phải là mảng chuỗi')
 
-  const questions: Question[] = []
-  if (data.questions != null && !Array.isArray(data.questions)) {
-    problems.push('questions phải là mảng { q, a }')
-  } else {
-    ;((data.questions as any[]) ?? []).forEach((item, i) => {
-      const q = nonEmptyString(item?.q)
-      const a = nonEmptyString(item?.a)
-      // Một câu hỏng không đáng làm mất cả note — bỏ câu đó, giữ phần còn lại.
-      if (!q || !a) {
-        errors.push(`${file}: questions[${i}] thiếu q hoặc a`)
-        return
-      }
-      // id sai/trùng không bỏ câu hỏi — chỉ bỏ id, flashcard quay về key theo vị trí.
-      let id: string | null = null
-      if (item?.id != null) {
-        if (!isQuestionId(item.id)) {
-          errors.push(
-            `${file}: questions[${i}] id "${item.id}" phải bắt đầu bằng chữ cái, chỉ gồm a-z 0-9 - _`,
-          )
-        } else if (questions.some((x) => x.id === item.id)) {
-          errors.push(`${file}: questions[${i}] id "${item.id}" trùng`)
-        } else {
-          id = item.id
-        }
-      }
-      questions.push({ q, a, id })
-    })
-  }
+  const questions = parseQuestions(data.questions, file, errors, problems)
   if (data.updated != null && !normalizeDate(data.updated, 'day')) {
     problems.push('updated phải có dạng YYYY-MM-DD')
   }
@@ -385,6 +399,7 @@ export function parseCaseStudy(
   if (data.updated != null && !normalizeDate(data.updated, 'day')) {
     problems.push('updated phải có dạng YYYY-MM-DD')
   }
+  const questions = parseQuestions(data.questions, file, errors, problems)
 
   if (problems.length) {
     errors.push(`${file}: ${problems.join(', ')}`)
@@ -398,6 +413,7 @@ export function parseCaseStudy(
       tags: tags!,
       visibility: visibility!,
       updated: normalizeDate(data.updated, 'day'),
+      questions,
       body: content,
     },
     errors,
@@ -505,7 +521,7 @@ export async function listCaseStudies(): Promise<WithErrors<CaseStudyMeta[]>> {
     if (!cs) continue
     errors.push(...cs.errors)
     if (cs.data) {
-      const { body: _body, ...meta } = cs.data
+      const { body: _body, questions: _questions, ...meta } = cs.data
       items.push(meta)
     }
   }

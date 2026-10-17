@@ -9,6 +9,8 @@ import handler from '@/pages/api/me/check-denylist'
 const dir = mkdtempSync(join(tmpdir(), 'pinit-api-'))
 mkdirSync(join(dir, 'case-studies'))
 writeFileSync(join(dir, 'case-studies/a.md'), '---\ntitle: A\n---\nGặp Acme')
+mkdirSync(join(dir, 'posts'))
+writeFileSync(join(dir, 'posts/b.md'), '---\ntitle: B\n---\nsạch\nAcme ở đây')
 afterAll(() => rmSync(dir, { recursive: true, force: true }))
 
 function call(body: unknown, method = 'POST') {
@@ -60,5 +62,22 @@ describe('POST /api/me/check-denylist', () => {
       status: 'matches',
       matches: [{ file: 'case-studies/a.md', line: 4, keyword: 'acme' }],
     })
+  })
+
+  it('kind post → kiểm file trong posts/', async () => {
+    writeFileSync(join(dir, '.denylist'), 'acme\n')
+    const r = await call({ kind: 'post', slug: 'b' })
+    expect(r.json).toEqual({
+      status: 'matches',
+      matches: [{ file: 'posts/b.md', line: 5, keyword: 'acme' }],
+    })
+  })
+
+  it('slug của case study không tìm thấy khi hỏi kind post → 404', async () => {
+    expect((await call({ kind: 'post', slug: 'a' })).status).toBe(404)
+  })
+
+  it.each(['learn', 'toString', '', 42])('kind %j → 400', async (kind) => {
+    expect((await call({ kind, slug: 'a' })).status).toBe(400)
   })
 })

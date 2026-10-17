@@ -78,6 +78,8 @@ export interface CaseStudyMeta {
 }
 
 export interface CaseStudy extends CaseStudyMeta {
+  /** Flashcard trên trang case study, key `case/<slug>/<id>`. Không bao giờ gửi lên model. */
+  questions: Question[]
   body: string
 }
 

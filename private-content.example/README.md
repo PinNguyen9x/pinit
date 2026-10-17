@@ -11,7 +11,7 @@ Chạy local với bộ mẫu này:
 roadmap.yaml                 milestones theo lane (+ topics, checklist tuỳ chọn)
 learn/<topic>/index.md       tổng quan topic (bắt buộc)
 learn/<topic>/<note>.md      từng note
-case-studies/<slug>.md       case study đã ẩn danh
+case-studies/<slug>.md       case study đã ẩn danh (questions[] tuỳ chọn → flashcard)
 .denylist                    từ khóa cấm (gitignore) — mẫu: denylist.example
 ```
 
@@ -58,3 +58,7 @@ questions:
   (đổi thứ tự note) làm xáo lịch ôn của các thẻ phía sau.
 - Thêm `id` cho câu **đã ôn** = thẻ đó bắt đầu lại lịch từ đầu (một lần). `id` sai dạng
   hoặc trùng trong topic bị bỏ kèm lỗi trên trang; câu hỏi vẫn giữ.
+
+Case study cũng nhận `questions[]` cùng cú pháp và cùng luật `id`; thẻ hiện trên trang
+case study, lịch ôn lưu theo `case/<slug>/<id>`. Câu hỏi case study **không** đi vào
+`/me/practice` — case study không bao giờ được gửi lên model.

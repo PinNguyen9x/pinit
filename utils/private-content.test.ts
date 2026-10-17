@@ -95,7 +95,9 @@ describe('private-content.example', () => {
       ['public-candidate-example', 'public-candidate'],
       ['example-migration', 'private'],
     ])
-    expect((await loadCaseStudy('example-migration'))?.data?.body).toContain('## Bối cảnh')
+    const cs = (await loadCaseStudy('example-migration'))?.data
+    expect(cs?.body).toContain('## Bối cảnh')
+    expect(cs?.questions.map((q) => q.id)).toEqual(['measure-e2e-latency'])
   })
 
   it.each([
@@ -281,6 +283,44 @@ describe('parseCaseStudy', () => {
     const r = parseCaseStudy('---\ntitle: T\nsummary: S\nvisibility: public\n---\n', 's', 'f.md')
     expect(r.data).toBeNull()
     expect(r.errors[0]).toContain('visibility')
+  })
+
+  it('questions[] cùng luật với note: câu hỏng bị bỏ, id sai/trùng chỉ bỏ id', () => {
+    const r = parseCaseStudy(
+      [
+        '---',
+        'title: T',
+        'summary: S',
+        'questions:',
+        '  - { id: pool, q: "Q0", a: "A0" }',
+        '  - { q: "Q1" }',
+        '  - { id: pool, q: "Q2", a: "A2" }',
+        '  - { id: "9x", q: "Q3", a: "A3" }',
+        '---',
+        '',
+      ].join('\n'),
+      's',
+      'f.md',
+    )
+    expect(r.data?.questions).toEqual([
+      { id: 'pool', q: 'Q0', a: 'A0' },
+      { id: null, q: 'Q2', a: 'A2' },
+      { id: null, q: 'Q3', a: 'A3' },
+    ])
+    expect(r.errors).toEqual([
+      'f.md: questions[1] thiếu q hoặc a',
+      'f.md: questions[2] id "pool" trùng',
+      'f.md: questions[3] id "9x" phải bắt đầu bằng chữ cái, chỉ gồm a-z 0-9 - _',
+    ])
+  })
+
+  it('không có questions → mảng rỗng; questions không phải mảng → bỏ cả file', () => {
+    expect(parseCaseStudy('---\ntitle: T\nsummary: S\n---\n', 's', 'f.md').data?.questions).toEqual(
+      [],
+    )
+    const bad = parseCaseStudy('---\ntitle: T\nsummary: S\nquestions: x\n---\n', 's', 'f.md')
+    expect(bad.data).toBeNull()
+    expect(bad.errors[0]).toContain('questions phải là mảng')
   })
 })
 

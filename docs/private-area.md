@@ -234,7 +234,7 @@ Không cần restart: mọi trang đọc file lúc request.
 Viết trực tiếp tại `/srv/pinit-private/content/.denylist` — **không commit** (repo
 content đã `.gitignore` file này, và `git pull` không đụng tới file untracked). Tên
 nội bộ không đi qua GitHub, không đi qua phiên làm việc với AI. Nút *Kiểm denylist*
-trên trang case study đọc file này. Muốn quét toàn bộ content bằng
+trên trang case study và bài viết đọc file này. Muốn quét toàn bộ content bằng
 `npm run check:denylist` trên máy owner: clone repo content vào thư mục tạm, chép
 `.denylist` từ VPS vào đó, chạy `PRIVATE_CONTENT_DIR=<thư-mục-tạm> npm run check:denylist`
 trong repo `pinit`, rồi xoá thư mục tạm.
@@ -280,8 +280,10 @@ biệt hoa thường, sau khi chuẩn hoá Unicode NFC cả hai phía.
   `listScanTargets` trong `utils/denylist.ts`** — quên là loại content đó lách hẳn hàng rào,
   và lách im lặng vì script vẫn exit `0`. Exit `0` sạch · `1` có khớp · `2` chưa có/rỗng denylist
   hoặc không có thư mục content. Từ khóa ≤ 3 ký tự chỉ bị cảnh báo.
-- Nút **Kiểm denylist** trên trang case study gọi `POST /api/me/check-denylist`
-  (`{ slug }`, sau middleware) để kiểm riêng file đó.
+- Nút **Kiểm denylist** trên trang case study và trang bài viết gọi
+  `POST /api/me/check-denylist` (`{ kind: "case-study" | "post", slug }`, thiếu `kind` thì
+  là case study; sau middleware) để kiểm riêng file đó. Thêm loại content có trang chi tiết
+  thì thêm vào `CHECK_DIRS` trong `utils/denylist.ts`.
 - **Đừng chạy script trên CI có log public**: output in nguyên từ khóa — chính những
   tên nội bộ cần giấu.
 
@@ -291,7 +293,8 @@ biệt hoa thường, sau khi chuẩn hoá Unicode NFC cả hai phía.
   `{ topic, question, answer }` → `{ score 0–10, missing[], followUp }`. Cả hai sau middleware.
 - Chỉ gửi `learn/<topic>/` (index.md trước, rồi note theo `updated` mới nhất), cắt ở
   12.000 ký tự theo ranh giới note — UI báo note nào bị bỏ. Không bao giờ gửi
-  `case-studies/`, `roadmap.yaml`, `.denylist`.
+  `case-studies/`, `roadmap.yaml`, `.denylist` — kể cả `questions[]` của case study: chúng
+  chỉ thành flashcard (`case/<slug>/<id>` trong `flashcard-state.json`), không lên model.
 - Quota **40 request/giờ chung cho cả hai API, toàn cục** (không theo IP) — chặn đốt
   tiền nếu cookie lộ. Một lượt = 1 generate + 5 grade. Đếm trong RAM: restart là reset.
 - Timeout 30s, không retry. Output model sai schema / refusal / bị cắt → 502, không

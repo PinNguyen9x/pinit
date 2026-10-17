@@ -1,16 +1,13 @@
 import { CardStatus, Rating, RATING_LABEL, RATINGS } from '@/utils/flashcard-schedule'
+import type { DeckCardData } from '@/utils/flashcards'
 import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ProgressBar } from './progress-ring'
 
-export interface DeckCard {
-  index: number
-  q: string
-  a: string
-  source: string
-  status: CardStatus
-  due: string | null
-}
+export type DeckCard = DeckCardData
+
+/** Thẻ thuộc deck nào — gửi nguyên vào body của POST /api/me/flashcard/rate. */
+export type DeckTarget = { topic: string } | { caseStudy: string }
 
 const RATING_COLOR: Record<Rating, 'error' | 'warning' | 'success'> = {
   forgot: 'error',
@@ -25,11 +22,11 @@ const STATUS_LABEL: Record<CardStatus, string> = {
 }
 
 /**
- * Flashcard từ questions[] của topic. Lượt ôn mặc định = thẻ đến hạn + thẻ mới;
+ * Flashcard từ questions[] của topic hoặc case study. Lượt ôn mặc định = thẻ đến hạn + thẻ mới;
  * hết thì cho ôn thêm cả thẻ chưa tới hạn. Câu hỏi/đáp án là nội dung owner tự
  * viết — vẫn render text thuần (pre-wrap), không qua pipeline markdown.
  */
-export function FlashcardDeck({ topic, cards }: { topic: string; cards: DeckCard[] }) {
+export function FlashcardDeck({ target, cards }: { target: DeckTarget; cards: DeckCard[] }) {
   const initialQueue = useMemo(() => cards.filter((c) => c.status !== 'later'), [cards])
   const [queue, setQueue] = useState<DeckCard[]>(initialQueue)
   const [pos, setPos] = useState(0)
@@ -49,7 +46,7 @@ export function FlashcardDeck({ topic, cards }: { topic: string; cards: DeckCard
       const res = await fetch('/api/me/flashcard/rate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, index: card.index, rating }),
+        body: JSON.stringify({ ...target, index: card.index, rating }),
       }).catch(() => null)
       setBusy(false)
       if (!res?.ok) {
@@ -65,7 +62,7 @@ export function FlashcardDeck({ topic, cards }: { topic: string; cards: DeckCard
       setRevealed(false)
       setPos((p) => p + 1)
     },
-    [busy, card, topic],
+    [busy, card, target],
   )
 
   // Phím tắt trên desktop: Space lộ đáp án, 1/2/3 đánh giá.
@@ -84,7 +81,7 @@ export function FlashcardDeck({ topic, cards }: { topic: string; cards: DeckCard
   }, [done, rate, revealed])
 
   if (!cards.length) {
-    return <Alert severity="info">Topic này chưa có câu hỏi trong frontmatter (questions[]).</Alert>
+    return <Alert severity="info">Chưa có câu hỏi trong frontmatter (questions[]).</Alert>
   }
 
   if (!queue.length || done) {
