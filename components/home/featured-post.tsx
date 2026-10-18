@@ -8,7 +8,7 @@ interface FeaturedPostProps {
 }
 
 /**
- * Bài mới nhất, cỡ lớn — điểm nhấn của trang chủ. Vệt xanh `log-marker` dưới
+ * Bài mới nhất, cỡ lớn — điểm nhấn của trang chủ. Gạch xanh `log-marker` dưới
  * tiêu đề (globals.css) quét một lần lúc tải trang: animation duy nhất của trang.
  *
  * Cả thẻ là một link; hover chỉ đổi màu viền và làm đậm gạch chân "Đọc bài",
