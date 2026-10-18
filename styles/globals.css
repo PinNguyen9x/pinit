@@ -197,6 +197,27 @@ a {
   --heat-4: #16a34a;
 }
 
+/* ===== Màu track của blog (trang chủ) =====
+   Một màu cho mỗi track trong constants/tracks.ts, tên biến là --track-<key>.
+   Dùng ở thanh tỷ lệ cột Chủ đề (components/home/topic-nav.tsx). Không có xanh
+   lá — xanh dành cho link và điểm nhấn — và không có đất nung. Bản tối cùng độ
+   sáng để không track nào nổi hơn track nào; bản sáng đậm hơn một nấc cho đủ
+   tương phản trên nền giấy. Thêm track mới thì thêm biến ở cả hai khối. */
+:root {
+  --track-ai-agents: #b39ddb;
+  --track-devops: #7fb3e0;
+  --track-distributed: #e0b45c;
+  --track-frontend: #e290ac;
+  --track-terminal-git: #6fc4c4;
+}
+:root[data-theme='light'] {
+  --track-ai-agents: #6e56a8;
+  --track-devops: #2f6e9e;
+  --track-distributed: #96660e;
+  --track-frontend: #a8446a;
+  --track-terminal-git: #23787a;
+}
+
 .diagram {
   display: flex;
   justify-content: center;
