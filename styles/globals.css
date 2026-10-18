@@ -40,24 +40,29 @@ a {
   background: color-mix(in srgb, var(--color-accent) 28%, transparent);
 }
 
-/* Vệt xanh dưới bài mới nhất trong khối nhật ký trang chủ (components/home/
-   recent-log.tsx) — điểm nhấn duy nhất của trang. Vẽ bằng background chứ
-   không phải border để vệt nằm sau chữ và gãy dòng theo chữ (clone). */
+/* Gạch xanh dưới tiêu đề bài nổi bật trên trang chủ (components/home/
+   featured-post.tsx) — điểm nhấn duy nhất của trang.
+
+   Là gạch chân ĐẶC 3px nằm dưới chân chữ, không phải dải bút dạ quang trong
+   mờ: bản cũ (xanh alpha 30%, phủ 42% chiều cao dưới chữ) đè lên nửa dưới con
+   chữ với mép mềm, ở cỡ 27px trên màn retina trông như chữ bị blur.
+
+   Vẽ bằng background (không dùng text-decoration) để quét được bằng
+   background-size; clone để mỗi dòng có gạch riêng khi tiêu đề xuống dòng.
+   padding-bottom đẩy gạch xuống dưới phần chân chữ (g, y, p) thay vì cắt qua. */
 .log-marker {
-  background-image: linear-gradient(
-    color-mix(in srgb, var(--color-accent) 30%, transparent),
-    color-mix(in srgb, var(--color-accent) 30%, transparent)
-  );
+  padding-bottom: 0.12em;
+  background-image: linear-gradient(var(--color-accent), var(--color-accent));
   background-repeat: no-repeat;
-  background-position: 0 90%;
-  background-size: 100% 42%;
+  background-position: 0 100%;
+  background-size: 100% 3px;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
 
-/* Moment duy nhất lúc load: vệt quét trái → phải một lần, dẫn mắt tới bài nên
+/* Moment duy nhất lúc load: gạch quét trái → phải một lần, dẫn mắt tới bài nên
    đọc trước. Chỉ chạy khi người dùng không xin giảm chuyển động — ngược lại
-   vệt hiện sẵn (trạng thái tĩnh ở trên). */
+   gạch hiện sẵn (trạng thái tĩnh ở trên). */
 @media (prefers-reduced-motion: no-preference) {
   .log-marker {
     animation: log-marker-swipe 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 200ms both;
@@ -66,10 +71,10 @@ a {
 
 @keyframes log-marker-swipe {
   from {
-    background-size: 0% 42%;
+    background-size: 0% 3px;
   }
   to {
-    background-size: 100% 42%;
+    background-size: 100% 3px;
   }
 }
 
