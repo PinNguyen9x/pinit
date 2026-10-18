@@ -48,8 +48,9 @@ export function TopicNav({ tracks, extras }: TopicNavProps) {
 }
 
 // withBars: thanh mảnh dưới mỗi track, dài theo số bài so với track nhiều bài
-// nhất — đọc nhanh blog nặng về chủ đề nào. Thanh tĩnh, màu chữ phụ: đây là dữ
-// liệu, không phải link hay trạng thái nên không dùng xanh.
+// nhất — đọc nhanh blog nặng về chủ đề nào. Thanh tĩnh, mỗi track một màu
+// (--track-<key>, globals.css) nhưng không dùng xanh lá: đây là dữ liệu, không
+// phải link hay trạng thái.
 function TopicList({ items, withBars = false }: { items: TopicLink[]; withBars?: boolean }) {
   const max = Math.max(1, ...items.map((i) => i.count))
   return (
@@ -109,8 +110,8 @@ function TopicList({ items, withBars = false }: { items: TopicLink[]; withBars?:
                   width: `${(item.count / max) * 100}%`,
                   height: '100%',
                   borderRadius: 2,
-                  bgcolor: 'var(--color-ink-muted)',
-                  opacity: 0.7,
+                  // Màu riêng của track (globals.css); key lạ thì rơi về màu chữ phụ.
+                  bgcolor: `var(--track-${item.key}, var(--color-ink-muted))`,
                 }}
               />
             </Box>
