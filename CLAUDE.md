@@ -244,7 +244,11 @@ Ví dụ:
 ## Bắt buộc
 - Mỗi commit một thay đổi logic — không gộp nhiều việc
 - Chạy `npm run lint` trước khi commit
-- Không thêm co-author hay footer quảng cáo tool vào commit message
+- Không thêm co-author hay footer quảng cáo tool — áp cho **mọi thứ đi vào repo và GitHub**:
+  commit message, **mô tả PR**, comment trên PR/issue. Bản cũ chỉ viết "commit message" nên
+  agent đọc đúng nghĩa đen: mô tả PR không bị cấm, và dòng `🤖 Generated with Claude Code`
+  vẫn lọt vào PR #79, phải gỡ tay bằng `gh pr edit`. Mặc định của Claude Code là tự thêm
+  dòng đó vào PR description, nên phải chặn ở đây mới có tác dụng.
 - Nhận việc và cập nhật state qua Plane theo "Task workflow (Plane)" — không làm việc ngoài board
 - `npm run lint` fail mà không sửa được: state → `Blocked` + comment, KHÔNG chuyển `In Review`
 
