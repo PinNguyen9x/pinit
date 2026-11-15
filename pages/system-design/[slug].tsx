@@ -37,7 +37,7 @@ export default function LessonPage({ lesson, prev, next }: LessonPageProps) {
         data={{
           title: `${lesson.title} | System Design | Pin Nguyen`,
           description: lesson.summary,
-          thumbnailUrl: 'https://pinit-ten.vercel.app/favicon.ico',
+          thumbnailUrl: '/covers/pages/system-design.png',
           url: `https://pinit-ten.vercel.app/system-design/${lesson.slug}`,
         }}
       />

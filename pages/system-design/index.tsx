@@ -38,7 +38,7 @@ const SystemDesignRoadmap: NextPageWithLayout = () => {
           title: 'System Design — Lộ trình 13 buổi | Pin Nguyen',
           description:
             'Lộ trình ôn System Design Interview theo 13 buổi: CAP, load balancer, sharding, caching, CDN và các case study TinyURL, YouTube, Uber, Messaging.',
-          thumbnailUrl: 'https://pinit-ten.vercel.app/favicon.ico',
+          thumbnailUrl: '/covers/pages/system-design.png',
           url: 'https://pinit-ten.vercel.app/system-design',
         }}
       />
