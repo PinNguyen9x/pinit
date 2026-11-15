@@ -123,8 +123,13 @@ cmd_list() {
   local s
   for s in "${wanted[@]}"; do ids+=("$(state_id "$s")"); done
 
-  local json
-  json="$(api GET "/modules/$(module_id "$module")/module-issues/?per_page=100")"
+  # Resolve id ra dòng gán RIÊNG, đừng nhét `$(module_id …)` vào giữa tham số:
+  # `die` chạy trong command substitution chỉ giết subshell đó. Lồng trong một
+  # `$( )` khác thì substitution ngoài vẫn thành công, `set -e` không thấy gì,
+  # script đi tiếp với id rỗng và gọi API với URL thủng (`/modules//…`).
+  local mid json
+  mid="$(module_id "$module")"
+  json="$(api GET "/modules/$mid/module-issues/?per_page=100")"
 
   # Lọc state phía client: endpoint module-issues không nhận filter state, mà
   # lọc sai thì kết quả rỗng trông y hệt "hết việc" — tự lọc thì nhìn thấy cả
@@ -152,7 +157,12 @@ cmd_show() {
 cmd_state() {
   local item="${1:-}" want="${2:-}"
   need_arg "$item"; need_arg "$want"
-  api PATCH "/issues/$item/" "$(jq -nc --arg s "$(state_id "$want")" '{state:$s}')" \
+  # Cùng lý do như cmd_list: state gõ sai mà để `$(state_id …)` lồng trong
+  # `$(jq …)` thì chỉ in lỗi rồi vẫn gửi `{"state":""}` lên API, exit 0.
+  local sid body
+  sid="$(state_id "$want")"
+  body="$(jq -nc --arg s "$sid" '{state:$s}')"
+  api PATCH "/issues/$item/" "$body" \
     | jq -r 'if .id then "PINIT-\(.sequence_id) -> state \(.state)" else . end'
 }
 
