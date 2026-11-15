@@ -1,17 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="pinit">
   <title>pinit</title>
   <defs>
-    <linearGradient id="pinit-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+    <linearGradient id="pinit-spark" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#16a34a" />
       <stop offset=".55" stop-color="#10b981" />
       <stop offset="1" stop-color="#34d399" />
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#pinit-bg)" />
+  <!-- Nền lấy #07140d của lớp aurora trong globals.css, không phải đen thuần. -->
+  <rect width="64" height="64" rx="14" fill="#07140d" />
+  <!--
+    Ngôi sao 4 cánh của components/common/logo.tsx. Chỗ thắt nới từ 1.5 lên 2.2:
+    bản gốc vẽ ở 20px trong logo nên mảnh vẫn đẹp, còn co xuống favicon 16px thì
+    cánh mỏng dính lại thành dấu cộng. Dày quá (3.0) thì ngược lại, 16px ra viên
+    kim cương. Đo cả ba rồi mới chốt.
+  -->
   <path
-    d="M23.5 13v38M23.5 17h8a9 9 0 0 1 0 18h-8"
-    fill="none"
-    stroke="#fff"
-    stroke-width="8"
+    transform="translate(6 6) scale(2.6)"
+    d="M10 0 L12.2 7.8 L20 10 L12.2 12.2 L10 20 L7.8 12.2 L0 10 L7.8 7.8 Z"
+    fill="url(#pinit-spark)"
   />
 </svg>
