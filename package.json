@@ -69,6 +69,7 @@
     "agentic-mermaid": "^0.4.1",
     "eslint": "8.57.0",
     "eslint-config-next": "^15.3.0",
+    "sharp": "^0.34.5",
     "simple-icons": "^16.28.0",
     "tsx": "^4.23.15",
     "typescript": "5.5.3",

@@ -11,6 +11,7 @@
   - `pinit-tmux-terminal-git` → module `tmux-terminal-git`
   - `pinit-research-archify` → module `tmux-terminal-git`
   - `pinit-integration-cloudflares` → module `cloudflare`
+  - `pinit-frontend-favicon-pinit` → module `UI/UX`
 
   Worktree không có tên trong bảng trên (ví dụ `pinit-fix-content-blog`, hay `pinit` gốc)
   thì KHÔNG tự suy ra module từ tên gần giống — hỏi tôi. Đoán sai module id thì query
@@ -47,6 +48,23 @@ Khi tool `plane` trục trặc, đọc triệu chứng theo bảng này — đ�
   `${PLANE_API_KEY}`. Đây là ca hay gặp nhất và `claude mcp list` vẫn báo ✔ Connected,
   vì server chỉ kiểm tra biến rỗng hay không, chuỗi literal thì không rỗng nên lọt.
   Muốn test tầng auth thì gọi một tool đọc bất kỳ, đừng nhìn health check.
+- **`MCP server "plane" connection timed out after 30000ms`** → server chưa kịp *khởi động*,
+  token vô can. Server khai kiểu stdio; bản cũ chạy bằng `uvx plane-mcp-server stdio`, mà
+  `uvx` resolve + tải package **mỗi lần spawn**: đo 15/11/2026 cache nguội **79.5s** (84 gói,
+  botocore 15.6 MiB) so với cache ấm 2.5s — vượt budget 30s. Vì vậy nó hỏng ngắt quãng: cache
+  bị prune hay có bản mới là lần sau lại nguội. Đã vá bằng `uv tool install plane-mcp-server`
+  rồi trỏ MCP thẳng vào `~/.local/bin/plane-mcp-server stdio` (khởi động 1.4–1.6s).
+  Phân biệt với ca 403: timeout thì `curl` REST vẫn 200 trong dưới 1s.
+
+Khi MCP chết mà vẫn phải cập nhật board, dùng `scripts/plane.sh` — gọi thẳng REST API, cùng
+bảng ID với file này:
+
+    ./scripts/plane.sh list <module> [state ...]    # mặc định Todo + In Progress
+    ./scripts/plane.sh state <item-uuid> 'In Review'
+    ./scripts/plane.sh comment <item-uuid> '<p>…</p>'   # tag thô, đừng escape
+
+Script in kèm dòng `— N/M item khớp state —`: M là tổng item của module, nên list rỗng phân
+biệt được với module id sai. Thêm module mới thì sửa bảng ID **cả ở đây lẫn trong script**.
 
 Gốc rễ của hai lỗi sau: `PLANE_API_KEY` khai trong `~/.zshrc`, nhưng `pinit-agents.sh` phóng
 agent bằng `tmux new-session ... "$CLAUDE_CONT"` — truyền `claude` làm *command của pane*.
@@ -70,6 +88,7 @@ ID cố định — dùng thẳng, không cần tra (tool `module` và `project`
 - module `research-planed` — `4d198c44-ed66-4606-b8cf-76d5ce86e7ba`
 - module `tmux-terminal-git` — `4135fd88-de22-4a9a-a431-add12a5ed40e`
 - module `cloudflare` — `67fc16f7-e191-4909-b1f7-1dccdcd5b14e`
+- module `UI/UX` — `328e8253-807b-4c54-bc96-eaf04ec0657f`
 - state `Todo` — `d6f14d6c-c832-4003-8c26-4d94f14330ba`
 - state `In Progress` — `632c35fa-4945-4e2e-8723-2f3b58c8bff0`
 - state `In Review` — `6f9b66cb-d44a-4f33-8af3-69581d8d90f0`

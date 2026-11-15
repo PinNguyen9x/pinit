@@ -1,3 +1,5 @@
+import { existsSync } from 'fs'
+import { join } from 'path'
 import { describe, expect, it } from 'vitest'
 import { LESSONS } from './system-design'
 import { LESSON_TRACKS } from '@/models/system-design'
@@ -60,5 +62,15 @@ describe('LESSONS — toàn vẹn cấu trúc', () => {
   it('readingMinutes là số dương', () => {
     const invalid = LESSONS.filter((l) => !Number.isFinite(l.readingMinutes) || l.readingMinutes <= 0)
     expect(invalid.map((l) => l.slug)).toEqual([])
+  })
+
+  // /system-design/[slug] trỏ og:image vào /covers/system-design/<slug>.png.
+  // Thêm buổi mới mà quên `npx tsx scripts/generate-covers.mjs --pages` thì link
+  // chia sẻ ra ảnh 404 — crawler không báo lỗi, chỉ hiện thẻ trống.
+  it('mọi buổi có bìa og trong public/covers/system-design', () => {
+    const missing = LESSONS.filter(
+      (l) => !existsSync(join(process.cwd(), 'public/covers/system-design', `${l.slug}.png`)),
+    )
+    expect(missing.map((l) => l.slug)).toEqual([])
   })
 })

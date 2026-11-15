@@ -16,7 +16,20 @@
  * của chủ site. Font: máy này không có Inter/JetBrains Mono nên dùng
  * Helvetica Neue + Menlo (đã render thử để kiểm).
  *
+ * Trang tĩnh (glossary, system-design) chỉ có khổ OG, không có `-card`: chúng
+ * không bao giờ xuất hiện trong lưới card nên khổ thứ hai là file chết.
+ *
  * Chạy: node scripts/generate-covers.mjs [--works]
+ *       npx tsx scripts/generate-covers.mjs --pages
+ *
+ * `--pages` phải chạy qua **tsx**, không phải node: nó đọc `LESSONS` từ
+ * `constants/system-design.ts` để sinh bìa riêng cho từng buổi, mà node không
+ * chạy được TypeScript. Hai chế độ kia vẫn chạy bằng node như cũ — vì vậy
+ * import LESSONS là import động nằm trong nhánh `--pages`, không phải ở đầu file.
+ *
+ * ⚠️ Không cờ nào = sinh LẠI TOÀN BỘ bìa blog, kể cả bài không đổi — byte PNG
+ * lệch ở vài bìa cũ và `git status` bẩn theo. `--pages` thì không đụng tới
+ * `covers/blog/`, chạy riêng được.
  */
 import { createHash } from 'crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync } from 'fs'
@@ -247,6 +260,84 @@ async function generateBlogCovers() {
   if (noIcon.length) console.log(`  dùng glyph mặc định (${noIcon.length}): ${noIcon.join(', ')}`)
 }
 
+/**
+ * Bìa cho các trang tĩnh — danh sách khai ngay đây chứ không đọc từ dữ liệu như
+ * blog/works: chúng là trang viết tay, thêm một trang là thêm một dòng.
+ *
+ * `seed` chốt theme màu (xem pickTheme) nên ĐỪNG đổi khi đã publish: đổi seed là
+ * đổi màu bìa, link đã chia sẻ sẽ hiện ảnh khác hẳn ảnh người ta từng thấy.
+ */
+const PAGES = [
+  { out: 'glossary', kicker: 'Glossary · phần mềm & AI', footerRight: '/glossary', seed: 'glossary' },
+  {
+    out: 'glossary-muc-luc',
+    kicker: 'Mục lục · theo nhóm chủ đề',
+    footerRight: '/glossary/muc-luc',
+    seed: 'glossary-muc-luc',
+  },
+  {
+    out: 'system-design',
+    kicker: 'System Design · lộ trình 13 buổi',
+    footerRight: '/system-design',
+    seed: 'system-design',
+  },
+  {
+    out: 'system-design-cheat-sheet',
+    kicker: 'Cheat sheet · ôn 20 phút',
+    footerRight: '/system-design/cheat-sheet',
+    seed: 'system-design-cheat-sheet',
+  },
+]
+
+async function loadLessons() {
+  const url = new URL('../constants/system-design.ts', import.meta.url)
+  try {
+    const mod = await import(url.href)
+    return mod.LESSONS
+  } catch (err) {
+    throw new Error(
+      `không nạp được constants/system-design.ts (${err.message})\n` +
+        'Chế độ --pages phải chạy qua tsx: npx tsx scripts/generate-covers.mjs --pages',
+    )
+  }
+}
+
+async function generatePageCovers() {
+  const dir = join(OUT_DIR, 'pages')
+  mkdirSync(dir, { recursive: true })
+
+  for (const page of PAGES) {
+    // tags rỗng -> glyph mạng node mặc định; không map icon vì trang tĩnh không
+    // thuộc về một công nghệ nào, gán đại một logo chỉ gây hiểu sai chủ đề.
+    await render(ogSvg({ tags: [], ...page }), join(dir, `${page.out}.png`))
+  }
+  console.log(`pages: ${PAGES.length} trang × khổ OG -> public/covers/pages/`)
+
+  // Bìa riêng cho từng buổi system-design. Tên file theo slug nên trang
+  // [slug].tsx trỏ thẳng /covers/system-design/<slug>.png, không cần bảng tra.
+  // Thêm buổi mới thì phải chạy lại lệnh này — constants/system-design.test.ts
+  // có một ca canh đúng chỗ đó, CI đỏ nếu quên.
+  const lessons = await loadLessons()
+  const lessonDir = join(OUT_DIR, 'system-design')
+  mkdirSync(lessonDir, { recursive: true })
+
+  for (const lesson of lessons) {
+    // keywords KHÔNG dùng làm tags: chỉ đúng một buổi (Redis/Kafka ở buổi 4)
+    // khớp bảng TAG_ICON, 12 buổi còn lại rơi về glyph — một bộ lệch pha còn
+    // khó coi hơn cả bộ đồng nhất. Phân biệt bằng màu (seed = slug) và kicker.
+    await render(
+      ogSvg({
+        tags: [],
+        kicker: `Buổi ${lesson.order} · ${lesson.track}`,
+        footerRight: `${lesson.readingMinutes} min read`,
+        seed: lesson.slug,
+      }),
+      join(lessonDir, `${lesson.slug}.png`),
+    )
+  }
+  console.log(`system-design: ${lessons.length} buổi × khổ OG -> public/covers/system-design/`)
+}
+
 async function generateWorkCovers() {
   const dir = join(OUT_DIR, 'works')
   mkdirSync(dir, { recursive: true })
@@ -275,5 +366,7 @@ async function generateWorkCovers() {
 }
 
 if (!existsSync(BLOG_DIR)) throw new Error(`không thấy thư mục blog: ${BLOG_DIR}`)
-if (process.argv.slice(2).includes('--works')) await generateWorkCovers()
+const flags = process.argv.slice(2)
+if (flags.includes('--works')) await generateWorkCovers()
+else if (flags.includes('--pages')) await generatePageCovers()
 else await generateBlogCovers()

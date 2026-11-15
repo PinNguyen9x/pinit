@@ -82,8 +82,8 @@ const GlossaryIndex: NextPageWithLayout = () => {
           title: 'Mục lục Thuật ngữ theo nhóm | Pin Nguyen',
           description:
             'Mục lục thuật ngữ phần mềm & AI nhóm theo chủ đề — AI, Messaging, DevOps, Web… Tìm nhanh và nhảy tới phần giải thích chi tiết.',
-          thumbnailUrl: 'https://pinit-ten.vercel.app/favicon.ico',
-          url: 'https://pinit-ten.vercel.app/glossary/muc-luc',
+          thumbnailUrl: '/covers/pages/glossary-muc-luc.png',
+          url: '/glossary/muc-luc',
         }}
       />
       <BackgroundFx parallax={false} />

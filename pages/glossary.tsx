@@ -207,8 +207,8 @@ const Glossary: NextPageWithLayout = () => {
           title: 'Thuật ngữ Phần mềm & AI | Pin Nguyen',
           description:
             'Từ điển thuật ngữ phần mềm và AI giải thích bằng tiếng Việt — dễ hiểu, dễ nhớ. Tìm kiếm, lọc theo nhóm và nhảy nhanh theo A-Z.',
-          thumbnailUrl: 'https://pinit-ten.vercel.app/favicon.ico',
-          url: 'https://pinit-ten.vercel.app/glossary',
+          thumbnailUrl: '/covers/pages/glossary.png',
+          url: '/glossary',
         }}
       />
       <BackgroundFx parallax={false} />

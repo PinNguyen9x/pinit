@@ -23,8 +23,8 @@ const CheatSheet: NextPageWithLayout = () => {
           title: 'Cheat sheet System Design — ôn 20 phút trước phỏng vấn | Pin Nguyen',
           description:
             'Bản ôn gấp: con số cần thuộc, bảng chọn database, khung 45 phút trả lời phỏng vấn và một dòng chốt cho mỗi buổi trong lộ trình 13 buổi.',
-          thumbnailUrl: 'https://pinit-ten.vercel.app/favicon.ico',
-          url: 'https://pinit-ten.vercel.app/system-design/cheat-sheet',
+          thumbnailUrl: '/covers/pages/system-design-cheat-sheet.png',
+          url: '/system-design/cheat-sheet',
         }}
       />
       <BackgroundFx parallax={false} />

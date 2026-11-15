@@ -12,6 +12,13 @@ export default class MyDocument extends Document {
       <Html lang="en" data-theme="dark">
         <Head>
           <meta name="theme-color" content="#16a34a" />
+          {/* Bộ favicon sinh từ public/favicon.svg — xem scripts/generate-favicon.mjs.
+              Giữ cả .ico vì Safari và Edge/Firefox cũ bỏ qua rel="icon" kiểu SVG rồi
+              âm thầm rơi về /favicon.ico. */}
+          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+          <link rel="icon" href="/favicon.ico" sizes="48x48" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+          <link rel="manifest" href="/site.webmanifest" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link
