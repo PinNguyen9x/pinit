@@ -19,7 +19,13 @@
  * Trang tĩnh (glossary, system-design) chỉ có khổ OG, không có `-card`: chúng
  * không bao giờ xuất hiện trong lưới card nên khổ thứ hai là file chết.
  *
- * Chạy: node scripts/generate-covers.mjs [--works|--pages]
+ * Chạy: node scripts/generate-covers.mjs [--works]
+ *       npx tsx scripts/generate-covers.mjs --pages
+ *
+ * `--pages` phải chạy qua **tsx**, không phải node: nó đọc `LESSONS` từ
+ * `constants/system-design.ts` để sinh bìa riêng cho từng buổi, mà node không
+ * chạy được TypeScript. Hai chế độ kia vẫn chạy bằng node như cũ — vì vậy
+ * import LESSONS là import động nằm trong nhánh `--pages`, không phải ở đầu file.
  *
  * ⚠️ Không cờ nào = sinh LẠI TOÀN BỘ bìa blog, kể cả bài không đổi — byte PNG
  * lệch ở vài bìa cũ và `git status` bẩn theo. `--pages` thì không đụng tới
@@ -283,6 +289,19 @@ const PAGES = [
   },
 ]
 
+async function loadLessons() {
+  const url = new URL('../constants/system-design.ts', import.meta.url)
+  try {
+    const mod = await import(url.href)
+    return mod.LESSONS
+  } catch (err) {
+    throw new Error(
+      `không nạp được constants/system-design.ts (${err.message})\n` +
+        'Chế độ --pages phải chạy qua tsx: npx tsx scripts/generate-covers.mjs --pages',
+    )
+  }
+}
+
 async function generatePageCovers() {
   const dir = join(OUT_DIR, 'pages')
   mkdirSync(dir, { recursive: true })
@@ -293,6 +312,30 @@ async function generatePageCovers() {
     await render(ogSvg({ tags: [], ...page }), join(dir, `${page.out}.png`))
   }
   console.log(`pages: ${PAGES.length} trang × khổ OG -> public/covers/pages/`)
+
+  // Bìa riêng cho từng buổi system-design. Tên file theo slug nên trang
+  // [slug].tsx trỏ thẳng /covers/system-design/<slug>.png, không cần bảng tra.
+  // Thêm buổi mới thì phải chạy lại lệnh này — constants/system-design.test.ts
+  // có một ca canh đúng chỗ đó, CI đỏ nếu quên.
+  const lessons = await loadLessons()
+  const lessonDir = join(OUT_DIR, 'system-design')
+  mkdirSync(lessonDir, { recursive: true })
+
+  for (const lesson of lessons) {
+    // keywords KHÔNG dùng làm tags: chỉ đúng một buổi (Redis/Kafka ở buổi 4)
+    // khớp bảng TAG_ICON, 12 buổi còn lại rơi về glyph — một bộ lệch pha còn
+    // khó coi hơn cả bộ đồng nhất. Phân biệt bằng màu (seed = slug) và kicker.
+    await render(
+      ogSvg({
+        tags: [],
+        kicker: `Buổi ${lesson.order} · ${lesson.track}`,
+        footerRight: `${lesson.readingMinutes} min read`,
+        seed: lesson.slug,
+      }),
+      join(lessonDir, `${lesson.slug}.png`),
+    )
+  }
+  console.log(`system-design: ${lessons.length} buổi × khổ OG -> public/covers/system-design/`)
 }
 
 async function generateWorkCovers() {

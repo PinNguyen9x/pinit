@@ -37,7 +37,8 @@ export default function LessonPage({ lesson, prev, next }: LessonPageProps) {
         data={{
           title: `${lesson.title} | System Design | Pin Nguyen`,
           description: lesson.summary,
-          thumbnailUrl: '/covers/pages/system-design.png',
+          // Bìa riêng từng buổi, sinh bằng `npx tsx scripts/generate-covers.mjs --pages`.
+          thumbnailUrl: `/covers/system-design/${lesson.slug}.png`,
           url: `/system-design/${lesson.slug}`,
         }}
       />
