@@ -166,8 +166,17 @@ cmd_list() {
 
 cmd_show() {
   local item="${1:-}"; need_arg "$item"
-  api GET "/issues/$item/" | jq -r '
-    "PINIT-\(.sequence_id)  \(.name)\nstate: \(.state)\ncreated: \(.created_at)\n\n\(.description_stripped // "(không có mô tả)")"'
+  local json
+  json="$(api GET "/issues/$item/")"
+  [ -n "$json" ] || return 0
+
+  # Đổi state id sang tên như `list` vẫn làm. Hai lệnh in cùng một trường mà một
+  # bên ra tên một bên ra UUID thì người đọc phải tự tra bảng, trong khi script
+  # đã có sẵn state_name().
+  local st
+  st="$(printf '%s' "$json" | jq -r '.state')"
+  printf '%s' "$json" | jq -r --arg st "$(state_name "$st")" '
+    "PINIT-\(.sequence_id)  \(.name)\nstate: \($st)\ncreated: \(.created_at)\n\n\(.description_stripped // "(không có mô tả)")"'
 }
 
 cmd_state() {
