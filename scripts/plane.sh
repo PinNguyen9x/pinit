@@ -131,21 +131,37 @@ cmd_list() {
   mid="$(module_id "$module")"
   json="$(api GET "/modules/$mid/module-issues/?per_page=100")"
 
+  [ -n "$json" ] || return 0   # --dry-run: api() không trả body
+
+  # Mẫu số lấy `total_count` của API, KHÔNG lấy số phần tử trong `results`:
+  # hai số đó chỉ bằng nhau khi module gọn trong một trang. Lấy nhầm thì dòng
+  # tổng kết tự khẳng định mình đầy đủ trong đúng lúc nó đang thiếu.
+  local total got
+  total="$(printf '%s' "$json" | jq -r '.total_count // (.results | length)')"
+  got="$(printf '%s' "$json" | jq -r '.results | length')"
+
   # Lọc state phía client: endpoint module-issues không nhận filter state, mà
   # lọc sai thì kết quả rỗng trông y hệt "hết việc" — tự lọc thì nhìn thấy cả
   # tổng số để đối chiếu.
   local filter
   filter="$(printf '%s\n' "${ids[@]}" | jq -R . | jq -sc .)"
-  printf '%s' "$json" | jq -r --argjson want "$filter" '
+  printf '%s' "$json" | jq -r --argjson want "$filter" --argjson total "$total" '
     (.results // []) as $all
     | ($all | map(select(.state as $s | $want | index($s)))) as $hit
     | ($hit[] | "\(.sequence_id)\t\(.state)\t\(.id)\t\(.name)"),
-      "— \($hit | length)/\($all | length) item khớp state —"
+      "— \($hit | length)/\($total) item khớp state —"
   ' | while IFS=$'\t' read -r seq st id name; do
     if [ -z "${name:-}" ]; then echo "$seq"; else
       printf 'PINIT-%-4s %-12s %s  %s\n' "$seq" "$(state_name "$st")" "$id" "$name"
     fi
   done
+
+  # Script này không phân trang. Im lặng cắt ở item thứ 100 là đúng kiểu hỏng mà
+  # dòng tổng kết sinh ra để chống, nên nói thẳng ra stderr.
+  if [ "$got" -lt "$total" ]; then
+    echo "plane: CẢNH BÁO — mới đọc $got/$total item (API trả một trang), danh sách trên THIẾU." >&2
+    echo "plane: lọc lại bằng state hẹp hơn, hoặc gọi thẳng API kèm cursor." >&2
+  fi
 }
 
 cmd_show() {
