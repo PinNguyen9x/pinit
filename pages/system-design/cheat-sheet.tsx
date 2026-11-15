@@ -24,7 +24,7 @@ const CheatSheet: NextPageWithLayout = () => {
           description:
             'Bản ôn gấp: con số cần thuộc, bảng chọn database, khung 45 phút trả lời phỏng vấn và một dòng chốt cho mỗi buổi trong lộ trình 13 buổi.',
           thumbnailUrl: '/covers/pages/system-design-cheat-sheet.png',
-          url: 'https://pinit-ten.vercel.app/system-design/cheat-sheet',
+          url: '/system-design/cheat-sheet',
         }}
       />
       <BackgroundFx parallax={false} />

@@ -39,7 +39,7 @@ const SystemDesignRoadmap: NextPageWithLayout = () => {
           description:
             'Lộ trình ôn System Design Interview theo 13 buổi: CAP, load balancer, sharding, caching, CDN và các case study TinyURL, YouTube, Uber, Messaging.',
           thumbnailUrl: '/covers/pages/system-design.png',
-          url: 'https://pinit-ten.vercel.app/system-design',
+          url: '/system-design',
         }}
       />
       <BackgroundFx parallax={false} />

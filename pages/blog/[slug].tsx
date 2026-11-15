@@ -41,7 +41,10 @@ export default function BlogDetailPage({ post, toc, readingTime }: BlogDetailPag
           // Bìa sinh sẵn trong repo, không trỏ ra ảnh stock ngoài mạng.
           // Seo tự ghép tên miền vì og:image cần URL tuyệt đối.
           thumbnailUrl: post?.thumbnailUrl || '/covers/default.png',
-          url: `${process.env.HOST_URL}/blog/${post.slug}`,
+          // Trước đây ghép `process.env.HOST_URL` — biến không khai ở đâu và
+          // không có tiền tố NEXT_PUBLIC_ nên bundle client thay bằng undefined,
+          // og:url ra nguyên chuỗi "undefined/blog/...". Để Seo ghép như ảnh bìa.
+          url: `/blog/${post.slug}`,
         }}
       />
 

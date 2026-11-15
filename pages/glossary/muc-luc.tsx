@@ -83,7 +83,7 @@ const GlossaryIndex: NextPageWithLayout = () => {
           description:
             'Mục lục thuật ngữ phần mềm & AI nhóm theo chủ đề — AI, Messaging, DevOps, Web… Tìm nhanh và nhảy tới phần giải thích chi tiết.',
           thumbnailUrl: '/covers/pages/glossary-muc-luc.png',
-          url: 'https://pinit-ten.vercel.app/glossary/muc-luc',
+          url: '/glossary/muc-luc',
         }}
       />
       <BackgroundFx parallax={false} />

@@ -208,7 +208,7 @@ const Glossary: NextPageWithLayout = () => {
           description:
             'Từ điển thuật ngữ phần mềm và AI giải thích bằng tiếng Việt — dễ hiểu, dễ nhớ. Tìm kiếm, lọc theo nhóm và nhảy nhanh theo A-Z.',
           thumbnailUrl: '/covers/pages/glossary.png',
-          url: 'https://pinit-ten.vercel.app/glossary',
+          url: '/glossary',
         }}
       />
       <BackgroundFx parallax={false} />

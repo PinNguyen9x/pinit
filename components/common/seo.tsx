@@ -9,6 +9,10 @@ export interface SeoProps {
 // Ảnh bìa lưu dạng đường dẫn tương đối (/covers/...) để không phải nhúng tên
 // miền vào từng bài. Nhưng og:image và twitter:image bắt buộc URL tuyệt đối —
 // crawler của LinkedIn/Twitter/Facebook không có ngữ cảnh trang để tự ghép.
+//
+// `url` đi qua cùng một hàm, vì lý do y hệt: trang nào tự ghép tên miền thì tên
+// miền cũ sống sót ở đó sau khi đổi domain — đã xảy ra một lần với
+// pinit-ten.vercel.app. Trang truyền URL tuyệt đối vẫn được giữ nguyên.
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nipit.pro'
 
 function absoluteUrl(src?: string) {
@@ -18,7 +22,8 @@ function absoluteUrl(src?: string) {
 }
 
 export function Seo({ data }: SeoProps) {
-  const { title, description, url } = data
+  const { title, description } = data
+  const url = absoluteUrl(data.url)
   const thumbnailUrl = absoluteUrl(data.thumbnailUrl)
   return (
     <Head>
