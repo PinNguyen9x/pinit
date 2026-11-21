@@ -203,18 +203,20 @@ phải chậm, mà là agent làm đúng theo skill và sai theo repo.
 thì còn 25 file không ai sinh thêm, không ai trỏ tới. Giữ skill mà xóa `docs/ai/` thì skill
 chạy sẽ dựng lại thư mục. Nên quyết một lần cho cả hai, đừng tách.
 
-### Hai việc kèm theo, không thuộc G0-3
+### Đã duyệt và đã thực hiện
 
-Gỡ skill xong thì hai chỗ này sai, phải sửa trong cùng PR của G0-3:
+Chủ repo duyệt **cả nhóm 14 skill "GỠ"** ngày 21/11/2026, với lập luận quyết định là chuyện
+trùng vai chứ không phải chi phí context: `dev-pr` dạy "push rồi mở PR" trong khi `CLAUDE.md`
+cấm `git push` tuyệt đối.
 
-- `CLAUDE.md` dòng 146 và 190: "19 skill dev-*/task/tdd/..." → con số thật sau khi gỡ.
-  (Hiện cũng đã sai: 19 khai nhưng chỉ dựng được 17.)
-- `scripts/pinit-agents.sh` dòng 146: comment "Khôi phục 19 skill dev-*/task/tdd/...".
+Gỡ ở G0-3. Hai dòng "HOÃN" (`memory`, `verify`) **vẫn còn** — `memory` chờ quyết định về MCP,
+`verify` chờ `verify-pinit` ở G1-4 thay chỗ.
 
-### Chờ chủ repo duyệt
+Sau khi gỡ, `.ai-devkit.json` còn **3 skill**: `tdd`, `memory`, `verify`.
 
-> Duyệt từng dòng "GỠ" trong bảng, hoặc duyệt cả nhóm. **G0-3 không bắt đầu trước khi có
-> duyệt.** Hai dòng "HOÃN" (`memory`, `verify`) cố ý không nằm trong phạm vi G0-3.
+Bốn chỗ ghi "19 skill" đã sửa theo trong cùng commit G0-3: `CLAUDE.md` (3 chỗ),
+`scripts/pinit-agents.sh` (3 chỗ). Các con số 19/17 **còn lại trong file này là cố ý** —
+đây là ảnh chụp trạng thái *trước* khi dọn, giữ nguyên để sau này còn so được.
 ---
 
 ## 4. MCP server
