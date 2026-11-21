@@ -96,15 +96,15 @@ Nhãn "bỏ" ở đây nghĩa là **bỏ khỏi memory MCP**, không phải "n�
   nên guardrail biến mất ở repo khác. `CLAUDE.md` nói *dùng* scope user nhưng không nói
   đánh đổi này.
 
-**Đã chép, 21/11/2026.** Plane Wiki workspace `pin`, page
-*Runbook — Plane MCP: permission, dò workspace slug, đánh đổi scope user* —
-`178d0cdc-6569-4973-8546-1c53ed0e8346`.
+**Đã chép, 21/11/2026** → `docs/runbooks/plane-mcp.md`.
 
-Page gộp cả ba mục thành một runbook thay vì ba trang rời, và thêm một hệ quả vận hành mới đo
+Gộp cả ba mục thành một runbook thay vì ba trang rời, và thêm một hệ quả vận hành mới đo
 được: deny `mcp__plane__module` nghĩa là agent **không gán work item vào module được** —
 `workitem` action `update` cũng không nhận `module_ids`. Việc đó là tay trên UI.
 
-Xếp page vào collection *Runbook & Cheatsheet* là việc của chủ repo trên UI.
+Bản đầu tạo trên Plane Wiki (page `178d0cdc-6569-4973-8546-1c53ed0e8346`) rồi chuyển vào repo
+ngay trong ngày: **Wiki bị khoá sau paywall ở gói Free** nên chủ repo không mở được bằng trình
+duyệt, dù agent qua MCP vẫn đọc ghi bình thường. Lý do đầy đủ ở phụ lục của chính file runbook.
 
 ---
 
