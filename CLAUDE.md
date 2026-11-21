@@ -33,16 +33,21 @@ và ghi page bình thường, nhưng **tôi mở bằng trình duyệt thì ch�
 wiki"**. Một runbook mà chủ repo không mở được thì không làm được việc của nó. Vì vậy runbook
 mới viết thẳng vào `docs/runbooks/`, **không tạo page Wiki nữa**.
 
-Runbook đã có — **đọc trước khi tự mò lại**, nhất là khi task yêu cầu viết tài liệu về quy trình:
-- `docs/runbooks/plane-mcp.md` — vì sao không deny được một `action` riêng lẻ, cách dò
-  workspace slug bằng mã HTTP, đánh đổi của MCP scope user
-- *Runbook — MCP Plane 403 & env của tmux server* — `be9ed9c9-967b-4db2-bc9d-4b62b2c1dacc`
-  (chẩn lỗi MCP `plane`, cheatsheet `agents`/tmux, worktree thiếu `node_modules`)
-- *Runbook — Vòng đời một task với `agents`* — `3cf1c6d3-6cc6-4bf0-848e-6952a2214b5f`
-  (14 lệnh `agents`, vòng đời 9 bước worktree → PR → merge → sync, 12 ca lỗi kèm nguyên nhân)
+Runbook đã có, **tất cả trong `docs/runbooks/`** — đọc trước khi tự mò lại, nhất là khi task
+yêu cầu viết tài liệu về quy trình:
+- `plane-mcp.md` — vì sao không deny được một `action` riêng lẻ, cách dò workspace slug bằng
+  mã HTTP, đánh đổi của MCP scope user
+- `mcp-plane-403-tmux-env.md` — chẩn lỗi MCP `plane` 403, cheatsheet `agents`/tmux, worktree
+  thiếu `node_modules`
+- `vong-doi-task-agents.md` — 14 lệnh `agents`, vòng đời 9 bước worktree → PR → merge → sync,
+  12 ca lỗi kèm nguyên nhân
 
-Hai cái sau **còn kẹt trên Wiki**, chỉ đọc được bằng `page` action `retrieve`. Chưa xuất vì
-nặng (cái đầu ~195KB). Khi nào đụng tới thì xuất sang `docs/runbooks/` luôn.
+⚠️ **Khối code trong hai file xuất từ Wiki bị mất xuống dòng** — 14/14 khối ở
+`mcp-plane-403-tmux-env.md`, 4/11 ở `vong-doi-task-agents.md`. Mất từ lúc nội dung được ghi
+vào Plane chứ không phải do bước xuất (kiểm cả `description_html`, `description_json` và tài
+liệu Yjs trong `description_binary` — không tầng nào còn newline). Lệnh nhiều dòng trong đó
+**không copy-paste chạy được**, phải tự tách lại. Thấy chỗ nào tách được chắc chắn thì sửa
+thẳng vào file, đó là lợi thế của việc nó nằm trong repo.
 
 Config MCP `plane` nằm ở **scope user** (`~/.claude.json`), cố tình KHÔNG để trong `.mcp.json`
 của repo: token đọc qua `${PLANE_API_KEY}` là biến môi trường của máy, không phải thứ commit được.

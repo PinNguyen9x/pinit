@@ -129,5 +129,12 @@ Chuyển vào repo được bốn thứ Wiki không có:
 - không phụ thuộc gói Plane đang dùng;
 - `grep` được cùng lúc với code.
 
-Hai runbook cũ vẫn chỉ nằm trên Wiki, **chưa xuất** — chúng nặng (cái đầu ~195KB) nên để chủ
-repo quyết.
+Hai runbook cũ cũng đã xuất cùng ngày: `mcp-plane-403-tmux-env.md` và
+`vong-doi-task-agents.md`. Page gốc trên Plane vẫn còn, không xoá — nhưng từ nay chỉ đọc,
+runbook mới viết thẳng vào thư mục này.
+
+Lúc xuất mới lộ ra một khiếm khuyết có sẵn: **khối code trong hai page đó mất xuống dòng**
+(14/14 khối ở page thứ nhất, 4/11 ở page thứ hai). Mất từ lúc ghi vào Plane chứ không phải do
+bước xuất — kiểm cả ba tầng biểu diễn, kể cả tài liệu Yjs trong `description_binary`, không
+tầng nào còn newline trong `codeBlock`. Nằm trên Wiki thì khiếm khuyết đó không ai thấy và
+không ai sửa được; nằm trong repo thì sửa được bằng một commit.
