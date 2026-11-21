@@ -12,6 +12,10 @@ find pages -type f \( -name '*.tsx' -o -name '*.ts' \) | grep -v '^pages/api/' |
 **34 file** trong `pages/` ngoài `api/`, trừ `_app.tsx` và `_document.tsx` (không phải route)
 còn **32 route** — đủ 32 có mặt dưới đây.
 
+Bản **máy đọc được** của file này là `scripts/verify/routes.mjs`. Thêm route thì sửa cả hai:
+file này giữ *vì sao*, file kia giữ *điều kiện kiểm*. Chỉ sửa một bên thì verify bỏ qua route
+mới trong im lặng.
+
 ## Đọc bảng thế nào
 
 - **Điều kiện vào** — cần auth gì, cần biến môi trường gì. "—" là vào thẳng được.
@@ -73,7 +77,7 @@ khởi động, không chỉ đọc HTTP status.
 
 | URL | Điều kiện vào | Dữ liệu | Dấu hiệu đang chạy đúng |
 |---|---|---|---|
-| `/` | — | `getStaticProps` lúc build: 35 bài `blog/*.md` + `constants/*` **[ngoài]** works | 200; có 4 knowledge track; thẻ bài nổi bật có tiêu đề thật; thanh tỷ lệ chủ đề có màu |
+| `/` | — | `getStaticProps` lúc build: 35 bài `blog/*.md` + `constants/*` **[ngoài]** works | 200; có heading `Đọc theo chủ đề` và `Featured Works` |
 | `/about` | — | tĩnh trong component | 200; có nội dung giới thiệu |
 | `/blog` | — | `getStaticProps`: 35 file `blog/*.md` | 200; danh sách **35** bài, mỗi bài có ngày + tag |
 | `/blog/reactjs-techniques-hooks` | — | `getStaticPaths` theo `slug` ở frontmatter, `fallback: false` | 200; thân bài render; mục lục bên cạnh; nút Copy ở mỗi khối code |
@@ -94,10 +98,10 @@ trang của buổi đó vĩnh viễn không vào được — và `next build`, 
 | URL | Điều kiện vào | Dữ liệu | Dấu hiệu đang chạy đúng |
 |---|---|---|---|
 | `/works` | — | `getStaticProps` rỗng; danh sách tải **client-side** **[ngoài]** | 200; thẻ work hiện ra sau khi tải xong |
-| `/works/infinity-scroll` | — | client-side, tải thêm khi cuộn **[ngoài]** | 200; cuộn tới cuối thì tải thêm trang sau |
+| `/works/infinity-scroll` | — | client-side, tải thêm khi cuộn **[ngoài]** | 200; cuộn tới cuối thì tải thêm trang sau. ⚠️ **Đang có lỗi hydrate React #418** trên `main` — PINIT-63 |
 | `/works/85287225-2cec-5155-8a6e-555d97248cb7/details` | — | `getStaticPaths` 10 work đầu + `fallback: 'blocking'` **[ngoài]** | 200; `fullDescription` render markdown; sơ đồ mermaid trong đó hiện ra |
 | `/works/85287225-2cec-5155-8a6e-555d97248cb7` | **cần login** (`requireLogin`) | form sửa work, client-side **[ngoài]** | chưa login → chuyển sang `/login`; đã login → form có dữ liệu work |
-| `/works/<id>/<slug>` | — | `getStaticPaths` + `fallback: 'blocking'` **[ngoài]** | route này **chỉ render game**, không phải trang chi tiết |
+| `/works/<id>/<slug>` | — | `getStaticPaths` + `fallback: 'blocking'` **[ngoài]** | route này **chỉ render game**, không phải trang chi tiết. Với 3 work hiện tại (đều không có `published`) nó trả **404** — đó là kỳ vọng |
 
 ⚠️ Work có `published` **và** có `slug` thì `getWorkHref` trỏ sang `/works/{id}/{slug}` —
 route game — **nuốt mất** `details.tsx`. Ba work hiện tại (`pinit`, `json-server`,
@@ -116,7 +120,7 @@ Giữ trong map để verify không báo "route lạ", nhưng tiêu chí chỉ l
 | `/posts/create` | — | form, client-side | 200; form render |
 | `/posts/a/b/c` | — | catch-all, chỉ in `router.query` | 200; hiện `{"params":["a","b","c"]}` |
 | `/product` | — | tĩnh (MUI + ảnh local) | 200; ảnh avatar tải được |
-| `/swr` | — | demo SWR, client-side | 200 |
+| `/swr` | — | demo SWR gọi `/api/students/<id>` ghim cứng **[ngoài]** | 200; id ghim cứng đó **không còn ở API ngoài nên trả 404** — tiếng ồn đã biết, khai trong `tolerate` của route |
 | `/login` | — | form đăng nhập **[ngoài]** | 200; sai mật khẩu hiện lỗi, không trắng trang |
 
 ## 4. Khu private `/me`
@@ -153,6 +157,26 @@ Phần *vào được trang* thì không cần key.
 ⚠️ Dữ liệu `/me` **chỉ được đọc lúc request**, không bao giờ lúc build: repo và image đều
 public, đọc lúc build là bake content vào HTML. File sai schema không làm sập trang — entry
 hỏng bị bỏ qua và lỗi nằm trong `errors` để trang hiện ra.
+
+---
+
+## Tiếng ồn nền, đã xác nhận không phải lỗi
+
+Đo bằng `npm run verify` ngày 21/11/2026, không phải suy luận từ code.
+
+**Mọi trang công khai đều log một console error `401` từ `/api/profile`.** Đó là `useAuth`
+trong `pages/_app.tsx` dò trạng thái đăng nhập; 401 là câu trả lời đúng cho khách ẩn danh.
+18 trong 35 route gặp nó. `scripts/verify/index.mjs` bỏ qua đúng cặp (URL `/api/profile`,
+mã 401) và đếm lại số lần bỏ qua trong báo cáo — bỏ qua rộng hơn thế thì mất khả năng bắt
+lỗi auth thật.
+
+**Trang mà 404 là kỳ vọng cũng log console error.** Response 404 của chính trang đó hiện ra
+dưới dạng console error. Verify bỏ qua đúng response của trang khi `status` khai là 404, chứ
+không bỏ qua mọi 404 trên trang.
+
+Hai điều này giải thích vì sao "không có console error" **không** dùng được làm tiêu chí thô.
+Tiêu chí thật là "không có console error nào ngoài danh sách đã khai, và danh sách đó phải
+ngắn và có lý do".
 
 ---
 
