@@ -286,17 +286,108 @@ comment trong code còn trỏ vào đó, xem phần đính chính ở mục 5.
 
 ## 6. `/context` trước khi dọn
 
-> **Chủ repo dán output `/context` vào đây.** Chạy trước G0-3 (gỡ skill) để con số này là
-> trạng thái "chưa dọn".
+Đo 21/11/2026 trong worktree `~/Desktop/pinit/pinit`, branch `main`:
+**21 mục** trong `.claude/skills/`, `CLAUDE.md` 272 dòng. Phiên mới tinh, `/context` là lệnh
+đầu tiên — để con số không bị hội thoại làm phồng.
 
 ```
-(chưa có)
+Context Usage                                     Opus 5.5 · claude-opus-5-5
+41.6k/1m tokens (4%)
+
+Estimated usage by category
+  System prompt:            4k tokens     (0.4%)
+  System tools:             16.6k tokens  (1.7%)
+  MCP tools:                714 tokens    (0.1%)
+  MCP server instructions:  1.4k tokens   (0.1%)
+  Custom agents:            118 tokens    (0.0%)
+  Memory files:             11.1k tokens  (1.1%)
+  Skills:                   7.6k tokens   (0.8%)
+  Messages:                 10 tokens     (0.0%)
+  Free space:               925.4k        (92.5%)
+  Autocompact buffer:       33k tokens    (3.3%)
+
+Auto-compact window: 1m tokens
+
+MCP tools · /mcp (loaded on-demand)   └ 66 tools · 714 tokens
+Custom agents · .claude/agents/       └ 1 agent · 118 tokens
+Memory files · /memory                └ 2 files · 11.1k tokens
+Skills · /skills                      └ 50 skills · 7.6k tokens
 ```
 
 ## 7. `/context` sau khi dọn
 
-> Dán sau khi G0-3 và G0-4 xong, để so với mục 6.
+Cùng cách đo, trong worktree `pinit-agent-workflow`, branch `chore/agent-workflow-g0`:
+**5 mục** trong `.claude/skills/`, `CLAUDE.md` 307 dòng.
 
 ```
-(chưa có)
+Context Usage                                     Opus 5.5 · claude-opus-5-5
+42.9k/1m tokens (4%)
+
+Estimated usage by category
+  System prompt:            4k tokens     (0.4%)
+  System tools:             17.7k tokens  (1.8%)
+  MCP tools:                714 tokens    (0.1%)
+  MCP server instructions:  1.4k tokens   (0.1%)
+  Custom agents:            118 tokens    (0.0%)
+  Memory files:             12.4k tokens  (1.2%)
+  Skills:                   6.5k tokens   (0.6%)
+  Messages:                 10 tokens     (0.0%)
+  Free space:               924.1k        (92.4%)
+  Autocompact buffer:       33k tokens    (3.3%)
+
+Auto-compact window: 1m tokens
+
+MCP tools · /mcp (loaded on-demand)   └ 66 tools · 714 tokens
+Custom agents · .claude/agents/       └ 1 agent · 118 tokens
+Memory files · /memory                └ 2 files · 12.4k tokens
+Skills · /skills                      └ 36 skills · 6.5k tokens
 ```
+
+## 8. Đọc kết quả — phép đo không ủng hộ lý do ban đầu
+
+| Hạng mục | Mục 6 (21 skill) | Mục 7 (5 skill) | Chênh |
+|---|---|---|---|
+| **Tổng** | **41,6k** | **42,9k** | **+1,3k** |
+| System prompt | 4k | 4k | 0 |
+| System tools | 16,6k | 17,7k | +1,1k |
+| MCP tools | 714 | 714 | 0 |
+| MCP server instructions | 1,4k | 1,4k | 0 |
+| Custom agents | 118 | 118 | 0 |
+| Memory files | 11,1k | 12,4k | +1,3k |
+| **Skills** | **7,6k — 50 skill** | **6,5k — 36 skill** | **−1,1k — 14 skill** |
+| Messages | 10 | 10 | 0 |
+
+**Phần gỡ chạy đúng.** Số skill giảm **đúng 14**, khớp danh sách ở mục 3b. Lưu ý `/context`
+đếm **mọi** skill khả dụng (50 → 36), không riêng `.claude/skills/` — nên 21 → 5 trong thư
+mục thể hiện ra ở đây thành 50 → 36.
+
+**Nhưng tiết kiệm được rất ít: 1,1k token.** Đặt vào ngữ cảnh:
+
+- **2,6%** của 41,6k mà phiên đang dùng;
+- **0,11%** của cửa sổ 1 triệu token;
+- và free space vốn đã là **92,5%** trước khi dọn.
+
+**Tổng còn tăng 1,3k**, vì `CLAUDE.md` dài thêm 35 dòng (272 → 307) khi hút vào danh sách
+runbook, cảnh báo paywall Wiki và cảnh báo khối code mất newline. Nói thẳng: *xét riêng chi
+phí context, đợt dọn này lỗ.*
+
+### Kết luận phải rút cho đúng
+
+Lý do gỡ 14 skill ghi ở mục 3b **không phải** chi phí context — mà là **trùng vai**:
+`dev-pr` dạy "push rồi mở PR" trong khi `CLAUDE.md` cấm `git push` tuyệt đối. Phép đo này
+xác nhận chọn lập luận đó là đúng: nếu khi ấy biện minh bằng "tiết kiệm context" thì giờ số
+liệu đã bác bỏ.
+
+Hệ quả cho các quyết định sau: **đừng dùng chi phí context làm lý do gỡ skill ở repo này.**
+Ở cửa sổ 1M token, 874 dòng `SKILL.md` là nhiễu. Lý do hợp lệ là mâu thuẫn luật, sản phẩm đã
+nguội, hoặc skill dạy sai — những thứ đã dùng ở mục 3b.
+
+### Một chênh lệch chưa giải thích được
+
+**System tools tăng 1,1k** giữa hai lần đo. Hạng mục này lẽ ra không đổi theo thư mục, và
+không có thay đổi nào trong đợt dọn chạm tới nó. Chưa truy ra nguyên nhân — ghi lại thay vì
+bịa một lời giải thích. Nếu lần đo sau vẫn lệch đúng chừng đó thì đáng tìm; nếu không thì
+coi như nhiễu giữa hai phiên.
+
+Hai hạng mục đổi còn lại đều giải thích được: Memory files +1,3k do chính `CLAUDE.md` dài
+thêm, Skills −1,1k do gỡ 14 skill.
