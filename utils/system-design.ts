@@ -1,5 +1,5 @@
 // Logic thuần cho tiến độ học System Design. Tách khỏi hook để test được mà
-// không cần jsdom — xem docs/ai/testing/2026-07-26-feature-system-design.md
+// không cần jsdom: vitest của repo chạy môi trường node, không có jsdom.
 
 /**
  * Đọc danh sách slug đã hoàn thành từ giá trị thô trong localStorage.
