@@ -62,3 +62,6 @@ tsconfig.tsbuildinfo
 private-content/
 .denylist
 *.jsonl
+
+# Kết quả `npm run verify` — screenshot + báo cáo, sinh lại mỗi lần chạy
+.verify-out/
