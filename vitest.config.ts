@@ -2,8 +2,8 @@ import { resolve } from 'path'
 import { defineConfig } from 'vitest/config'
 
 // Chỉ test logic thuần (parser, toàn vẹn dữ liệu, tính toán) — không jsdom,
-// không testing-library. Hành vi hook/component kiểm thủ công theo checklist
-// trong docs/ai/testing.
+// không testing-library. Hành vi hook/component kiểm bằng `npm run verify`
+// (chạy app thật qua Playwright, xem docs/feature-map.md).
 export default defineConfig({
   resolve: {
     alias: {

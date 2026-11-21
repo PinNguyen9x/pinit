@@ -254,8 +254,22 @@ grep -rn "docs/ai" --include='*.md' . --exclude-dir=node_modules --exclude-dir=.
 `implementation`, `testing`, `deployment`, `monitoring`) × (1 `README.md` + 2 tài liệu feature),
 cộng `docs/ai/features/glossary-index/` (4 file).
 
-**Không file nào ngoài `docs/ai/` trỏ tới `docs/ai/`** — các tham chiếu duy nhất là giữa các
-file trong chính thư mục đó. Nghĩa là xóa cả `docs/ai/` sẽ không làm link nào ở nơi khác gãy.
+**Không file Markdown nào ngoài `docs/ai/` trỏ tới `docs/ai/`.**
+
+⚠️ **Đính chính (21/11/2026, lúc làm G0-4).** Câu trên lúc đầu viết là "không file *nào*",
+và nó sai: lệnh đếm chỉ quét `--include='*.md'` nên bỏ sót **4 file TypeScript** có trỏ tới
+`docs/ai/` trong comment — `vitest.config.ts`, `constants/system-design.ts`,
+`utils/system-design.ts`, `models/system-design.ts`. G0-4 đã sửa 4 comment đó thành tự chứa
+trước khi xóa thư mục.
+
+Bài học về cách đo, không phải về `docs/ai/`: **grep giới hạn `--include` thì kết luận cũng
+giới hạn theo**, mà câu kết luận lại không mang theo giới hạn đó. Lần sau quét tham chiếu
+thì quét mọi loại file, hoặc nói rõ đã quét loại nào.
+
+```bash
+grep -rn 'docs/ai' --include='*.ts' --include='*.tsx' --include='*.sh' --include='*.yml' \
+  --include='*.json' --include='*.md' . --exclude-dir=node_modules --exclude-dir=.next
+```
 
 ### Doc đầu việc nói sai một chỗ ở đây
 
@@ -265,7 +279,8 @@ vào repo qua commit `76522a9 chore(mermaid): thêm skill agentic-mermaid cho ag
 `ai-devkit` **chưa bao giờ chèn gì vào `AGENTS.md`**.
 
 Nên khi làm G0-4, tiêu chí "`AGENTS.md` chỉ còn nội dung chủ repo tự viết" đã đúng từ đầu;
-việc thật của G0-4 chỉ là quyết định giữ hay xóa `docs/ai/` (25 file).
+việc thật của G0-4 chỉ là quyết định giữ hay xóa `docs/ai/` (25 file) — cộng việc dọn 4
+comment trong code còn trỏ vào đó, xem phần đính chính ở mục 5.
 
 ---
 
