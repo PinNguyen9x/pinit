@@ -1,5 +1,4 @@
 // Kiểu dữ liệu cho trang học System Design Interview (lộ trình 13 buổi).
-// Xem docs/ai/design/2026-07-26-feature-system-design.md
 
 /** Nhóm buổi học — dùng để tô màu và gom nhóm ở trang lộ trình. */
 export const LESSON_TRACKS = [

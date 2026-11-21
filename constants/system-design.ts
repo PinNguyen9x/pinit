@@ -1,6 +1,5 @@
 // Lộ trình học System Design Interview — 13 buổi.
-// Nguồn: lộ trình khóa học, đối chiếu bảng ánh xạ trong
-// docs/ai/requirements/2026-07-26-feature-system-design.md
+// Nguồn: lộ trình khóa học gốc, đã đối chiếu từng buổi khi dựng dữ liệu này.
 //
 // Mỗi buổi có:
 //   order          — số thứ tự, quyết định thứ tự hiển thị

@@ -20,24 +20,34 @@
 ## Task workflow (Plane)
 Ba lớp lưu trữ, mỗi thứ một chỗ — không trộn:
 - **Plane work item + comment** — *trạng thái công việc*: đang làm gì, xong chưa, kẹt ở đâu.
-- **Plane Wiki** — *runbook & cheatsheet dùng chung*: quy trình lặp lại, cách chẩn lỗi hạ tầng,
-  bảng lệnh. Thứ mà agent khác hoặc tôi cần tra lại sau nhiều tháng.
+- **`docs/runbooks/` trong repo** — *runbook & cheatsheet dùng chung*: quy trình lặp lại,
+  cách chẩn lỗi hạ tầng, bảng lệnh. Thứ mà agent khác hoặc tôi cần tra lại sau nhiều tháng.
 - **memory (`saveKnowledge`)** — *learnings riêng của agent*: kinh nghiệm rút ra trong phiên,
   chưa đủ chín hoặc quá riêng để thành runbook chung.
 
 Đặt nhầm chỗ thì hỏng theo kiểu khó thấy: status task nằm trong memory thì board sai mà không ai
 biết; runbook nằm trong comment work item thì chôn theo task đã đóng, tra không ra.
 
-Runbook đã có (Wiki workspace `pin`, collection *Runbook & Cheatsheet*) — **đọc trước khi tự
-mò lại**, nhất là khi task yêu cầu viết tài liệu về quy trình:
-- *Runbook — MCP Plane 403 & env của tmux server* — `be9ed9c9-967b-4db2-bc9d-4b62b2c1dacc`
-  (chẩn lỗi MCP `plane`, cheatsheet `agents`/tmux, worktree thiếu `node_modules`)
-- *Runbook — Vòng đời một task với `agents`* — `3cf1c6d3-6cc6-4bf0-848e-6952a2214b5f`
-  (14 lệnh `agents`, vòng đời 9 bước worktree → PR → merge → sync, 12 ca lỗi kèm nguyên nhân)
+⚠️ **Wiki của Plane bị khoá sau paywall ở gói Free** (đo 21/11/2026). Agent qua MCP vẫn đọc
+và ghi page bình thường, nhưng **tôi mở bằng trình duyệt thì chỉ thấy "Upgrade to unlock
+wiki"**. Một runbook mà chủ repo không mở được thì không làm được việc của nó. Vì vậy runbook
+mới viết thẳng vào `docs/runbooks/`, **không tạo page Wiki nữa**.
 
-Plane không giữ `id` trên heading nên **link neo trong page không hoạt động** — đừng phí công
-viết `<a href="#...">`, nó còn tự thành `target="_blank"` trỏ vào hư không. Điều hướng bằng
-panel outline hoặc `Cmd + F`.
+Runbook đã có, **tất cả trong `docs/runbooks/`** — đọc trước khi tự mò lại, nhất là khi task
+yêu cầu viết tài liệu về quy trình:
+- `plane-mcp.md` — vì sao không deny được một `action` riêng lẻ, cách dò workspace slug bằng
+  mã HTTP, đánh đổi của MCP scope user
+- `mcp-plane-403-tmux-env.md` — chẩn lỗi MCP `plane` 403, cheatsheet `agents`/tmux, worktree
+  thiếu `node_modules`
+- `vong-doi-task-agents.md` — 14 lệnh `agents`, vòng đời 9 bước worktree → PR → merge → sync,
+  12 ca lỗi kèm nguyên nhân
+
+⚠️ **Khối code trong hai file xuất từ Wiki bị mất xuống dòng** — 14/14 khối ở
+`mcp-plane-403-tmux-env.md`, 4/11 ở `vong-doi-task-agents.md`. Mất từ lúc nội dung được ghi
+vào Plane chứ không phải do bước xuất (kiểm cả `description_html`, `description_json` và tài
+liệu Yjs trong `description_binary` — không tầng nào còn newline). Lệnh nhiều dòng trong đó
+**không copy-paste chạy được**, phải tự tách lại. Thấy chỗ nào tách được chắc chắn thì sửa
+thẳng vào file, đó là lợi thế của việc nó nằm trong repo.
 
 Config MCP `plane` nằm ở **scope user** (`~/.claude.json`), cố tình KHÔNG để trong `.mcp.json`
 của repo: token đọc qua `${PLANE_API_KEY}` là biến môi trường của máy, không phải thứ commit được.
@@ -116,9 +126,9 @@ Giới hạn:
 - Không xoá work item, không sửa/xoá comment của người khác.
 - Không tạo/xoá project, module, cycle.
 - Gán work item vào module là việc của tôi trên UI — agent chỉ đọc.
-- Wiki: được tạo page mới và cập nhật page do chính mình tạo. Sửa page của người khác thì
-  hỏi trước; không archive, không xoá page của ai. Xếp page vào collection là việc của tôi
-  trên UI.
+- `docs/runbooks/`: được thêm file mới và sửa file do chính mình viết. Sửa runbook của
+  người khác thì hỏi trước; không xoá file của ai. Page Wiki cũ trên Plane: chỉ đọc, đừng
+  tạo page mới ở đó nữa.
 
 ## Diagram
 
@@ -128,9 +138,9 @@ Hai skill cùng nhận yêu cầu "vẽ diagram", chọn theo **output cần gì
   sequence, data-flow, lifecycle. Ra một file HTML tự chứa có animation, search node, trace
   upstream/downstream, export PNG/SVG/WebM. Nhúng thẳng vào bài blog Next.js được.
 - **`agentic-mermaid-diagram-workflow` — khi cần diagram ở dạng *text* sống trong file.**
-  Tức là khi hình phải nằm trong Markdown/Wiki và được sửa bằng diff về sau: README, page
-  Plane Wiki, comment PR. Mermaid là source text nên review được qua git; HTML của archify
-  thì không.
+  Tức là khi hình phải nằm trong Markdown và được sửa bằng diff về sau: README, file trong
+  `docs/runbooks/`, comment PR. Mermaid là source text nên review được qua git; HTML của
+  archify thì không.
 
 Archify **nhận cả Mermaid làm input** — có sẵn `flowchart`/`sequenceDiagram`/`stateDiagram`
 thì đưa thẳng cho archify, đừng vẽ lại từ đầu.
@@ -143,7 +153,7 @@ không có cơ sở nói bố cục đạt — đây là điểm khác biệt ch
 
 Worktree mới clone về **thiếu skill ở hai nguồn khác nhau**, phải chạy cả hai lệnh:
 
-    npx ai-devkit install              # đọc .ai-devkit.json, dựng 19 skill dev-*/task/tdd/...
+    npx ai-devkit install              # đọc .ai-devkit.json, dựng 3 skill tdd/memory/verify
     npx skills experimental_install    # kéo archify về .agents/
 
 `agents create` tự chạy cả hai sau `npm install`. Worktree tạo trước khi có bước đó thì chạy
@@ -187,7 +197,7 @@ archify thì commit riêng, có chủ đích.
 
 Vì sao hai nguồn, và vì sao chỉ một cái được commit:
 
-| | ai-devkit (19 skill) | archify |
+| | ai-devkit (3 skill) | archify |
 |---|---|---|
 | Lockfile trong git | `.ai-devkit.json` | `skills-lock.json` |
 | Bản thật nằm ở | `~/.ai-devkit/skills/` — **ngoài repo** | `.agents/skills/` — trong repo |
@@ -196,7 +206,7 @@ Vì sao hai nguồn, và vì sao chỉ một cái được commit:
 
 `ai-devkit install` **có** wire `.claude/skills/` (đã đo: log in ra `→ .claude/skills/<tên>
 (symlinked)`), khác với `skills experimental_install` vốn bỏ sót Claude Code — đó là toàn bộ
-lý do archify phải commit symlink còn 19 cái kia thì không.
+lý do archify phải commit symlink còn 3 cái kia thì không.
 
 Triệu chứng khi quên: skill `archify` không xuất hiện trong danh sách skill, hoặc symlink
 `.claude/skills/archify` dangling. Renderer chạy được (`archify doctor` xanh) mà Claude Code
@@ -293,5 +303,5 @@ Ranh giới cứng giữa hai nơi, không được viết trùng:
 
 Learnings rút ra trong phiên → `saveKnowledge` (memory), KHÔNG ghi vào work item/comment.
 Nếu learning đó là quy trình lặp lại hoặc cách chẩn một lỗi hạ tầng — thứ agent khác sẽ cần —
-thì viết thành page trên **Wiki** thay vì chôn trong comment (xem "Task workflow (Plane)").
-Comment work item chỉ trỏ tới page, không chép lại nội dung.
+thì viết thành file trong **`docs/runbooks/`** thay vì chôn trong comment (xem
+"Task workflow (Plane)"). Comment work item chỉ trỏ tới file, không chép lại nội dung.
