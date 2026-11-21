@@ -146,6 +146,77 @@ for d in .claude/skills/*/; do f="$d/SKILL.md"; [ -f "$f" ] && wc -l < "$f"; don
 
 ---
 
+## 3b. Kiểm kê skill — đề xuất giữ/gỡ (G0-2)
+
+### Căn cứ xếp hạng, không phải cảm tính
+
+Mỗi đề xuất "gỡ" dưới đây dựa trên một trong ba bằng chứng đo được:
+
+1. **Có thứ khác trong repo đã làm việc đó rồi** — `CLAUDE.md` quy định cách làm riêng, hoặc
+   `scripts/pinit-agents.sh` đã bọc thành lệnh. Hai bộ luật song song thì agent chọn bừa.
+2. **Sản phẩm của skill đã nguội** — `docs/ai/` không ai sửa từ **08/08/2026** (3,5 tháng),
+   `~/.ai-devkit/tasks` **không tồn tại** (0 task), `~/.ai-devkit/memory.db` ghi lần cuối
+   **30/08/2026**.
+3. **Skill nói ngược luật của repo** — nguy hiểm nhất, vì agent đọc skill trước khi đọc `CLAUDE.md`.
+
+```
+git log -1 --format='%h %ad' --date=short -- docs/ai/     # c8bbc65 2026-08-08
+ls ~/.ai-devkit/tasks | wc -l                             # 0 (thư mục không có)
+sqlite3 ~/.ai-devkit/memory.db 'select scope,count(*),max(updated_at) from knowledge group by scope;'
+```
+
+### Bảng
+
+| Skill | Dòng | Nguồn | Đề xuất | Lý do |
+|---|---|---|---|---|
+| `archify` | 137 | tự cài (`skills experimental_install`) | **GIỮ** | `CLAUDE.md` chỉ định làm mặc định cho mọi diagram người đọc xem |
+| `agentic-mermaid-diagram-workflow` | 40 | tự cài (commit `76522a9`) | **GIỮ** | `CLAUDE.md` chỉ định cho diagram dạng text sống trong Markdown/Wiki |
+| `tdd` | 66 | `ai-devkit install` | **GIỮ** | Repo có 38 file test + vitest; `CLAUDE.md` không có luật test-first nào thay thế |
+| `memory` | 121 | `ai-devkit install` | **HOÃN** | `CLAUDE.md` đang gọi `saveKnowledge` của chính server này — quyết cùng G0-5, đừng gỡ lẻ |
+| `verify` | 95 | `ai-devkit install` | **HOÃN** | Gỡ *sau khi* G1-4 xong, vì `verify-pinit` là bản cụ thể thay nó; gỡ trước thì hụt một nhịp |
+| `dev-pr` | 46 | `ai-devkit install` | **GỠ** | Nói ngược luật: skill `push` và mở PR, `CLAUDE.md` cấm `git push` tuyệt đối |
+| `dev-commit` | 39 | `ai-devkit install` | **GỠ** | "Quy ước commit" + "Bắt buộc" trong `CLAUDE.md` đã là luật commit, chi tiết hơn |
+| `dev-worktree` | 73 | `ai-devkit install` | **GỠ** | `agents create/new/sync` trong `scripts/pinit-agents.sh` thay thế hoàn toàn |
+| `task` | 158 | `ai-devkit install` | **GỠ** | Plane là board duy nhất; `~/.ai-devkit/tasks` rỗng — CLI này chưa từng được dùng |
+| `agent-management` | 49 | `ai-devkit install` | **GỠ** | Đã bọc trong `agents ls/new/send`; `ai-devkit start` còn làm mất context nên bị thay bằng `agents new` |
+| `agent-communication` | 26 | `ai-devkit install` | **GỠ** | `agents send` bọc đúng lệnh này, `agents --help` đã mô tả |
+| `dev-lifecycle` | 129 | `ai-devkit install` | **GỠ** | Orchestrator cho 7 phase skill dưới; gỡ phần thân thì đầu không còn việc |
+| `dev-requirements` | 55 | `ai-devkit install` | **GỠ** | Sản phẩm là `docs/ai/requirements/` — nguội từ 08/08/2026 |
+| `dev-design` | 39 | `ai-devkit install` | **GỠ** | Sản phẩm là `docs/ai/design/` — nguội từ 08/08/2026 |
+| `dev-planning` | 47 | `ai-devkit install` | **GỠ** | Sản phẩm là `docs/ai/planning/` — nguội từ 08/08/2026 |
+| `dev-implementation` | 54 | `ai-devkit install` | **GỠ** | Sản phẩm là `docs/ai/implementation/` — nguội từ 08/08/2026 |
+| `dev-testing` | 31 | `ai-devkit install` | **GỠ** | Sản phẩm là `docs/ai/testing/` — nguội từ 08/08/2026 |
+| `dev-review` | 42 | `ai-devkit install` | **GỠ** | Trùng vai với `/code-review` của Claude Code và mục "Review bằng bằng chứng" (giai đoạn 4) |
+| `document-code` | 86 | `ai-devkit install` | **GỠ** | Lưu kết quả vào store ai-devkit đã nguội; chỗ đúng cho tài liệu dùng lại là Plane Wiki |
+
+**19/19 skill có mặt trong bảng.** Cộng lại: giữ 3 (243 dòng) · hoãn 2 (216 dòng) ·
+gỡ 14 (874 dòng). Gỡ hết nhóm "GỠ" thì `SKILL.md` thường trú giảm từ **1.333 → 459 dòng**.
+
+### Hai điều đáng nói hơn con số
+
+**Trùng vai là vấn đề lớn hơn chi phí context.** 874 dòng không nhiều. Thứ gây hại là một
+việc có hai bộ luật: agent vừa đọc `dev-pr` ("push rồi mở PR") vừa đọc `CLAUDE.md`
+("không `git push` — để tôi tự push"). `dev-commit` và `dev-worktree` cùng kiểu. Rủi ro không
+phải chậm, mà là agent làm đúng theo skill và sai theo repo.
+
+**Nhóm 7 phase skill + `dev-lifecycle` đi liền với G0-4.** Gỡ 8 skill này mà giữ `docs/ai/`
+thì còn 25 file không ai sinh thêm, không ai trỏ tới. Giữ skill mà xóa `docs/ai/` thì skill
+chạy sẽ dựng lại thư mục. Nên quyết một lần cho cả hai, đừng tách.
+
+### Hai việc kèm theo, không thuộc G0-3
+
+Gỡ skill xong thì hai chỗ này sai, phải sửa trong cùng PR của G0-3:
+
+- `CLAUDE.md` dòng 146 và 190: "19 skill dev-*/task/tdd/..." → con số thật sau khi gỡ.
+  (Hiện cũng đã sai: 19 khai nhưng chỉ dựng được 17.)
+- `scripts/pinit-agents.sh` dòng 146: comment "Khôi phục 19 skill dev-*/task/tdd/...".
+
+### Chờ chủ repo duyệt
+
+> Duyệt từng dòng "GỠ" trong bảng, hoặc duyệt cả nhóm. **G0-3 không bắt đầu trước khi có
+> duyệt.** Hai dòng "HOÃN" (`memory`, `verify`) cố ý không nằm trong phạm vi G0-3.
+---
+
 ## 4. MCP server
 
 ```
