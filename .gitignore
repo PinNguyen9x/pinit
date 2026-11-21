@@ -57,8 +57,15 @@ tsconfig.tsbuildinfo
 .claude/skills/*
 !.claude/skills/archify
 !.claude/skills/agentic-mermaid-diagram-workflow
+# verify-pinit là skill của chính repo này (không đến từ registry nào), nên bản
+# thật nằm trong repo và PHẢI commit — clone mới mà thiếu nó thì agent không biết
+# `npm run verify` tồn tại.
+!.claude/skills/verify-pinit
 
 # Khu private /me — content thật chỉ nằm trên disk của VPS, không bao giờ vào repo.
 private-content/
 .denylist
 *.jsonl
+
+# Kết quả `npm run verify` — screenshot + báo cáo, sinh lại mỗi lần chạy
+.verify-out/
