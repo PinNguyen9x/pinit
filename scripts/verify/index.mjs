@@ -122,6 +122,38 @@ function fail(message) {
   process.exit(2)
 }
 
+// Mã work item Plane. Chỉ chấp dạng này — `knownIssue` không có mã thì không
+// phải "lỗi đã biết", chỉ là lỗi bị tắt tiếng.
+const WORK_ITEM_RE = /^PINIT-\d+$/
+
+/**
+ * `knownIssue` là cơ chế duy nhất làm verify bỏ qua một lỗi thật, nên nó là chỗ
+ * dễ thành nơi giấu lỗi nhất. Điều kiện: phải gắn mã work item Plane, và phải
+ * có `pattern` hẹp. Thiếu bất kỳ cái nào thì **verify đỏ ngay**, trước cả khi
+ * build — thà dừng ồn ào còn hơn chạy xanh trong lúc che một lỗi vô danh.
+ */
+function assertKnownIssuesTracked(routes) {
+  const bad = []
+  for (const r of routes) {
+    const k = r.knownIssue
+    if (!k) continue
+    if (!k.ref || !WORK_ITEM_RE.test(k.ref)) {
+      bad.push(`${r.path}: knownIssue.ref phải là mã work item Plane dạng PINIT-<số>, đang là ${JSON.stringify(k.ref)}`)
+    }
+    if (!(k.pattern instanceof RegExp)) {
+      bad.push(`${r.path}: knownIssue.pattern phải là RegExp để chỉ khớp đúng lỗi đã biết, đang là ${typeof k.pattern}`)
+    }
+  }
+  if (bad.length) {
+    fail(
+      'knownIssue khai sai trong scripts/verify/routes.mjs:\n  ' +
+        bad.join('\n  ') +
+        '\n\nMỗi lỗi được bỏ qua phải truy ra được một work item. Mở work item trên Plane\n' +
+        'rồi gắn mã vào `ref`, hoặc gỡ khối knownIssue để verify báo lỗi như bình thường.',
+    )
+  }
+}
+
 // ---------- tiến trình con ----------
 
 function portFree(port) {
@@ -437,6 +469,10 @@ async function main() {
     process.stdout.write(HELP)
     return 0
   }
+
+  // Kiểm trước khi build: hai thứ này sai thì cả lần chạy vô nghĩa, không đáng
+  // tốn 5 phút build mới phát hiện.
+  assertKnownIssuesTracked(ROUTES)
 
   const fixture = parseEnvFile(await readFile(FIXTURE_ENV, 'utf8'))
   const mockPort = assertMockOnly(fixture)
