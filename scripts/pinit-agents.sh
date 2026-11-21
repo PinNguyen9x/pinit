@@ -143,7 +143,7 @@ skills_install_at() {
   )
 }
 
-# Khôi phục 19 skill dev-*/task/tdd/... từ `.ai-devkit.json` (file này ĐƯỢC commit, đóng
+# Khôi phục 3 skill tdd/memory/verify từ `.ai-devkit.json` (file này ĐƯỢC commit, đóng
 # vai lockfile). Bản thật nằm ở ~/.ai-devkit/skills/ — ngoài repo — nên symlink bắt buộc
 # là đường dẫn tuyệt đối và KHÔNG commit được: mỗi máy phải tự sinh path của mình.
 #
@@ -414,10 +414,10 @@ cmd_create() {   # tạo worktree feature MỚI từ origin/main rồi bật age
   echo "▶ skills install (khôi phục archify từ skills-lock.json)..."
   skills_install_at "$path" || echo "  ! skills install lỗi — chạy tay: npx skills experimental_install"
 
-  # 19 skill dev-*/task/tdd/... là symlink TUYỆT ĐỐI vào ~/.ai-devkit/, không commit được
+  # 3 skill tdd/memory/verify là symlink TUYỆT ĐỐI vào ~/.ai-devkit/, không commit được
   # (path neo vào $HOME từng máy) nên worktree mới cũng thiếu. Khác archify ở chỗ lệnh này
   # CÓ tự wire .claude/skills/, nên không cần commit symlink — chỉ cần chạy lệnh.
-  echo "▶ ai-devkit install (khôi phục skill dev-* từ .ai-devkit.json)..."
+  echo "▶ ai-devkit install (khôi phục skill từ .ai-devkit.json)..."
   adk_install_at "$path" || echo "  ! ai-devkit install lỗi — chạy tay: npx ai-devkit install"
 
   # Hook chặn secret nằm ở .githooks/ (thư mục ĐƯỢC track) nên clone mới có sẵn file,
